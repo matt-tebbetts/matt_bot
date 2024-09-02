@@ -1,0 +1,9 @@
+# But do not ignore .gitignore
+!.gitignore
+
+# anything starting with a dot or underscore
+.*
+_*
+
+# any cache file
+*.pyc
