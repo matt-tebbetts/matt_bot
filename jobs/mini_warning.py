@@ -14,10 +14,8 @@ from functions.sql_helper import get_df_from_sql
 load_dotenv()
 GMAIL_USER = os.getenv("GMAIL_USER")
 GMAIL_PASS = os.getenv("GMAIL_PASS")
-if not GMAIL_USER or not GMAIL_PASS:
-    raise ValueError("GMAIL_USER or GMAIL_PASS environment variables are not set")
 
- # gmail connection
+# gmail connection
 @asynccontextmanager
 async def smtp_server_connection():
     server = smtplib.SMTP("smtp.gmail.com", 587)
@@ -41,7 +39,9 @@ async def send_sms(name, number, carrier, message):
     try:
         async with smtp_server_connection() as server:
             server.sendmail(GMAIL_USER, recipient_email, message)
+
         print("Message sent successfully.")
+
     except smtplib.SMTPException as e:
         print(f"SMTP error occurred: {e}")
     except Exception as e:
