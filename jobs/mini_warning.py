@@ -5,6 +5,11 @@ import json
 import os
 import sys
 from dotenv import load_dotenv
+from datetime import datetime
+import pytz
+import random
+from functions import send_df_to_sql
+import pandas as pd
 
 # Add the project root directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -18,6 +23,8 @@ GMAIL_PASS = os.getenv("GMAIL_PASS")
 # gmail connection
 @asynccontextmanager
 async def smtp_server_connection():
+    
+    # connect to gmail server
     server = smtplib.SMTP("smtp.gmail.com", 587)
     try:
         server.starttls()
@@ -47,35 +54,66 @@ async def send_sms(name, number, carrier, message):
     except Exception as e:
         print(f"An error occurred: {e}")
 
+async def log_sms_sent(player_name, phone_nbr, carrier, message):
+    # Prepare the data to be logged
+    log_data = pd.DataFrame([{
+        'player_name': player_name,
+        'phone_nbr': phone_nbr,
+        'carrier': carrier,
+        'message': message,
+        'sent_at': datetime.now(pytz.timezone('US/Eastern'))
+    }])
+
+    # Insert the log into the sms_reminders table
+    await send_df_to_sql(log_data, 'sms_reminders', if_exists='append')
+
 async def send_mini_warning():
 
     # find users who have not yet completed the mini
     df = await get_df_from_sql("SELECT * FROM matt.mini_not_completed")
-
     if df.empty:
-        return print("No users found who have not completed the mini.")
+        return print("No users to warn right now.")
 
+    now = datetime.now(pytz.timezone('US/Eastern'))
     text_count = 0
     users_texted = []
+
+    # send each user a text
     for index, row in df.iterrows():
 
-        # if they want the text message, send it
-        if row['wants_text'] == 1 and row['phone_nbr'] and row['phone_carr_cd']:
+        # create series of short mini reminder messages
+        mini_reminder_phrases = [
+            "it's Mini time. Don't forget.",
+            "quick Mini break?",
+            "done the Mini yet?",
+            "the Mini is waiting for you!",
+            "don't miss today's Mini!",
+            "got a sec? Do the Mini?",
+            "it's time for your Mini fix",
+            "Mini challenge? Go for it!",
+            "Mini done? If not, now's the time!",
+            "let's not skip the Mini today!",
+            "you can still do the Mini today"
+        ]
 
-            # while testing, only send to Matt
-            if row['player_name'] != "Matt":
-                continue
+        # pick random message
+        chosen_phrase = random.choice(mini_reminder_phrases)
 
-            await send_sms(
-                    name=row['player_name'],
-                    number=row['phone_nbr'],
-                    carrier=row['phone_carr_cd'],
-                    message=f"Hey {row['player_name']}, there is still time to do the Mini today!"
-                    )
-            text_count += 1
-            users_texted += [row['player_name']]
-    
-    print(f"Texted the following {text_count} users: {users_texted}")
+        name = row['player_name']
+        number = row['phone_nbr']
+        carrier = row['phone_carr_cd']
+        message = f"Hey {name}, {chosen_phrase}"
+        print(f"Sending text to {name}...")
+
+        await send_sms(name, number, carrier, message)
+
+        text_count += 1
+        users_texted += [name]
+
+        # Log the sent SMS in the sms_reminders table
+        await log_sms_sent(name, number, carrier, message)
+
+    print(f"Texted the following {text_count} user(s): {users_texted}")
     return
 
 async def main():
