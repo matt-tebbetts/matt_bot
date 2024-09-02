@@ -1,0 +1,3 @@
+Subject: [ALERT] Service Failure Detected
+
+The mini_warning.service has failed. Please check the system.

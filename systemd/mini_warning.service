@@ -1,13 +1,18 @@
 [Unit]
 Description=Run Mini Warning Job
+StartLimitBurst=3
+StartLimitIntervalSec=10min
+OnFailure=notification.service
 
 [Service]
 ExecStart=/root/projects/matt_bot/.venv/bin/python /root/projects/matt_bot/jobs/mini_warning.py
 WorkingDirectory=/root/projects/matt_bot
 Environment="PYTHONPATH=/root/projects/matt_bot"
 User=root
-Type=oneshot              # Run once and exit
-RemainAfterExit=false     # Do not remain active after the job is done
+Restart=on-failure
+RestartSec=5s
+Type=oneshot
+RemainAfterExit=false
 
 [Install]
 WantedBy=multi-user.target
