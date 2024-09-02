@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Mini Warning Job Every Minute
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+Unit=mini_warning.service
+
+[Install]
+WantedBy=timers.target
