@@ -2,7 +2,7 @@
 import asyncio
 import aiomysql
 import pandas as pd
-from config import get_db_config
+from files.config.config import get_db_config
 
 lock = asyncio.Lock()
 
