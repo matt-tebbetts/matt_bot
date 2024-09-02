@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Mini Warning Job
+
+[Service]
+ExecStart=/usr/bin/python3 /root/projects/matt_bot/jobs/mini_warning.py
+WorkingDirectory=/root/projects/matt_bot
+User=root
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
