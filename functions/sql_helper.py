@@ -5,13 +5,13 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 
-# load env variables
-load_dotenv()
-
 lock = asyncio.Lock()
 
 # get sql config
 async def get_db_config():
+
+    # load env variables
+    load_dotenv()
 
     # Retrieve environment variables
     SQLUSER = os.getenv('SQLUSER')
