@@ -3,6 +3,8 @@
 ## it should not be linked to Discord at all
 ## it should write the leaderboard to a file, and only write new records to sql
 
+from jobs import send_df_to_sql
+
 import pandas as pd
 from datetime import datetime
 import pytz
@@ -11,7 +13,6 @@ import requests
 from bs4 import BeautifulSoup
 from bot_functions import get_mini_date, bot_print
 from global_functions import get_current_time
-from bot_sql import send_df_to_sql
 import os
 from config import NYT_COOKIE
 import asyncio

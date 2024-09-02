@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from sql_helper import get_df_from_sql
+from functions.sql_helper import get_df_from_sql
 import asyncio
 import smtplib
 import json
