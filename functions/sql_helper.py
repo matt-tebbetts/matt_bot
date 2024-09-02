@@ -13,7 +13,7 @@ async def get_db_config():
     SQLUSER = os.getenv('SQLUSER')
     SQLPASS = os.getenv('SQLPASS')
     SQLHOST = os.getenv('SQLHOST')
-    SQLPORT = int(os.getenv('SQLPORT'))
+    SQLPORT = os.getenv('SQLPORT')
     SQLDATA = os.getenv('SQLDATA')
 
     # Check if all environment variables were found
