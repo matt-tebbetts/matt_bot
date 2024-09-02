@@ -17,9 +17,9 @@ async def get_db_config():
     SQLDATA = os.getenv('SQLDATA')
 
     # Check if all environment variables were found
-    for var in [SQLUSER, SQLPASS, SQLHOST, SQLPORT, SQLDATA]:
-        if var is None:
-            raise ValueError(f"Environment variable '{var}' not found.")
+    for var_name, var_value in [('SQLUSER', SQLUSER), ('SQLPASS', SQLPASS), ('SQLHOST', SQLHOST), ('SQLPORT', SQLPORT), ('SQLDATA', SQLDATA)]:
+        if var_value is None:
+            raise ValueError(f"Environment variable '{var_name}' not found.")
 
     db_config = {
         'host': SQLHOST,
