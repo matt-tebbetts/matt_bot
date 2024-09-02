@@ -4,14 +4,18 @@ import smtplib
 import json
 import os
 import sys
+from dotenv import load_dotenv
 
 # Add the project root directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from functions.sql_helper import get_df_from_sql
 
 # load environment variables
+load_dotenv()
 GMAIL_USER = os.getenv("GMAIL_USER")
 GMAIL_PASS = os.getenv("GMAIL_PASS")
+if not GMAIL_USER or not GMAIL_PASS:
+    raise ValueError("GMAIL_USER or GMAIL_PASS environment variables are not set")
 
  # gmail connection
 @asynccontextmanager
