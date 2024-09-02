@@ -1,10 +1,13 @@
 from contextlib import asynccontextmanager
-from functions.sql_helper import get_df_from_sql
 import asyncio
 import smtplib
 import json
 import os
 import sys
+
+# Add the project root directory to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from functions.sql_helper import get_df_from_sql
 
 # load environment variables
 GMAIL_USER = os.getenv("GMAIL_USER")
@@ -24,7 +27,7 @@ async def smtp_server_connection():
 async def send_sms(name, number, carrier, message):
 
     # determine user's full sms carrier gateway email address
-    with open('files/config/sms_carriers.json', 'r') as file:
+    with open('config/sms_carriers.json', 'r') as file:
         carrier_emails = json.load(file)
     carrier_gateway_template = carrier_emails[carrier]["sms_email"]
     carrier_gateway = carrier_gateway_template.replace("number", number)

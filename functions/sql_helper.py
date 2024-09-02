@@ -27,7 +27,7 @@ async def get_db_config():
 
     db_config = {
         'host': SQLHOST,
-        'port': SQLPORT,
+        'port': int(SQLPORT), # set port as integer
         'user': SQLUSER,
         'password': SQLPASS,
         'db': SQLDATA
