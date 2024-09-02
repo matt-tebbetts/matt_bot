@@ -7,6 +7,12 @@ WorkingDirectory=/root/projects/matt_bot
 Environment="PYTHONPATH=/root/projects/matt_bot"
 User=root
 Restart=always
+RestartSec=5               # Wait 5 seconds before restarting
+StartLimitIntervalSec=60   # In a 60-second window...
+StartLimitBurst=3          # ...allow up to 3 restarts
+Type=simple                # Default type, suitable for foreground processes
+StandardOutput=journal     # Redirect stdout to journal
+StandardError=journal      # Redirect stderr to journal
 
 [Install]
 WantedBy=multi-user.target
