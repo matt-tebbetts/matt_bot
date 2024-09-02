@@ -1,9 +1,9 @@
-from sql_helper import get_df_from_sql
-import os
-import json
-import smtplib
-import asyncio
 from contextlib import asynccontextmanager
+from sql_helper import get_df_from_sql
+import asyncio
+import smtplib
+import json
+import os
 
 # load environment variables
 GMAIL_USER = os.getenv("GMAIL_USER")

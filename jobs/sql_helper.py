@@ -2,11 +2,36 @@
 import asyncio
 import aiomysql
 import pandas as pd
-from files.config.config import get_db_config
+import os
 
 lock = asyncio.Lock()
 
-# sql to df
+# get sql config
+async def get_db_config():
+
+    # Retrieve environment variables
+    SQLUSER = os.getenv('SQLUSER')
+    SQLPASS = os.getenv('SQLPASS')
+    SQLHOST = os.getenv('SQLHOST')
+    SQLPORT = int(os.getenv('SQLPORT'))
+    SQLDATA = os.getenv('SQLDATA')
+
+    # Check if all environment variables were found
+    for var in [SQLUSER, SQLPASS, SQLHOST, SQLPORT, SQLDATA]:
+        if var is None:
+            raise ValueError(f"Environment variable '{var}' not found.")
+
+    db_config = {
+        'host': SQLHOST,
+        'port': SQLPORT,
+        'user': SQLUSER,
+        'password': SQLPASS,
+        'db': SQLDATA
+    }
+
+    return db_config
+
+# get df from sql query
 async def get_df_from_sql(query, params=None):
     db_config = await get_db_config()
     attempts = 0
@@ -32,7 +57,7 @@ async def get_df_from_sql(query, params=None):
             raise e
     return pd.DataFrame()
 
-# df to sql
+# save df to sql table
 async def send_df_to_sql(df, table_name, if_exists='append'):
     db_config = await get_db_config()
     async with lock:
