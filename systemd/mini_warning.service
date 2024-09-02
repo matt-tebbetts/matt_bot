@@ -4,6 +4,7 @@ Description=Run Mini Warning Job
 [Service]
 ExecStart=/root/projects/matt_bot/.venv/bin/python /root/projects/matt_bot/jobs/mini_warning.py
 WorkingDirectory=/root/projects/matt_bot
+Environment="PYTHONPATH=/root/projects/matt_bot"
 User=root
 Restart=always
 

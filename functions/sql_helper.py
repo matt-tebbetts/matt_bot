@@ -3,6 +3,10 @@ import asyncio
 import aiomysql
 import pandas as pd
 import os
+from dotenv import load_dotenv
+
+# load env variables
+load_dotenv()
 
 lock = asyncio.Lock()
 
