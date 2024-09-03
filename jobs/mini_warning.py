@@ -20,31 +20,19 @@ load_dotenv()
 GMAIL_USER = os.getenv("GMAIL_USER")
 GMAIL_PASS = os.getenv("GMAIL_PASS")
 
-# gmail connection
-@asynccontextmanager
-async def smtp_server_connection():
-    
-    # connect to gmail server
-    server = smtplib.SMTP("smtp.gmail.com", 587)
-    try:
-        server.starttls()
-        server.login(GMAIL_USER, GMAIL_PASS)
-        yield server
-    finally:
-        server.quit()
+def send_sms(name, number, carrier, message):
 
-async def send_sms(name, number, carrier, message):
-
-    # determine user's full sms carrier gateway email address
+    # Determine user's full SMS carrier gateway email address
     with open('config/sms_carriers.json', 'r') as file:
         carrier_emails = json.load(file)
     carrier_gateway_template = carrier_emails[carrier]["sms_email"]
-    carrier_gateway = carrier_gateway_template.replace("number", number)
-    recipient_email = f"{number}@{carrier_gateway}"
+    recipient_email = f"{number}@{carrier_gateway_template.replace('number', number)}"
     print(f"Texting reminder to {name} ({recipient_email})...")
 
     try:
-        async with smtp_server_connection() as server:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(GMAIL_USER, GMAIL_PASS)
             server.sendmail(GMAIL_USER, recipient_email, message)
 
         print("Message sent successfully.")
