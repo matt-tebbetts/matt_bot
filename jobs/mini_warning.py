@@ -80,7 +80,7 @@ async def send_mini_warning():
             "it's time for your Mini fix",
             "Mini challenge? Go for it!",
             "Mini done? If not, now's the time!",
-            "let's not skip the Mini today!",
+            "there's still time to do today's Mini!",
             "you can still do the Mini today"
         ]
 
