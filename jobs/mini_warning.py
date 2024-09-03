@@ -20,7 +20,7 @@ load_dotenv()
 GMAIL_USER = os.getenv("GMAIL_USER")
 GMAIL_PASS = os.getenv("GMAIL_PASS")
 
-def send_sms(name, number, carrier, message):
+async def send_sms(name, number, carrier, message):
 
     # Determine user's full SMS carrier gateway email address
     with open('config/sms_carriers.json', 'r') as file:
