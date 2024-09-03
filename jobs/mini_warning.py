@@ -1,4 +1,3 @@
-from contextlib import asynccontextmanager
 import asyncio
 import smtplib
 import json
@@ -33,9 +32,12 @@ async def send_sms(name, number, carrier, message):
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.starttls()
             server.login(GMAIL_USER, GMAIL_PASS)
-            server.sendmail(GMAIL_USER, recipient_email, message)
-
-        print("Message sent successfully.")
+            response = server.sendmail(GMAIL_USER, recipient_email, message)
+            
+            if response == {}:
+                print("Message handed off to SMTP server successfully.")
+            else:
+                print(f"Failed to deliver to some recipients: {response}")
 
     except smtplib.SMTPException as e:
         print(f"SMTP error occurred: {e}")
