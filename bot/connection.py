@@ -8,11 +8,21 @@ client = discord.Client(intents=intents)
 tree = discord.app_commands.CommandTree(client)
 token = os.getenv("MATT_BOT")
 
-# first command
-@tree.command(name="hello", description="Says hello")
-async def hello(interaction: discord.Interaction):
-    print(f"activated the hello command!")
-    await interaction.response.send_message("Hello!")
+async def send_dm(user_id: int, message: str):
+    user = await client.fetch_user(user_id)
+    if user:
+        try:
+            await user.send(message)
+            print(f"Message sent to user {user.name}")
+        except Exception as e:
+            print(f"Failed to send message: {e}")
+
+# Example command to trigger DM sending
+@tree.command(name="senddm", description="Send a direct message to a user")
+async def send_dm_command(interaction: discord.Interaction, 
+                          user_id: int, message: str):
+    await send_dm(user_id, message)
+    await interaction.response.send_message(f"DM sent to user {user_id}")
 
 @client.event
 async def on_ready():

@@ -5,8 +5,6 @@ import json
 
 # Load environment variables from .env file
 load_dotenv()
-
-# Get values from environment variables
 ZOHO_EMAIL = os.getenv('ZOHO_EMAIL')
 ZOHO_ACCOUNT_ID = os.getenv('ZOHO_ACCOUNT_ID')
 ZOHO_REFRESH_TOKEN = os.getenv('ZOHO_REFRESH_TOKEN')
@@ -45,7 +43,6 @@ def refresh_access_token():
         return new_access_token
     else:
         print(f"Failed to refresh access token: {response.status_code}")
-        print(response.text)
         return None
 
 def send_email_via_api(to_address, subject, content):
@@ -66,25 +63,14 @@ def send_email_via_api(to_address, subject, content):
         "toAddress": to_address,
         "subject": subject.strip(),
         "content": content.strip(),
-        "mailFormat": "html"
+        "mailFormat": "plaintext"
     }
 
     # Convert the payload to JSON
     payload_json = json.dumps(payload, ensure_ascii=False)
 
-    # Print the URL, headers, and payload for debugging
-    print("Debug Info:")
-    print(f"URL: {url}")
-    print(f"Headers: {headers}")
-    print(f"Payload: {payload_json}")
-
     try:
         response = requests.post(url, data=payload_json, headers=headers)
-
-        # Print the response status code and text
-        print(f"Response Status Code: {response.status_code}")
-        print(f"Response Text: {response.text}")
-
         if response.status_code != 200:
             print("Failed to send email. The API might be expecting a different pattern.")
             print(f"Error Details: {response.json()}")
@@ -94,5 +80,15 @@ def send_email_via_api(to_address, subject, content):
         print(f"An error occurred: {e}")
 
 # Example usage
-test_email = "matttebbetts@gmail.com"
-send_email_via_api(test_email, "Mini", "There's still time to do the Mini!")
+
+# sms_gateway = "vzwpix.com"
+matt_iphone = "4049046431@vtext.com"
+matt_android = "4043134793@vtext.com"
+matt_android = "4043134793@vzwpix.com"
+matt_gmail = "matttebbetts@gmail.com"
+
+
+emails_to_try = [matt_iphone, matt_android]
+
+for email in emails_to_try:
+    send_email_via_api(email, "Subject", "Simple plain text message.")
