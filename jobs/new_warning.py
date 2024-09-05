@@ -12,7 +12,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from bot.connection import send_dm
 
 async def send_mini_warning():
-    # Find users who have not yet completed the mini
     df = await get_df_from_sql("SELECT * FROM matt.mini_not_completed")
     if df.empty:
         return print("No users to warn right now.")
