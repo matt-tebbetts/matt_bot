@@ -1,12 +1,16 @@
 ├── bot
 │   ├── bot.py
-│   └── connection.py
+│   ├── commands.py
+│   ├── events.py
+│   └── tasks.py
 ├── config
 │   ├── sms_carriers.json
 │   └── zoho
 │       ├── get_account_id.py
 │       └── get_curl.py
 ├── files
+│   ├── queries
+│   │   └── test_query.sql
 │   ├── requirements.txt
 │   └── tree.txt
 ├── functions
@@ -27,6 +31,4 @@
 │   └── warnings
 │       ├── mini_warning.py
 │       └── new_warning.py
-├── queries
-│   └── test_query.sql
 └── tests
