@@ -2,6 +2,14 @@ import random
 from datetime import datetime
 import pytz
 from functions import get_df_from_sql
+import sys
+import os
+
+# Add the project root directory to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# Import the send_dm function
+from bot.connection import send_dm
 
 async def send_mini_warning():
     # Find users who have not yet completed the mini
@@ -14,6 +22,7 @@ async def send_mini_warning():
     users_messaged = []
 
     # Create series of short mini reminder messages
+    """
     mini_reminder_phrases = [
         "it's Mini time. Don't forget.",
         "quick Mini break?",
@@ -27,12 +36,13 @@ async def send_mini_warning():
         "there's still time to do today's Mini!",
         "you can still do the Mini today"
     ]
+    """
 
     # Send each user a DM on Discord
     for index, row in df.iterrows():
-        # Pick random message
-        chosen_phrase = random.choice(mini_reminder_phrases)
+        chosen_phrase = ['this is your reminder to complete the Mini!'] # random.choice(mini_reminder_phrases)
 
+        # get user
         name = row['player_name']
         discord_user_id = row['discord_user_id']  # Assuming you have a Discord user ID stored
 
