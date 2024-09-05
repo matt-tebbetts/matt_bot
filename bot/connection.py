@@ -36,11 +36,21 @@ async def on_ready():
 async def send_warning_loop():
     print("Checking and sending Mini warnings...")
     users_to_warn = await find_users_to_warn(client)
-    print(f"Found {len(users_to_warn)} users to warn: {users_to_warn}")
+    
+    results = []
+
     for user in users_to_warn:
-        print(f"Sending warning to user: {user['discord_user_id']}")
-        await send_dm(user['discord_user_id'], user['message'])
-    print("Finished sending Mini warnings.")
+        try:
+            await send_dm(user['discord_id_nbr'], f'Hi {user["name"]}, this is your reminder to complete the Mini!')
+            results.append({'user': user['name'], 'status': 'Message sent'})
+        except discord.Forbidden:
+            results.append({'user': user['name'], 'status': 'Not in guild'})
+        except Exception as e:
+            results.append({'user': user['name'], 'status': f'Error: {e}'})
+
+    print("Summary of actions taken:")
+    for result in results:
+        print(f"- {result['user']}: {result['status']}")
 
 @send_warning_loop.before_loop
 async def before_send_warning_loop():
@@ -56,11 +66,8 @@ async def on_message(message):
 async def send_dm(user_id: int, message: str):
     user = await client.fetch_user(user_id)
     if user:
-        try:
-            await user.send(message)
-            print(f"Message sent to user {user.name}")
-        except Exception as e:
-            print(f"Failed to send message: {e}")
+        await user.send(message)
+        print(f"Message sent to user {user.name}")
 
 async def main():
     async with client:

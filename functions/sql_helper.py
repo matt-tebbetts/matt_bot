@@ -37,17 +37,19 @@ async def get_db_config():
 
 # get df from sql query
 async def get_df_from_sql(query, params=None):
-    print("Now we're in the get_df_from_sql() function...")
     db_config = await get_db_config()
-    print(f"db_config: {db_config}")
     attempts = 0
     while attempts < 3:
         try:
+            print(f"Connecting to SQL database...")
             conn = await aiomysql.connect(**db_config, loop=asyncio.get_running_loop())
             async with conn.cursor(aiomysql.DictCursor) as cursor:
+                print(f"Executing SQL query: {query}")
                 await cursor.execute(query, params)
                 result = await cursor.fetchall()
+                print(f"Query executed successfully. Result is {len(result)} rows.")
             conn.close()
+            print(f"SQL connection closed.")
 
             # return df
             return pd.DataFrame(result) if result else pd.DataFrame()
