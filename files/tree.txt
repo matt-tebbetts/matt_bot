@@ -1,6 +1,6 @@
 ├── bot
 │   ├── bot.py
-│   ├── connection.py
+│   └── connection.py
 ├── config
 │   ├── sms_carriers.json
 │   └── zoho
@@ -8,25 +8,25 @@
 │       └── get_curl.py
 ├── files
 │   ├── requirements.txt
-│   └── structure.txt
+│   └── tree.txt
 ├── functions
 │   ├── project_path.py
 │   ├── sql_helper.py
-│   ├── tree.py
+│   └── tree.py
 ├── jobs
 │   ├── email
 │   │   ├── send_email.py
 │   │   ├── send_gmail.py
 │   │   └── send_gmail_classic.py
 │   ├── mini_scraper.py
-│   ├── warnings
-│   │   ├── mini_warning.py
-│   │   ├── new_warning.py
+│   ├── systemd
+│   │   ├── email_alert.txt
+│   │   ├── mini_warning.service
+│   │   ├── mini_warning.timer
+│   │   └── notification.service
+│   └── warnings
+│       ├── mini_warning.py
+│       └── new_warning.py
 ├── queries
 │   └── test_query.sql
-├── systemd
-│   ├── email_alert.txt
-│   ├── mini_warning.service
-│   ├── mini_warning.timer
-│   └── notification.service
-├── tests
+└── tests
