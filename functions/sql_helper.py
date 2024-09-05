@@ -37,7 +37,9 @@ async def get_db_config():
 
 # get df from sql query
 async def get_df_from_sql(query, params=None):
+    print("Now we're in the get_df_from_sql() function...")
     db_config = await get_db_config()
+    print(f"db_config: {db_config}")
     attempts = 0
     while attempts < 3:
         try:
