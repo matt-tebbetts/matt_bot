@@ -2,6 +2,7 @@
 │   ├── commands
 │   │   └── leaderboards.py
 │   ├── functions
+│   │   ├── mini_warning.py
 │   │   ├── msg_logger.py
 │   │   └── sql_helper.py
 │   ├── bot.py
@@ -11,23 +12,21 @@
 │   ├── archive
 │   │   ├── get_zoho_acct.py
 │   │   ├── get_zoho_curl.py
-│   │   └── project_path.py
+│   │   ├── project_path.py
+│   │   ├── send_email_different.py
+│   │   ├── send_email_original.py
+│   │   └── send_email_via_zoho.py
 │   ├── queries
 │   │   └── test_query.sql
 │   ├── requirements.txt
 │   ├── sms_carriers.json
 │   └── tree.txt
 ├── jobs
-│   ├── email
-│   │   ├── send_email.py
-│   │   ├── send_gmail.py
-│   │   └── send_gmail_classic.py
 │   ├── systemd
 │   │   ├── email_alert.txt
 │   │   ├── mini_warning.service
 │   │   ├── mini_warning.timer
 │   │   └── notification.service
 │   ├── mini_scraper.py
-│   ├── mini_warning.py
 │   └── tree.py
 ├── tests

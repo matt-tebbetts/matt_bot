@@ -2,7 +2,7 @@ import os
 import discord
 from discord import app_commands
 import asyncio
-from bot.events import setup_events
+from bot.connections.events import setup_events
 
 # setup
 intents = discord.Intents.all()

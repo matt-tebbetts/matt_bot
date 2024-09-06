@@ -1,7 +1,7 @@
 import os
 import discord
 import importlib
-from bot.tasks import setup_tasks
+from bot.connections.tasks import setup_tasks
 
 # load cogs commands
 async def load_cogs(client, tree):
@@ -44,11 +44,8 @@ async def setup_events(client, tree):
         print("events.py: running tree.sync")
         try:
             await tree.sync()
-            print("events.py: successfully ran tree.sync")
-            commands = await tree.fetch_commands()
-            print("events.py: the following commands are available:")
-            for command in commands:
-                print(f"-- {command.name}: {command.description}")
+            commands = ", ".join([cmd.name for cmd in await tree.fetch_commands()])
+            print("events.py: synced these commands:", commands)
         except Exception as e:
             print(f"events.py: error syncing commands: {e}")
 
