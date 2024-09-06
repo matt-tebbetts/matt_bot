@@ -1,10 +1,10 @@
 import discord
 from discord.ext import tasks
-from jobs.mini_warning import find_users_to_warn
+from bot.functions.mini_warning import find_users_to_warn
 
 @tasks.loop(hours=1)
 async def send_warning_loop(client: discord.Client):
-    print("Checking and sending Mini warnings...")
+    print("tasks.py: running send_warning_loop")
     users_to_warn = await find_users_to_warn()  # Fetch users who need a warning
     msg = "this is your reminder to complete the Mini!"
     results = []
@@ -16,10 +16,10 @@ async def send_warning_loop(client: discord.Client):
         except:
             results.append({'user': user['name'], 'status': 'Message failed'})
 
-    # Print a summary of actions taken
-    print("Summary of actions taken:")
-    for result in results:
-        print(f"- {result['user']}: {result['status']}")
+    # print
+    print(f"tasks.py: Mini warning summary: {results}")
 
 def setup_tasks(client: discord.Client):
+    print("tasks.py: running setup_tasks")
     send_warning_loop.start(client)
+    print("tasks.py: successfully ran setup_tasks")

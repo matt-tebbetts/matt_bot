@@ -2,8 +2,7 @@ import os
 import discord
 from discord import app_commands
 import asyncio
-from bot.commands import setup_commands
-from bot.events import setup_events
+from bot.connections.events import setup_events
 
 # setup
 intents = discord.Intents.all()
@@ -12,9 +11,14 @@ client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 token = os.getenv("MATT_BOT")
 
-# config
-setup_commands(tree)
-setup_events(client, tree)
+# main
+async def main():
 
-# connect
-client.run(token)
+    # config
+    await setup_events(client, tree)
+
+    # connect
+    await client.start(token)
+
+# run the bot
+asyncio.run(main())
