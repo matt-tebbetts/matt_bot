@@ -1,7 +1,7 @@
 import discord
 from functions.sql_helper import get_df_from_sql
 
-async def find_users_to_warn(client: discord.Client):
+async def find_users_to_warn():
     df = await get_df_from_sql("SELECT * FROM matt.mini_not_completed")
     if df.empty:
         return []
