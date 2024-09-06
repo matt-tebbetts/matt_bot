@@ -11,12 +11,14 @@ client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 token = os.getenv("MATT_BOT")
 
+# main
 async def main():
+
     # config
     await setup_events(client, tree)
 
     # connect
     await client.start(token)
 
-# Run the bot
+# run the bot
 asyncio.run(main())
