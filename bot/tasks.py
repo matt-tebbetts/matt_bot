@@ -16,10 +16,10 @@ async def send_warning_loop(client: discord.Client):
         except:
             results.append({'user': user['name'], 'status': 'Message failed'})
 
-    # Print a summary of actions taken
-    print("Summary of actions taken:")
-    for result in results:
-        print(f"- {result['user']}: {result['status']}")
+    # print
+    print(f"Mini warning summary: {results}")
 
 def setup_tasks(client: discord.Client):
+    print("setup_tasks activated")
     send_warning_loop.start(client)
+    print("send_warning_loop started")

@@ -2,9 +2,13 @@ from discord import app_commands, Interaction
 from discord.ext import commands
 from functions.sql_helper import get_df_from_sql
 
-class LeaderboardCog(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
+class Leaderboards(commands.Cog):
+    def __init__(self, client):
+        self.client = client
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print("Leaderboards cog loaded")
 
     @app_commands.command(name="mini", description="Show Mini leaderboard")
     async def mini(self, interaction: Interaction):
@@ -28,5 +32,10 @@ class LeaderboardCog(commands.Cog):
             leaderboard = df.to_string(index=False)
             await interaction.followup.send(f"```\n{leaderboard}\n```")
 
-async def setup(bot):
-    await bot.add_cog(LeaderboardCog(bot))
+async def setup(client, tree):
+    print("Setting up Leaderboards commands")
+    leaderboards = Leaderboards(client)
+    tree.add_command(leaderboards.mini)
+    tree.add_command(leaderboards.octordle)
+    tree.add_command(leaderboards.wordle)
+    print("Leaderboards commands added to tree")
