@@ -10,3 +10,6 @@
 
 # testing edit
 test/*
+
+# any guild-specific files
+files/guilds/*
