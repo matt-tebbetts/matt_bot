@@ -2,6 +2,7 @@ import os
 import discord
 import importlib
 from bot.connections.tasks import setup_tasks
+from bot.functions import save_message_detail
 
 # load cogs commands
 async def load_cogs(client, tree):
@@ -45,7 +46,7 @@ async def setup_events(client, tree):
         try:
             await tree.sync()
             commands = ", ".join([cmd.name for cmd in await tree.fetch_commands()])
-            print("events.py: synced these commands:", commands)
+            print(f"events.py: synced these commands:", commands)
         except Exception as e:
             print(f"events.py: error syncing commands: {e}")
 
@@ -64,3 +65,9 @@ async def setup_events(client, tree):
         if message.author == client.user:
             return
         print(f"events.py: message from {message.author}: {message.content}")
+
+        # Call save_message_detail
+        try:
+            save_message_detail(message)
+        except Exception as e:
+            print(f"events.py: error saving message detail: {e}")

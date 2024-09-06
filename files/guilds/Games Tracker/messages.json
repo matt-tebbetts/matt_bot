@@ -1,0 +1,68 @@
+{
+    "1281715878987169903": {
+        "id": 1281715878987169903,
+        "content": "Test 1",
+        "create_ts": "2024-09-06 16:41:18",
+        "edit_ts": null,
+        "length": 6,
+        "author_id": 340940380927295491,
+        "author_nm": "svendiamond",
+        "author_nick": "Matt",
+        "channel_id": 1123090225393041568,
+        "channel_nm": "bot-test",
+        "has_attachments": false,
+        "has_links": false,
+        "has_gifs": false,
+        "has_mentions": false,
+        "list_of_attachment_types": [],
+        "list_of_links": [],
+        "list_of_gifs": [],
+        "list_of_mentioned": []
+    },
+    "1281715965779771514": {
+        "id": 1281715965779771514,
+        "content": "https://tenor.com/view/no-gif-6533142189269812111",
+        "create_ts": "2024-09-06 16:41:39",
+        "edit_ts": null,
+        "length": 49,
+        "author_id": 340940380927295491,
+        "author_nm": "svendiamond",
+        "author_nick": "Matt",
+        "channel_id": 1123090225393041568,
+        "channel_nm": "bot-test",
+        "has_attachments": false,
+        "has_links": true,
+        "has_gifs": false,
+        "has_mentions": false,
+        "list_of_attachment_types": [],
+        "list_of_links": [
+            "https://tenor.com/view/no-gif-6533142189269812111"
+        ],
+        "list_of_gifs": [],
+        "list_of_mentioned": []
+    },
+    "1281716127717785710": {
+        "id": 1281716127717785710,
+        "content": "",
+        "create_ts": "2024-09-06 16:42:17",
+        "edit_ts": null,
+        "length": 0,
+        "author_id": 340940380927295491,
+        "author_nm": "svendiamond",
+        "author_nick": "Matt",
+        "channel_id": 1123090225393041568,
+        "channel_nm": "bot-test",
+        "has_attachments": true,
+        "has_links": true,
+        "has_gifs": false,
+        "has_mentions": false,
+        "list_of_attachment_types": [
+            "image/png"
+        ],
+        "list_of_links": [
+            "https://cdn.discordapp.com/attachments/1123090225393041568/1281716127348817920/7ln03l8nulmd1.png?ex=66dcbaa9&is=66db6929&hm=0f64202d11b4e76b36d548b00bb040d79a3521d7f604f2f035d6725a608113e9&"
+        ],
+        "list_of_gifs": [],
+        "list_of_mentioned": []
+    }
+}

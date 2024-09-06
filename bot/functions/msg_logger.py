@@ -3,7 +3,6 @@ import json
 import os
 import pytz
 
-
 # save message to file
 def save_message_detail(message):
     
@@ -13,8 +12,7 @@ def save_message_detail(message):
     # Check for GIFs or other attachments
     attachments = [attachment.url for attachment in message.attachments]
     urls.extend(attachments)
-    contains_gifs = any(url.endswith('.gif') for url in attachments)
-    
+
     msg_crt = message.created_at.replace(tzinfo=pytz.utc).astimezone(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d %H:%M:%S")
     msg_edt = None
     if message.edited_at is not None:
@@ -34,11 +32,9 @@ def save_message_detail(message):
         "channel_nm": message.channel.name,
         "has_attachments": bool(message.attachments),
         "has_links": bool(urls),
-        "has_gifs": bool(contains_gifs),
         "has_mentions": bool(message.mentions),
         "list_of_attachment_types": [attachment.content_type for attachment in message.attachments],
         "list_of_links": urls,
-        "list_of_gifs": [url for url in urls if url.endswith('.gif')],
         "list_of_mentioned": [str(user.name) for user in message.mentions]
     }
 
@@ -67,9 +63,5 @@ def save_message_detail(message):
     # Write updated messages back to the file
     with open(file_path, 'w') as file:
         json.dump(messages, file, indent=4)
-
-    ## write contents to sql
-    # df = pd.DataFrame(data=[message_data])
-    # await send_df_to_sql(df, 'guild_messages', if_exists='append')
 
     return
