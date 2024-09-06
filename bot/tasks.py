@@ -22,4 +22,4 @@ async def send_warning_loop(client: discord.Client):
         print(f"- {result['user']}: {result['status']}")
 
 def setup_tasks(client: discord.Client):
-    send_warning_loop.start()
+    send_warning_loop.start(client)

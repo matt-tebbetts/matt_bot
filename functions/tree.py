@@ -3,7 +3,7 @@ from pathlib import Path
 def print_tree(dir_path, indent="", file=None):
     items = sorted(dir_path.iterdir(), key=lambda x: x.name.lower())  # Sort items alphabetically (case-insensitive)
     for index, item in enumerate(items):
-        if item.name.startswith('.') or item.name.startswith('_'):
+        if item.name.startswith('.'): # or item.name.startswith('_'):
             continue
         connector = "├── " if index != len(items) - 1 else "└── "
         file.write(f"{indent}{connector}{item.name}\n")

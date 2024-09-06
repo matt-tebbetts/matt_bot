@@ -1,4 +1,5 @@
 ├── bot
+│   ├── __init__.py
 │   ├── bot.py
 │   ├── commands.py
 │   ├── events.py
@@ -16,6 +17,7 @@
 │   ├── requirements.txt
 │   └── tree.txt
 ├── functions
+│   ├── __init__.py
 │   ├── sql_helper.py
 │   └── tree.py
 ├── jobs
@@ -24,12 +26,10 @@
 │   │   ├── send_gmail.py
 │   │   └── send_gmail_classic.py
 │   ├── mini_scraper.py
-│   ├── systemd
-│   │   ├── email_alert.txt
-│   │   ├── mini_warning.service
-│   │   ├── mini_warning.timer
-│   │   └── notification.service
-│   └── warnings
-│       ├── mini_warning.py
-│       └── new_warning.py
+│   ├── mini_warning.py
+│   └── systemd
+│       ├── email_alert.txt
+│       ├── mini_warning.service
+│       ├── mini_warning.timer
+│       └── notification.service
 └── tests

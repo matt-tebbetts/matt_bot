@@ -1,24 +1,33 @@
 import discord
-
-# Define the on_ready event
-async def on_ready(client: discord.Client):
-    for guild in client.guilds:
-        print(f"Connected to guild: {guild.name}")
-
-    # sync commands
-    await client.tree.sync()
-    print("Synced commands:")
-    commands = await client.tree.fetch_commands()
-    for command in commands:
-        print(f"-- {command.name}: {command.description}")
-
-# Define the on_message event
-async def on_message(client: discord.Client, message: discord.Message):
-    if message.author == client.user:
-        return
-    print(f"Message from {message.author}: {message.content}")
+from bot.tasks import setup_tasks
 
 # Register event listeners
-def setup_events(client: discord.Client):
-    client.event(on_ready)
-    client.event(on_message)
+def setup_events(client, tree):
+
+    # on ready
+    @client.event
+    async def on_ready():
+        print(f"Logged in as {client.user}")
+        for guild in client.guilds:
+            print(f"Connected to guild: {guild.name}")
+
+        # sync commands
+        try:
+            await tree.sync()
+            print("Synced commands:")
+            commands = await tree.fetch_commands()
+            for command in commands:
+                print(f"-- {command.name}: {command.description}")
+        except Exception as e:
+            print(f"Error syncing commands: {e}")
+
+        # start background tasks
+        setup_tasks(client)
+
+    # on message
+    @client.event
+    async def on_message(message):
+        print("on_message activated")
+        if message.author == client.user:
+            return
+        print(f"Message from {message.author}: {message.content}")
