@@ -1,6 +1,6 @@
 from discord import app_commands, Interaction
 from discord.ext import commands
-from functions.sql_helper import get_df_from_sql
+from bot.functions import get_df_from_sql
 from datetime import datetime
 
 class Leaderboards(commands.Cog):

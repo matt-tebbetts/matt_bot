@@ -1,6 +1,6 @@
 import discord
 from discord.ext import tasks
-from jobs.mini_warning import find_users_to_warn
+from bot.functions.mini_warning import find_users_to_warn
 
 @tasks.loop(hours=1)
 async def send_warning_loop(client: discord.Client):
