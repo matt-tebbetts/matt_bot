@@ -41,24 +41,32 @@ async def get_df_from_sql(query, params=None):
     attempts = 0
     while attempts < 3:
         try:
-            print(f"Connecting to SQL database...")
+            print(f"sql_helper.py: connecting to SQL database...")
             conn = await aiomysql.connect(**db_config, loop=asyncio.get_running_loop())
             async with conn.cursor(aiomysql.DictCursor) as cursor:
-                print(f"Executing SQL query: {query}")
-                await cursor.execute(query, params)
-                result = await cursor.fetchall()
-                print(f"Query executed successfully. Result is {len(result)} rows.")
+                try:
+                    print(f"sql_helper.py: executing SQL query: {query}")
+                    await cursor.execute(query, params)
+                except Exception as execute_error:
+                    print(f"sql_helper.py: error executing query: {execute_error}")
+                    raise execute_error
+
+                try:
+                    result = await cursor.fetchall()
+                    print(f"sql_helper.py: returned {len(result)} rows successfully.")
+                except Exception as fetch_error:
+                    print(f"sql_helper.py: error fetching results: {fetch_error}")
+                    raise fetch_error
             conn.close()
-            print(f"SQL connection closed.")
 
             # return df
             return pd.DataFrame(result) if result else pd.DataFrame()
         
         except (asyncio.TimeoutError, aiomysql.OperationalError) as e:
-            print(f"SQL Connection/Timeout Error: {e}")
+            print(f"sql_helper.py: SQL Connection/Timeout Error: {e}")
             attempts += 1
             if attempts >= 3:
-                print("Max attempts reached")
+                print("sql_helper.py: max attempts reached")
                 raise e
             await asyncio.sleep(1)
         except Exception as e:
