@@ -68,12 +68,3 @@ def save_message_detail(message):
         json.dump(messages, file, indent=4)
 
     return
-
-def msg_is_game_score(message):
-
-    # Check if the message text starts with any of the game prefixes
-    game_prefixes = get_game_prefixes()
-    for prefix in game_prefixes:
-        if msg_text.lower().startswith(prefix.lower()):
-            return True
-    return False

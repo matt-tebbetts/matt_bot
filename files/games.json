@@ -1,69 +1,82 @@
 {
-    "games": {
-        "mini": {
-            "prefix": "Mini",
-            "emoji": "",
-            "scoring_type": "timed"
-        },
-        "wordle": {
-            "prefix": "Wordle",
-            "emoji": "📚",
-            "scoring_type": "guesses"
-        },
-        "worldle": {
-            "prefix": "#Worldle",
-            "emoji": "🌎",
-            "scoring_type": "guesses"
-        },
-        "crosswordle": {
-            "prefix": "Daily Crosswordle",
-            "emoji": "🧩",
-            "scoring_type": "timed"
-        },
-        "boxoffice": {
-            "prefix": "boxofficega.me",
-            "emoji": "🎥",
-            "scoring_type": "points"
-        },
-        "factle": {
-            "prefix": "Factle.app",
-            "emoji": "📈",
-            "scoring_type": "guesses"
-        },
-        "travle": {
-            "prefix": "#travle",
-            "emoji": "🌍",
-            "scoring_type": "guesses"
-        },
-        "connections": {
-            "prefix": "Connections",
-            "emoji": "🔠",
-            "scoring_type": "guesses"
-        },
-        "timeguessr": {
-            "prefix": "TimeGuessr",
-            "emoji": "⏱️",
-            "scoring_type": "points"
-        },
-        "actorle": {
-            "prefix": "Actorle",
-            "emoji": "🎭",
-            "scoring_type": "guesses"
-        },
-        "octordle": {
-            "prefix": "Daily Octordle",
-            "emoji": "8️⃣",
-            "scoring_type": "guesses"
-        },
-        "octordle_sequence": {
-            "prefix": "Daily Sequence Octordle",
-            "emoji": "8️⃣",
-            "scoring_type": "guesses"
-        },
-        "octordle_rescue": {
-            "prefix": "Daily Rescue Octordle",
-            "emoji": "8️⃣",
-            "scoring_type": "guesses"
+    "mini": {
+        "game_name": "Mini",
+        "scoring_type": "timed"
+    },
+    "wordle": {
+        "game_name": "Wordle",
+        "prefix": "Wordle",
+        "emoji": "📚",
+        "scoring_type": "guesses"
+    },
+    "worldle": {
+        "game_name": "Worldle",
+        "prefix": "#Worldle",
+        "emoji": "🌎",
+        "scoring_type": "guesses"
+    },
+    "crosswordle": {
+        "game_name": "Crosswordle",
+        "prefix": "Daily Crosswordle",
+        "emoji": "🧩",
+        "scoring_type": "timed"
+    },
+    "boxoffice": {
+        "game_name": "BoxOffice",
+        "prefix": "boxofficega.me",
+        "emoji": "🎥",
+        "scoring_type": "points"
+    },
+    "factle": {
+        "game_name": "Factle",
+        "prefix": "Factle.app",
+        "emoji": "📈",
+        "scoring_type": "guesses"
+    },
+    "travle": {
+        "game_name": "Travle",
+        "prefix": "#travle",
+        "emoji": "🌍",
+        "scoring_type": "guesses"
+    },
+    "connections": {
+        "game_name": "Connections",
+        "prefix": "Connections",
+        "emoji": "🔠",
+        "scoring_type": "guesses",
+        "bonuses": {
+            "rainbow_bonus": "🌈",
+            "purple_bonus": "🟪"
         }
+    },
+    "timeguessr": {
+        "game_name": "TimeGuessr",
+        "prefix": "TimeGuessr",
+        "emoji": "⏱️",
+        "scoring_type": "points"
+    },
+    "actorle": {
+        "game_name": "Actorle",
+        "prefix": "Actorle",
+        "emoji": "🎭",
+        "scoring_type": "guesses"
+    },
+    "octordle": {
+        "game_name": "Octordle",
+        "prefix": "Daily Octordle",
+        "emoji": "8️⃣",
+        "scoring_type": "guesses"
+    },
+    "octordle_sequence": {
+        "game_name": "Octordle Sequence",
+        "prefix": "Daily Sequence Octordle",
+        "emoji": "8️⃣",
+        "scoring_type": "guesses"
+    },
+    "octordle_rescue": {
+        "game_name": "Octordle Rescue",
+        "prefix": "Daily Rescue Octordle",
+        "emoji": "8️⃣",
+        "scoring_type": "guesses"
     }
 }

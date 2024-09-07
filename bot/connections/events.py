@@ -67,9 +67,8 @@ async def setup_events(client, tree):
         except Exception as e:
             print(f"events.py: error saving message detail: {e}")
 
-        # save game score
-        if is_game_score(message.content):
-            try:
-                await process_game_score(message)
-            except Exception as e:
-                print(f"events.py: error processing game score: {e}")
+        # save game scores
+        try:
+            await process_game_score(message)
+        except Exception as e:
+            print(f"events.py: error processing game score: {e}")
