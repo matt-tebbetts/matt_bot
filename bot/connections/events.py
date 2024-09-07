@@ -3,7 +3,7 @@ import discord
 import importlib
 from bot.connections.tasks import setup_tasks
 from bot.functions import save_message_detail
-from bot.functions import msg_is_game_score
+from bot.functions import process_game_score
 
 # load cogs commands
 async def load_cogs(client, tree):
@@ -70,5 +70,7 @@ async def setup_events(client, tree):
         # save game scores
         try:
             await process_game_score(message)
+
+            
         except Exception as e:
             print(f"events.py: error processing game score: {e}")
