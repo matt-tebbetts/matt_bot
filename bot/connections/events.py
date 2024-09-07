@@ -3,6 +3,7 @@ import discord
 import importlib
 from bot.connections.tasks import setup_tasks
 from bot.functions import save_message_detail
+from bot.functions import msg_is_game_score
 
 # load cogs commands
 async def load_cogs(client, tree):
@@ -26,23 +27,19 @@ async def setup_events(client, tree):
     # on ready
     @client.event
     async def on_ready():
-        print("events.py: on_ready activated")
-
-            # print confirmation
-        print(f"events.py: logged in as {client.user}")
+        
+        # print confirmation
         for guild in client.guilds:
-            print(f"events.py: connected to guild: {guild.name}")
+            print(f"events.py: {client.user} connected to {guild.name}")
 
         # load cogs
         try:
-            print("events.py: running load_cogs")
             await load_cogs(client, tree)
-            print("events.py: successfully ran load_cogs")
+            print("events.py: loaded commands via load_cogs")
         except Exception as e:
             print(f"events.py: error in load_cogs: {e}")
 
         # sync commands
-        print("events.py: running tree.sync")
         try:
             await tree.sync()
             commands = ", ".join([cmd.name for cmd in await tree.fetch_commands()])
@@ -51,7 +48,6 @@ async def setup_events(client, tree):
             print(f"events.py: error syncing commands: {e}")
 
         # start background tasks
-        print("events.py: running setup_tasks")
         try:
             setup_tasks(client)
             print("events.py: successfully ran setup_tasks")
@@ -61,13 +57,19 @@ async def setup_events(client, tree):
     # on message
     @client.event
     async def on_message(message):
-        print("events.py: on_message activated")
         if message.author == client.user:
             return
-        print(f"events.py: message from {message.author}: {message.content}")
+        print(f"events.py: message on channel {message.channel} from {message.author}")
 
-        # Call save_message_detail
+        # save message
         try:
             save_message_detail(message)
         except Exception as e:
             print(f"events.py: error saving message detail: {e}")
+
+        # save game score
+        if is_game_score(message.content):
+            try:
+                await process_game_score(message)
+            except Exception as e:
+                print(f"events.py: error processing game score: {e}")
