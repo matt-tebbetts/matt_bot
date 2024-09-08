@@ -4,12 +4,11 @@ from bot.functions import get_df_from_sql
 from datetime import datetime
 
 class Leaderboards(commands.Cog):
-    print("leaderboards.py: running __init__")
     def __init__(self, client):
         self.client = client
 
     async def on_ready(self):
-        print("leaderboards.py: successfully ran on_ready")
+        print("leaderboards.py: THIS IS THE on_ready BUT NEVER PRINTS")
 
     @app_commands.command(name="mini", description="Show Mini leaderboard")
     async def mini(self, interaction: Interaction):
@@ -48,9 +47,7 @@ class Leaderboards(commands.Cog):
                 print(f"leaderboards.py: Error sending message: {send_error}")
 
 async def setup(client, tree):
-    print("leaderboards.py: Setting up Leaderboards commands")
     leaderboards = Leaderboards(client)
     tree.add_command(leaderboards.mini)
     tree.add_command(leaderboards.octordle)
     tree.add_command(leaderboards.wordle)
-    print("leaderboards.py: Leaderboards commands added to tree")

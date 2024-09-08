@@ -2,10 +2,13 @@ import re
 import json
 import os
 import pytz
-from bot.functions import get_game_prefixes
+import discord
 
 # save message to file
 def save_message_detail(message):
+    
+    if not isinstance(message, discord.Message):
+        raise TypeError(f"Expected discord.Message object, got {type(message)}")
     
     # Find URLs
     urls = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', message.content)

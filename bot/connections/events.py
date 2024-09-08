@@ -7,22 +7,18 @@ from bot.functions import process_game_score
 
 # load cogs commands
 async def load_cogs(client, tree):
-    print("events.py: loading cogs...")
     cog_directory = './bot/commands'
     cog_files = [f for f in os.listdir(cog_directory) if f.endswith('.py') and f != '__init__.py']
     
     for filename in cog_files:
         module_name = f'bot.commands.{filename[:-3]}'
-        print(f"events.py: importing module: {module_name}")
         module = importlib.import_module(module_name)
         if hasattr(module, 'setup'):
-            print(f"events.py: setting up module: {module_name}")
             await module.setup(client, tree)
-        print(f"events.py: loaded extension: {module_name}")
+        print(f"events.py: loaded {module_name}")
 
 # Register event listeners
 async def setup_events(client, tree):
-    print("events.py: setup_events activated")
 
     # on ready
     @client.event
@@ -35,7 +31,6 @@ async def setup_events(client, tree):
         # load cogs
         try:
             await load_cogs(client, tree)
-            print("events.py: loaded commands via load_cogs")
         except Exception as e:
             print(f"events.py: error in load_cogs: {e}")
 
@@ -50,9 +45,9 @@ async def setup_events(client, tree):
         # start background tasks
         try:
             setup_tasks(client)
-            print("events.py: successfully ran setup_tasks")
+            print("events.py: started tasks")
         except Exception as e:
-            print(f"events.py: error starting background tasks: {e}")
+            print(f"events.py: error starting tasks: {e}")
 
     # on message
     @client.event
@@ -69,8 +64,15 @@ async def setup_events(client, tree):
 
         # save game scores
         try:
-            await process_game_score(message)
-
-            
+            result = process_game_score(message) 
+            if result:
+                # message the user, confirming the result
+                msg = f"""
+                    Nice job, {message.author.mention}!
+                    Your score has been saved for {result['game_name']}.
+                    Here are the details:
+                    {result}
+                """
+                await message.channel.send(msg)
         except Exception as e:
             print(f"events.py: error processing game score: {e}")

@@ -6,7 +6,7 @@ from datetime import datetime
 import pytz
 from bot.functions import send_df_to_sql
 
-async def process_game_score(message):
+def process_game_score(message):
     
     # load games.json
     games_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'files', 'games.json'))
@@ -15,21 +15,26 @@ async def process_game_score(message):
 
     # if it's a game score, parse it and add to database
     for game_name, game_info in games_data.items():
-        if "prefix" in game_info and message.startswith(game_info["prefix"]):
-            game_name = game_info["name"]
+        if "prefix" in game_info and message.content.startswith(game_info["prefix"]):
+            game_name = game_info["game_name"].lower()
             print(f"save_scores.py: this is a game score for: {game_name}")
             
             # send for processing
-            result = get_score_info(message, game_name, game_info)
+            score_info = get_score_info(message.content, game_name, game_info)
+            basic_info = {
+                'added_ts': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                'game_date': message.created_at.astimezone(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d"),
+                'user_id': message.author.id,
+                'user_name': message.author.name,
+                'game_name': game_name,
+            }
 
-            # message the user, confirming the result
-            msg = f"""
-                Thanks {message.author.mention}!
-                Your score has been saved for {game_name}.
-                Here are the details:
-                {result}
-            """
-            await message.channel.send(msg)
+            # combine
+            result = {**basic_info, **score_info}
+            return result
+
+    # else it's not a game score
+    return None
 
 def get_score_info(message, game_name, game_info):
 
@@ -42,7 +47,7 @@ def get_score_info(message, game_name, game_info):
         score_info = process_boxoffice(message)
     elif game_name == 'travle':
         score_info = process_travle(message)
-    elif game_name == 'octordle' or game_name == 'octordle_sequence' or game_name == 'octordle_rescue':
+    elif 'octordle' in game_name:
         score_info = process_octordle(message)
     else:
         if game_info["scoring_type"] == "guesses":
@@ -58,24 +63,9 @@ def get_score_info(message, game_name, game_info):
             'score': score,
             'game_detail': None
         }
-    
-        # get basic info
-    
-    # combine into final_info
-    result = {
-        'added_ts': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        'game_date': message.created_at.astimezone(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d"),
-        'user_id': message.author.id,
-        'user_name': message.author.name,
-        'game_name': game_name,
-        'game_info': game_info,
-        'score': score_info['score'],
-        'game_detail': score_info['game_detail'],
-        'bonuses': score_info['bonuses']
-    }
 
-    print(f"save_scores.py: result is {result}")
-    return result  
+    print(f"save_scores.py: result is {score_info}")
+    return score_info  
 
 def process_connections(message):
     
@@ -131,19 +121,11 @@ def process_boxoffice(message):
     game_detail = message.strip().split("\n")[1] # movie date
 
     # calculate bonuses
-    guessed_1 = message.count("✅") == 1
-    guessed_2 = message.count("✅") == 2
-    guessed_3 = message.count("✅") == 3
-    guessed_4 = message.count("✅") == 4
-    guessed_5 = message.count("✅") == 5
-    bonuses = {
-        'guessed_1': guessed_1,
-        'guessed_2': guessed_2,
-        'guessed_3': guessed_3,
-        'guessed_4': guessed_4,
-        'guessed_5': guessed_5,
-        'guessed_all': guessed_5
-    }
+    movies_guessed = message.count("✅") == 1
+    print(f"save_scores.py: movies_guessed: {movies_guessed}")
+    bonuses = {}
+    if movies_guessed > 0:
+        bonuses[f'guessed_{movies_guessed}'] = True
     score_info = {
         'score': score,
         'bonuses': bonuses,
@@ -177,9 +159,11 @@ def process_octordle(message):
         if score == 9:
             bonuses[f"bonus_9"] = True
     else:
-        for i in range(1, 9):
+        # Find the highest number of words guessed
+        for i in range(8, 0, -1):  # Check from 8 down to 1
             if str(i) in message or f"{i}️" in message:
                 bonuses[f"guessed_{i}"] = True
+                break  # Exit the loop after finding the highest number
         if score <= 52:
             bonuses["under_52"] = True
 

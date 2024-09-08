@@ -28,14 +28,13 @@
         "game_name": "BoxOffice",
         "prefix": "boxofficega.me",
         "scoring_type": "points",
-        "emoji": "🎥",
+        "emoji": "🎬",
         "bonus_emojis": {
             "guessed_1": "1️⃣",
             "guessed_2": "2️⃣",
             "guessed_3": "3️⃣",
             "guessed_4": "4️⃣",
-            "guessed_5": "5️⃣",
-            "guessed_all": "🔥"
+            "guessed_5": "🔥"
         }
     },
     "factle": {
