@@ -2,9 +2,13 @@ import re
 import json
 import os
 import pytz
+import discord
 
 # save message to file
 def save_message_detail(message):
+    
+    if not isinstance(message, discord.Message):
+        raise TypeError(f"Expected discord.Message object, got {type(message)}")
     
     # Find URLs
     urls = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', message.content)
@@ -13,6 +17,7 @@ def save_message_detail(message):
     attachments = [attachment.url for attachment in message.attachments]
     urls.extend(attachments)
 
+    # get message timestamps
     msg_crt = message.created_at.replace(tzinfo=pytz.utc).astimezone(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d %H:%M:%S")
     msg_edt = None
     if message.edited_at is not None:
@@ -38,10 +43,10 @@ def save_message_detail(message):
         "list_of_mentioned": [str(user.name) for user in message.mentions]
     }
 
-    # set directory to save messages
+    # set file path
     file_path = f"files/guilds/{message.guild.name}/messages.json"
 
-    # Read existing messages (if any)
+    # read existing messages (if any)
     if os.path.exists(file_path):
         with open(file_path, 'r') as file:
             content = file.read()
@@ -58,9 +63,10 @@ def save_message_detail(message):
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         messages = {}
 
+    # add new message to existing messages
     messages[message.id] = message_data  # This will overwrite if the ID already exists
 
-    # Write updated messages back to the file
+    # write updated messages back to the file
     with open(file_path, 'w') as file:
         json.dump(messages, file, indent=4)
 
