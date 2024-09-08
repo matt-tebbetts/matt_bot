@@ -121,7 +121,7 @@ def process_boxoffice(message):
     game_detail = message.strip().split("\n")[1] # movie date
 
     # calculate bonuses
-    movies_guessed = message.count("✅") == 1
+    movies_guessed = message.count("✅")
     print(f"save_scores.py: movies_guessed: {movies_guessed}")
     bonuses = {}
     if movies_guessed > 0:
