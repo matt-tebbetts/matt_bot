@@ -1,22 +1,25 @@
 {
     "mini": {
-        "game_name": "Mini",
+        "game_name": "mini",
         "scoring_type": "timed"
     },
     "wordle": {
-        "game_name": "Wordle",
+        "game_name": "wordle",
         "prefix": "Wordle",
         "scoring_type": "guesses",
         "emoji": "📚"
     },
     "worldle": {
-        "game_name": "Worldle",
+        "game_name": "worldle",
         "prefix": "#Worldle",
         "scoring_type": "guesses",
-        "emoji": "🌎"
+        "emoji": "🌎",
+        "bonus_emojis": {
+            "first_guess": "🔥"
+        }
     },
     "crosswordle": {
-        "game_name": "Crosswordle",
+        "game_name": "crosswordle",
         "prefix": "Daily Crosswordle",
         "scoring_type": "timed",
         "emoji": "🧩",
@@ -25,7 +28,7 @@
         }
     },
     "boxoffice": {
-        "game_name": "BoxOffice",
+        "game_name": "boxoffice",
         "prefix": "boxofficega.me",
         "scoring_type": "points",
         "emoji": "🎬",
@@ -38,13 +41,13 @@
         }
     },
     "factle": {
-        "game_name": "Factle",
+        "game_name": "factle",
         "prefix": "Factle.app",
         "scoring_type": "guesses",
         "emoji": "📈"
     },
     "travle": {
-        "game_name": "Travle",
+        "game_name": "travle",
         "prefix": "#travle",
         "scoring_type": "guesses",
         "emoji": "🌍",
@@ -54,17 +57,17 @@
         }
     },
     "connections": {
-        "game_name": "Connections",
+        "game_name": "connections",
         "prefix": "Connections",
         "scoring_type": "guesses",
         "emoji": "🔠",
         "bonus_emojis": {
-            "rainbow": "🌈",
-            "purple": "🟪"
+            "rainbow_first": "🌈",
+            "purple_second": "🟪"
         }
     },
     "timeguessr": {
-        "game_name": "TimeGuessr",
+        "game_name": "timeguessr",
         "prefix": "TimeGuessr",
         "scoring_type": "points",
         "emoji": "⏱️",
@@ -73,7 +76,7 @@
         }
     },
     "actorle": {
-        "game_name": "Actorle",
+        "game_name": "actorle",
         "prefix": "Actorle",
         "scoring_type": "guesses",
         "emoji": "🎭",
@@ -82,7 +85,7 @@
         }
     },
     "octordle": {
-        "game_name": "Octordle",
+        "game_name": "octordle",
         "prefix": "Daily Octordle",
         "scoring_type": "guesses",
         "emoji": "🐙",
@@ -99,7 +102,7 @@
         }
     },
     "octordle_sequence": {
-        "game_name": "Octordle Sequence",
+        "game_name": "octordle_sequence",
         "prefix": "Daily Sequence Octordle",
         "scoring_type": "guesses",
         "emoji": "🔢",
@@ -116,7 +119,7 @@
         }
     },
     "octordle_rescue": {
-        "game_name": "Octordle Rescue",
+        "game_name": "octordle_rescue",
         "prefix": "Daily Rescue Octordle",
         "scoring_type": "guesses",
         "emoji": "🚑",

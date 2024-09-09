@@ -57,7 +57,6 @@ async def setup_events(client, tree):
     async def on_message(message):
         if message.author == client.user:
             return
-        print(f"events.py: message on channel {message.channel} from {message.author}")
 
         # save message
         try:
@@ -69,25 +68,27 @@ async def setup_events(client, tree):
         try:
             score_result = await process_game_score(message) 
             if score_result:
-                
+                print(f"events.py: successfully saved {score_result['game_name']} score of {score_result['game_score']} for {message.author}")
+
+                # message back the score result
+                await message.channel.send(f"{score_result}")
+
                 # Load games configuration
                 with open('files/games.json', 'r') as f:
                     games_config = json.load(f)
                 game_config = games_config.get(score_result['game_name'], {})
                 
                 # React with confirmation emoji
-                confirmation_emoji = game_config.get('emoji')
-                if confirmation_emoji:
-                    await message.add_reaction(confirmation_emoji)
-
-                # React with bonus emojis
-                bonus_emojis = game_config.get('bonus_emojis', {})
-                for bonus, emoji in bonus_emojis.items():
-                    if score_result.get('bonuses', {}).get(bonus) == True:
-                        await message.add_reaction(emoji)
-
-                # Create the message with left alignment and formatted result
-                print(f"events.py: saved {score_result['game_name']} score for {message.author}")
+                confirmation_emoji = game_config.get('emoji', '✅')  # Default to green checkmark
+                await message.add_reaction(confirmation_emoji)
+                
+                # check for bonuses
+                game_bonuses = score_result.get('game_bonuses', {})
+                if game_bonuses:
+                    bonus_emojis = game_config.get('bonus_emojis', {})
+                    for bonus, emoji in bonus_emojis.items():
+                        if game_bonuses.get(bonus) == True:
+                            await message.add_reaction(emoji)
                 return 
             
         except Exception as e:
