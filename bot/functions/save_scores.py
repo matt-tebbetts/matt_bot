@@ -68,7 +68,8 @@ def get_score_info(message, game_name, game_info):
         "worldle": process_worldle,
         "octordle": process_octordle,
         "octordle_rescue": process_octordle,
-        "octordle_sequence": process_octordle
+        "octordle_sequence": process_octordle,
+        "timeguessr": process_timeguessr
     }
 
     # Check if the game has a specific processor
@@ -242,6 +243,7 @@ def process_octordle(message):
     return score_info
 
 def process_worldle(message):
+    
     pattern = re.compile(r'(\d{1,2}|\?|X)/\d{1,2}')
     match = pattern.search(message)
     score = None
@@ -255,6 +257,31 @@ def process_worldle(message):
     detail_pattern = re.compile(r'#Worldle #\d+')
     detail_match = detail_pattern.search(message)
     game_detail = detail_match.group(0) if detail_match else None
+
+    score_info = {
+        'game_score': score,
+        'game_detail': game_detail,
+        'game_bonuses': bonus
+    }
+    return score_info
+
+def process_timeguessr(message):
+    lines = message.split('\n')
+    game_detail = None
+    score = None
+    bonus = None
+
+    if lines:
+        # Extract game detail
+        parts = lines[0].split()
+        if len(parts) >= 2:
+            game_detail = ' '.join(parts[:2])
+
+        # Extract score
+        score_match = re.search(r'(\d{1,3}(?:,\d{3})*)/\d{1,3}(?:,\d{3})*', lines[0])
+        if score_match:
+            score = score_match.group(1).replace(',', '')
+            bonus = 'over_40k' if int(score) > 40000 else None
 
     score_info = {
         'game_score': score,

@@ -66,7 +66,6 @@ async def setup_events(client, tree):
 
         # save game scores
         try:
-            print(f"events.py: processing game score...")
             score_result = await process_game_score(message) 
             if score_result:
                 confirmation_message = f"events.py: saved {score_result}"
