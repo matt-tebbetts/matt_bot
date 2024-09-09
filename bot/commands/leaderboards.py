@@ -6,8 +6,9 @@ from bot.functions import get_df_from_sql
 from datetime import datetime
 
 class Leaderboards(commands.Cog):
-    def __init__(self, client):
+    def __init__(self, client, tree):
         self.client = client
+        self.tree = tree
         self.load_commands()
 
     def load_commands(self):
@@ -26,8 +27,9 @@ class Leaderboards(commands.Cog):
             await self.show_leaderboard(interaction, name)
 
         command.__name__ = name
-        app_command = app_commands.Command(name=name, description=description)(command)
-        self.client.tree.add_command(app_command)
+        app_command = app_commands.Command(name=name, description=description, callback=command)
+        self.tree.add_command(app_command)
+        print(f"leaderboards.py: added command {name}")
 
     async def show_leaderboard(self, interaction: Interaction, game: str):
         await interaction.response.defer()
@@ -51,5 +53,5 @@ class Leaderboards(commands.Cog):
                 print(f"leaderboards.py: Error sending message: {send_error}")
 
 async def setup(client, tree):
-    leaderboards = Leaderboards(client)
+    leaderboards = Leaderboards(client, tree)
     # No need to manually add commands here, they are added dynamically

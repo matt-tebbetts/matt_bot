@@ -6,28 +6,22 @@ import pandas as pd
 
 @tasks.loop(hours=1)
 async def send_warning_loop(client: discord.Client):
-    users_to_warn = await find_users_to_warn()  # Fetch users who need a warning
+    
+    # see if anyone needs a warning
+    users_to_warn = await find_users_to_warn()
     if len(users_to_warn) == 0:
         print("tasks.py: No users to warn about the Mini right now")
         return
     
     # send warning to each user
-    print(f"tasks.py: Need to warn {len(users_to_warn)} users")
     warning_text = "this is your reminder to complete the Mini!"
     warning_data = []
-
-    # Collect all members from all guilds
     guild_member_ids = {member.id for guild in client.guilds for member in guild.members}
-    print(f"tasks.py: bot is currently connected to these users: {guild_member_ids}")
-    
-    print(f"tasks.py: users to warn: {users_to_warn}")
     for user in users_to_warn:
         if user['discord_id_nbr'] not in guild_member_ids:
-            print(f"tasks.py: User {user['name']} ({user['discord_id_nbr']}) not in any of this bot's guilds")
             status = 'Failed'
             error_msg = 'Bot not in user\'s guild(s)'
             msg = 'Did not attempt to send warning'
-            print(f"tasks.py: {msg}")
         else:
             try:
                 discord_id = await client.fetch_user(user['discord_id_nbr'])
