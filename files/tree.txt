@@ -1,13 +1,15 @@
 ├── bot
 │   ├── commands
 │   │   └── leaderboards.py
+│   ├── connections
+│   │   ├── events.py
+│   │   └── tasks.py
 │   ├── functions
 │   │   ├── mini_warning.py
-│   │   ├── msg_logger.py
+│   │   ├── save_messages.py
+│   │   ├── save_scores.py
 │   │   └── sql_helper.py
-│   ├── bot.py
-│   ├── events.py
-│   └── tasks.py
+│   └── bot.py
 ├── files
 │   ├── archive
 │   │   ├── get_zoho_acct.py
@@ -16,8 +18,14 @@
 │   │   ├── send_email_different.py
 │   │   ├── send_email_original.py
 │   │   └── send_email_via_zoho.py
+│   ├── guilds
+│   │   └── Games Tracker
+│   │       └── messages.json
 │   ├── queries
+│   │   ├── add_historical_game_scores.sql
 │   │   └── test_query.sql
+│   ├── examples.txt
+│   ├── games.json
 │   ├── requirements.txt
 │   ├── sms_carriers.json
 │   └── tree.txt
@@ -27,6 +35,6 @@
 │   │   ├── mini_warning.service
 │   │   ├── mini_warning.timer
 │   │   └── notification.service
+│   ├── warnings
 │   ├── mini_scraper.py
 │   └── tree.py
-├── tests

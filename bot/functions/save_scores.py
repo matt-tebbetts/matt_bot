@@ -37,13 +37,8 @@ async def process_game_score(message):
 
             # prepare for database
             df_copy = game_score_to_add.copy()
+            df_copy.setdefault('game_bonuses', None)
             df_copy['source_desc'] = 'discord'
-
-            # Convert game_bonuses to a comma-separated string of True bonuses
-            if df_copy['game_bonuses']:
-                df_copy['game_bonuses'] = ', '.join([k for k, v in df_copy['game_bonuses'].items() if v])
-            else:
-                df_copy['game_bonuses'] = None
             
             columns_order = [
                 'added_ts', 'user_name', 'game_name', 'game_score',
@@ -81,11 +76,12 @@ def get_score_info(message, game_name, game_info):
         return game_processors[game_name](message)
 
     # Default processing based on scoring type
-    if game_info["scoring_type"] == "guesses":
+    scoring_type = game_info["scoring_type"]
+    if scoring_type == "guesses":
         pattern = re.compile(r'(\d{1,2}|\?|X)/\d{1,2}')
-    elif game_info["scoring_type"] == "points":
+    elif scoring_type == "points":
         pattern = re.compile(r'(\d{1,3}(?:,\d{3})*)(?=/)')
-    elif game_info["scoring_type"] == "timed":
+    elif scoring_type == "timed":
         pattern = re.compile(r'\d{1,2}:\d{2}')
     else:
         pattern = None
@@ -97,9 +93,12 @@ def get_score_info(message, game_name, game_info):
         if match:
             score = match.group(0)
 
+    # set game detail to first line
+    game_detail = message.split('\n')[0]
+
     score_info = {
         'game_score': score,
-        'game_detail': None,
+        'game_detail': game_detail,
         'game_bonuses': None
     }
     return score_info
@@ -116,9 +115,20 @@ def process_connections(message):
 
         # calculate score and bonuses (true/false if they got the bonus)
         score = f"{guesses_taken}/7" if completed_lines == 4 else "X/7"
+        
+        # get bonuses
         got_rainbow_first = len(set(lines[2])) == 4
         got_purple_second = lines[3].count("🟪") == 4
-        bonuses = {'rainbow_first': got_rainbow_first, 'purple_second': got_purple_second}
+
+        # make list/string of bonuses
+        bonuses = []
+        if got_rainbow_first:
+            bonuses.append('rainbow_first')
+        if got_purple_second:
+            bonuses.append('purple_second')
+        bonuses_str = ', '.join(bonuses) if bonuses else None
+        
+        # get game detail
         game_detail = lines[1].strip()
 
         # return dictionary of all info
@@ -142,7 +152,8 @@ def process_crosswordle(message):
         total_seconds = minutes * 60 + seconds
     
     # if under 30 seconds, give bonus
-    bonus = {"under_30": True} if total_seconds < 30 else {}
+    bonus = "under_30" if total_seconds < 30 else None
+
     score_info = {
         'game_score': score,
         'game_detail': game_detail,
@@ -158,24 +169,40 @@ def process_boxoffice(message):
 
     # calculate bonuses
     movies_guessed = message.count("✅")
-    bonuses = {}
     if movies_guessed > 0:
-        bonuses[f'guessed_{movies_guessed}'] = True
+        bonus = f'guessed_{movies_guessed}'
+    
+    # return dictionary
     score_info = {
         'game_score': score,
         'game_detail': game_detail,
-        'game_bonuses': bonuses
+        'game_bonuses': bonus
     }
     return score_info
 
 def process_travle(message):
-    parts = message.split()
-    score = parts[2] if len(parts) > 2 else None
-    game_detail = parts[1] if len(parts) > 1 else None
+    lines = message.split('\n')
+    game_detail = lines[0] if lines else None
+    score = None
+    if game_detail:
+        parts = game_detail.split()
+        if len(parts) >= 3:
+            score = parts[2]  # Assuming the score is the third part
+
+    # Check for bonuses
+    bonuses = []
+    if "Perfect" in game_detail:
+        bonuses.append("perfect")
+    if "hint" in game_detail:
+        bonuses.append("hint")
+
+    # Convert bonuses list to a comma-separated string
+    bonuses_str = ', '.join(bonuses) if bonuses else None
+
     score_info = {
         'game_score': score,
         'game_detail': game_detail,
-        'game_bonuses': None
+        'game_bonuses': bonuses_str
     }
     return score_info
 
@@ -186,24 +213,26 @@ def process_octordle(message):
     # Calculate bonuses based on game type
     wordles_failed = message.count('🟥')
     wordles_guessed = 8 - wordles_failed
-    bonuses = {}
+    bonuses_list = []
+    
     if "Rescue" in game_detail:
         if score == 9:
-            bonuses[f"bonus_9"] = True
+            bonuses_list.append("bonus_9")
         elif wordles_guessed < 8:
-            bonuses[f"under_8"] = True
+            bonuses_list.append("under_8")
         elif wordles_guessed == 8:
-            bonuses[f"saved_8"] = True
-        else: # no bonus
-            pass
+            bonuses_list.append("saved_8")
     else:
         # Find the highest number of words guessed
         for i in range(8, 0, -1):  # Check from 8 down to 1
             if str(i) in message or f"{i}️" in message:
-                bonuses[f"guessed_{i}"] = True
+                bonuses_list.append(f"guessed_{i}")
                 break  # Exit the loop after finding the highest number
         if score <= 52:
-            bonuses["under_52"] = True
+            bonuses_list.append("under_52")
+
+    # convert to string
+    bonuses = ', '.join(bonuses_list) if bonuses_list else None
 
     score_info = {
         'game_score': score,
@@ -215,12 +244,12 @@ def process_octordle(message):
 def process_worldle(message):
     pattern = re.compile(r'(\d{1,2}|\?|X)/\d{1,2}')
     match = pattern.search(message)
+    score = None
+    bonus = None
     if match:
         score = match.group(0)
-        bonuses = {'first_guess': score.startswith('1/')}
-    else:
-        score = None
-        bonuses = None
+        if score.startswith('1/'):
+            bonus = 'first_guess'
 
     # Extract game detail
     detail_pattern = re.compile(r'#Worldle #\d+')
@@ -230,6 +259,6 @@ def process_worldle(message):
     score_info = {
         'game_score': score,
         'game_detail': game_detail,
-        'game_bonuses': bonuses
+        'game_bonuses': bonus
     }
     return score_info

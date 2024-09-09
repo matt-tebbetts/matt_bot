@@ -66,9 +66,10 @@ async def setup_events(client, tree):
 
         # save game scores
         try:
+            print(f"events.py: processing game score...")
             score_result = await process_game_score(message) 
             if score_result:
-                confirmation_message = f"events.py: successfully saved {score_result['game_name']} score for {message.author} with score: {score_result['game_score']} and bonuses: {score_result['game_bonuses']}"
+                confirmation_message = f"events.py: saved {score_result}"
                 print(confirmation_message)
 
                 # Load games configuration
@@ -81,12 +82,13 @@ async def setup_events(client, tree):
                 await message.add_reaction(confirmation_emoji)
                 
                 # check for bonuses
-                game_bonuses = score_result.get('game_bonuses', {})
+                game_bonuses = score_result.get('game_bonuses')
                 if game_bonuses:
                     bonus_emojis = game_config.get('bonus_emojis', {})
-                    for bonus, emoji in bonus_emojis.items():
-                        if game_bonuses.get(bonus) == True:
-                            await message.add_reaction(emoji)
+                    bonuses_list = game_bonuses.split(', ')
+                    for bonus in bonuses_list:
+                        if bonus in bonus_emojis:
+                            await message.add_reaction(bonus_emojis[bonus])
                 return 
             
         except Exception as e:
