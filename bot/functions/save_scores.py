@@ -6,7 +6,7 @@ from datetime import datetime
 import pytz
 from bot.functions import send_df_to_sql
 
-def process_game_score(message):
+async def process_game_score(message):
     
     # load games.json
     games_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'files', 'games.json'))
@@ -24,14 +24,26 @@ def process_game_score(message):
             basic_info = {
                 'added_ts': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 'game_date': message.created_at.astimezone(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d"),
-                'user_id': message.author.id,
-                'user_name': message.author.name,
                 'game_name': game_name,
+                'user_id': message.author.id,
+                'user_name': message.author.name
             }
 
             # combine
-            result = {**basic_info, **score_info}
-            return result
+            game_score_to_add = {**basic_info, **score_info}
+
+            # send a version to the database
+            df_dict = game_score_to_add.copy()
+            if 'bonuses' in df_dict:
+                df_dict['bonuses'] = json.dumps(df_dict['bonuses'])
+            df = pd.DataFrame([df_dict])
+            try:
+                await send_df_to_sql(df, 'games.game_history', if_exists='append')
+            except Exception as e:
+                print(f"save_scores.py: error sending score to sql: {e}")
+
+            # send back for further processing
+            return game_score_to_add
 
     # else it's not a game score
     return None
@@ -60,11 +72,9 @@ def get_score_info(message, game_name, game_info):
         if match:           
             score = match.group(0)
         score_info = {
-            'score': score,
+            'game_score': score,
             'game_detail': None
         }
-
-    print(f"save_scores.py: result is {score_info}")
     return score_info  
 
 def process_connections(message):
@@ -86,9 +96,9 @@ def process_connections(message):
 
         # return dictionary of all info
         score_info = {
-            'score': score,
-            'bonuses': bonuses,
-            'game_detail': game_detail
+            'game_score': score,
+            'game_detail': game_detail,
+            'bonuses': bonuses
         }
         return score_info
 
@@ -108,7 +118,7 @@ def process_crosswordle(message):
     # if under 30 seconds, give bonus
     bonuses = {"under_30": True} if total_seconds < 30 else {}
     score_info = {
-        'score': score,
+        'game_score': score,
         'game_detail': game_detail,
         'bonuses': bonuses
     }
@@ -127,9 +137,9 @@ def process_boxoffice(message):
     if movies_guessed > 0:
         bonuses[f'guessed_{movies_guessed}'] = True
     score_info = {
-        'score': score,
-        'bonuses': bonuses,
+        'game_score': score,
         'game_detail': game_detail,
+        'bonuses': bonuses
     }
     return score_info
 
@@ -138,7 +148,7 @@ def process_travle(message):
     score = parts[2] if len(parts) > 2 else None
     game_detail = parts[1] if len(parts) > 1 else None
     score_info = {
-        'score': score,
+        'game_score': score,
         'game_detail': game_detail
     }
     return score_info
@@ -168,8 +178,8 @@ def process_octordle(message):
             bonuses["under_52"] = True
 
     score_info = {
-        'score': score,
-        'bonuses': bonuses,
-        'game_detail': game_detail
+        'game_score': score,
+        'game_detail': game_detail,
+        'bonuses': bonuses
     }
     return score_info

@@ -41,11 +41,9 @@ async def get_df_from_sql(query, params=None):
     attempts = 0
     while attempts < 3:
         try:
-            print(f"sql_helper.py: connecting to SQL database...")
             conn = await aiomysql.connect(**db_config, loop=asyncio.get_running_loop())
             async with conn.cursor(aiomysql.DictCursor) as cursor:
                 try:
-                    print(f"sql_helper.py: executing SQL query: {query}")
                     await cursor.execute(query, params)
                 except Exception as execute_error:
                     print(f"sql_helper.py: error executing query: {execute_error}")
@@ -53,7 +51,6 @@ async def get_df_from_sql(query, params=None):
 
                 try:
                     result = await cursor.fetchall()
-                    print(f"sql_helper.py: returned {len(result)} rows successfully.")
                 except Exception as fetch_error:
                     print(f"sql_helper.py: error fetching results: {fetch_error}")
                     raise fetch_error
