@@ -7,6 +7,7 @@ from bot.functions import process_game_score
 from pprint import pformat
 import pandas as pd
 import json
+import traceback
 
 # load cogs commands
 async def load_cogs(client, tree):
@@ -74,7 +75,7 @@ async def setup_events(client, tree):
                 await message.channel.send(f"{score_result}")
 
                 # Load games configuration
-                with open('files/games.json', 'r') as f:
+                with open('files/games.json', 'r', encoding='utf-8') as f:
                     games_config = json.load(f)
                 game_config = games_config.get(score_result['game_name'], {})
                 
@@ -92,4 +93,7 @@ async def setup_events(client, tree):
                 return 
             
         except Exception as e:
-            print(f"events.py: error processing game score: {e}")
+            print(f"events.py: Error processing game score: {str(e)}")
+            print(f"Message content: {message.content.encode('ascii', errors='replace')}")
+            print("Full traceback:")
+            traceback.print_exc()

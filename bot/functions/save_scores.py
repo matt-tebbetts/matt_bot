@@ -7,10 +7,23 @@ import pytz
 from bot.functions import send_df_to_sql
 
 async def process_game_score(message):
+    print(f"Debug: Entering process_game_score")
+    print(f"Debug: Message content type: {type(message.content)}")
+   
+    # Try to encode and then decode the message content
+    try:
+        encoded_content = message.content.encode('utf-8', errors='ignore')
+        decoded_content = encoded_content.decode('utf-8', errors='ignore')
+        print(f"Debug: Successfully re-encoded message content")
+    except Exception as e:
+        print(f"Debug: Error re-encoding message content: {str(e)}")
+        decoded_content = message.content  # Fall back to original content if re-encoding fails
+    
+    print(f"Debug: Message content (first 100 chars): {decoded_content[:100]}")
     
     # load games.json
     games_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'files', 'games.json'))
-    with open(games_file_path, 'r') as file:
+    with open(games_file_path, 'r', encoding='utf-8') as file:
         games_data = json.load(file)
 
     # if it's a game score, parse it and add to database
@@ -19,7 +32,15 @@ async def process_game_score(message):
             
             # send for processing
             game_name = game_info["game_name"].lower()
-            score_info = get_score_info(message.content, game_name, game_info)
+            try:
+                score_info = get_score_info(decoded_content, game_name, game_info)
+                print(f"Debug: Score info: {score_info}")
+            except Exception as e:
+                print(f"Debug: Error in get_score_info: {str(e)}")
+                print(f"Debug: Problematic content: {decoded_content.encode('ascii', errors='replace')}")
+                return None
+            
+            # get basic info
             basic_info = {
                 'added_ts': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 'game_date': message.created_at.astimezone(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d"),
