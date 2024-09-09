@@ -19,11 +19,11 @@ SELECT
     CASE 
         WHEN old.game_name = 'boxoffice' THEN
             CASE 
-                WHEN old.metric_01 = '1' THEN '{"guessed_1": true}'
-                WHEN old.metric_01 = '2' THEN '{"guessed_2": true}'
-                WHEN old.metric_01 = '3' THEN '{"guessed_3": true}'
-                WHEN old.metric_01 = '4' THEN '{"guessed_4": true}'
-                WHEN old.metric_01 = '5' THEN '{"guessed_5": true}'
+                WHEN old.metric_01 = '1' THEN 'guessed_1'
+                WHEN old.metric_01 = '2' THEN 'guessed_2'
+                WHEN old.metric_01 = '3' THEN 'guessed_3'
+                WHEN old.metric_01 = '4' THEN 'guessed_4'
+                WHEN old.metric_01 = '5' THEN 'guessed_5'
                 ELSE NULL
             END
         ELSE NULL

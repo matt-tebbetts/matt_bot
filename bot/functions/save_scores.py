@@ -7,19 +7,6 @@ import pytz
 from bot.functions import send_df_to_sql
 
 async def process_game_score(message):
-    print(f"Debug: Entering process_game_score")
-    print(f"Debug: Message content type: {type(message.content)}")
-   
-    # Try to encode and then decode the message content
-    try:
-        encoded_content = message.content.encode('utf-8', errors='ignore')
-        decoded_content = encoded_content.decode('utf-8', errors='ignore')
-        print(f"Debug: Successfully re-encoded message content")
-    except Exception as e:
-        print(f"Debug: Error re-encoding message content: {str(e)}")
-        decoded_content = message.content  # Fall back to original content if re-encoding fails
-    
-    print(f"Debug: Message content (first 100 chars): {decoded_content[:100]}")
     
     # load games.json
     games_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'files', 'games.json'))
@@ -33,11 +20,8 @@ async def process_game_score(message):
             # send for processing
             game_name = game_info["game_name"].lower()
             try:
-                score_info = get_score_info(decoded_content, game_name, game_info)
-                print(f"Debug: Score info: {score_info}")
+                score_info = get_score_info(message.content, game_name, game_info)
             except Exception as e:
-                print(f"Debug: Error in get_score_info: {str(e)}")
-                print(f"Debug: Problematic content: {decoded_content.encode('ascii', errors='replace')}")
                 return None
             
             # get basic info
@@ -53,8 +37,14 @@ async def process_game_score(message):
 
             # prepare for database
             df_copy = game_score_to_add.copy()
-            df_copy['game_bonuses'] = json.dumps(df_copy['game_bonuses']) if df_copy['game_bonuses'] else None
             df_copy['source_desc'] = 'discord'
+
+            # Convert game_bonuses to a comma-separated string of True bonuses
+            if df_copy['game_bonuses']:
+                df_copy['game_bonuses'] = ', '.join([k for k, v in df_copy['game_bonuses'].items() if v])
+            else:
+                df_copy['game_bonuses'] = None
+            
             columns_order = [
                 'added_ts', 'user_name', 'game_name', 'game_score',
                 'game_date', 'game_detail', 'game_bonuses', 'source_desc'
@@ -198,12 +188,14 @@ def process_octordle(message):
     wordles_guessed = 8 - wordles_failed
     bonuses = {}
     if "Rescue" in game_detail:
-        if wordles_guessed < 8:
-            bonuses[f"under_8"] = True
-        if wordles_guessed == 8:
-            bonuses[f"saved_8"] = True
         if score == 9:
             bonuses[f"bonus_9"] = True
+        elif wordles_guessed < 8:
+            bonuses[f"under_8"] = True
+        elif wordles_guessed == 8:
+            bonuses[f"saved_8"] = True
+        else: # no bonus
+            pass
     else:
         # Find the highest number of words guessed
         for i in range(8, 0, -1):  # Check from 8 down to 1
