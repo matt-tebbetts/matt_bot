@@ -1,0 +1,18 @@
+[Unit]
+Description=Matt_Bot
+After=network.target
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=/root/projects/matt_bot
+Environment="PYTHONUNBUFFERED=1"
+EnvironmentFile=/root/projects/matt_bot/.env
+ExecStart=/root/projects/matt_bot/.venv/Scripts/python /root/projects/matt_bot/bot/bot.py
+Restart=always
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
