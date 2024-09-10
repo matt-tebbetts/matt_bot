@@ -1,4 +1,5 @@
 -- if the old bot is adding scores that the new bot has missed, this will backfill
+/*
 INSERT INTO games.game_history (
     added_ts,
     user_name,
@@ -9,6 +10,7 @@ INSERT INTO games.game_history (
     game_bonuses,
     source_desc
 )
+*/
 SELECT 
     old.added_ts,
     old.discord_id AS user_name,

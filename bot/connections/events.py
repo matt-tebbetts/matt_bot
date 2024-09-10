@@ -39,9 +39,9 @@ async def setup_events(client, tree):
 
         # sync commands
         try:
-            await tree.sync()
+            await tree.sync(guild=None)  # Ensure global sync
             commands = ", ".join([cmd.name for cmd in await tree.fetch_commands()])
-            print(f"events.py: synced these commands:", commands)
+            print(f"events.py: synced these commands: {commands}")
         except Exception as e:
             print(f"events.py: error syncing commands: {e}")
 
@@ -75,11 +75,11 @@ async def setup_events(client, tree):
                 with open('files/games.json', 'r', encoding='utf-8') as f:
                     games_config = json.load(f)
                 game_config = games_config.get(score_result['game_name'], {})
-                
+
                 # React with confirmation emoji
                 confirmation_emoji = game_config.get('emoji', '✅')  # Default to green checkmark
                 await message.add_reaction(confirmation_emoji)
-                
+
                 # check for bonuses
                 game_bonuses = score_result.get('game_bonuses')
                 if game_bonuses:
