@@ -23,18 +23,18 @@
 │   │       └── messages.json
 │   ├── queries
 │   │   ├── add_historical_game_scores.sql
+│   │   ├── game_view_new.sql
 │   │   └── test_query.sql
 │   ├── examples.txt
 │   ├── games.json
-│   ├── requirements.txt
 │   ├── sms_carriers.json
 │   └── tree.txt
 ├── jobs
 │   ├── systemd
+│   │   ├── bot.service
 │   │   ├── email_alert.txt
 │   │   ├── mini_warning.service
 │   │   ├── mini_warning.timer
 │   │   └── notification.service
-│   ├── warnings
 │   ├── mini_scraper.py
 │   └── tree.py

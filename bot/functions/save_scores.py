@@ -216,21 +216,15 @@ def process_octordle(message):
     wordles_guessed = 8 - wordles_failed
     bonuses_list = []
     
-    if "Rescue" in game_detail:
-        if score == 9:
-            bonuses_list.append("bonus_9")
-        elif wordles_guessed < 8:
-            bonuses_list.append("under_8")
-        elif wordles_guessed == 8:
-            bonuses_list.append("saved_8")
-    else:
-        # Find the highest number of words guessed
-        for i in range(8, 0, -1):  # Check from 8 down to 1
-            if str(i) in message or f"{i}️" in message:
-                bonuses_list.append(f"guessed_{i}")
-                break  # Exit the loop after finding the highest number
-        if score <= 52:
-            bonuses_list.append("under_52")
+    # bonus check
+    if wordles_failed > 0:
+        bonuses_list.append("failed_any")
+
+    if "Rescue" in game_detail and score == 9:
+        bonuses_list.append("bonus_9")
+
+    if "Rescue" not in game_detail and score <= 52:
+        bonuses_list.append("under_52")
 
     # convert to string
     bonuses = ', '.join(bonuses_list) if bonuses_list else None

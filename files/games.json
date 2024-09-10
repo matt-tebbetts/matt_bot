@@ -90,14 +90,7 @@
         "scoring_type": "guesses",
         "emoji": "🐙",
         "bonus_emojis": {
-            "guessed_1": "1️⃣",
-            "guessed_2": "2️⃣",
-            "guessed_3": "3️⃣",
-            "guessed_4": "4️⃣",
-            "guessed_5": "5️⃣",
-            "guessed_6": "6️⃣",
-            "guessed_7": "7️⃣",
-            "guessed_8": "8️⃣",
+            "failed_any": "💀",
             "under_52": "🔥"
         }
     },
@@ -107,14 +100,7 @@
         "scoring_type": "guesses",
         "emoji": "🔢",
         "bonus_emojis": {
-            "guessed_1": "1️⃣",
-            "guessed_2": "2️⃣",
-            "guessed_3": "3️⃣",
-            "guessed_4": "4️⃣",
-            "guessed_5": "5️⃣",
-            "guessed_6": "6️⃣",
-            "guessed_7": "7️⃣",
-            "guessed_8": "8️⃣",
+            "failed_any": "💀",
             "under_52": "🔥"
         }
     },
@@ -124,8 +110,7 @@
         "scoring_type": "guesses",
         "emoji": "🚑",
         "bonus_emojis": {
-            "under_8": "💀",
-            "saved_8": "8️⃣",
+            "failed_any": "💀",
             "bonus_9": "🔥"
         }
     }
