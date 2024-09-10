@@ -68,8 +68,8 @@ async def setup_events(client, tree):
         try:
             score_result = await process_game_score(message) 
             if score_result:
-                confirmation_message = f"events.py: saved {score_result}"
-                print(confirmation_message)
+                formatted_score = json.dumps(score_result, indent=4, sort_keys=False)
+                print(f"events.py: processed the following score: \n{formatted_score}")
 
                 # Load games configuration
                 with open('files/games.json', 'r', encoding='utf-8') as f:

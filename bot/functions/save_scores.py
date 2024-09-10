@@ -36,17 +36,19 @@ async def process_game_score(message):
             game_score_to_add = {**basic_info, **score_info}
 
             # prepare for database
-            df_copy = game_score_to_add.copy()
-            df_copy.setdefault('game_bonuses', None)
-            df_copy['source_desc'] = 'discord'
+            game_score_to_add.setdefault('game_bonuses', None)
+            game_score_to_add['source_desc'] = 'discord'
             
             columns_order = [
                 'added_ts', 'user_name', 'game_name', 'game_score',
                 'game_date', 'game_detail', 'game_bonuses', 'source_desc'
             ]
 
+            # Reorder the dictionary
+            ordered_game_score = {col: game_score_to_add[col] for col in columns_order}
+
             # Create DataFrame with specified column order
-            df = pd.DataFrame([df_copy], columns=columns_order)
+            df = pd.DataFrame([ordered_game_score])
 
             try:
                 await send_df_to_sql(df, 'games.game_history', if_exists='append')
@@ -54,7 +56,7 @@ async def process_game_score(message):
                 print(f"save_scores.py: error sending score to sql: {e}")
 
             # send back for further processing
-            return game_score_to_add
+            return ordered_game_score
 
     # else it's not a game score
     return None
