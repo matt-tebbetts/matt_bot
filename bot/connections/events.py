@@ -7,6 +7,7 @@ from bot.functions import process_game_score
 from pprint import pformat
 import pandas as pd
 import json
+from collections import OrderedDict
 
 # load cogs commands
 async def load_cogs(client, tree):
@@ -68,7 +69,12 @@ async def setup_events(client, tree):
         try:
             score_result = await process_game_score(message) 
             if score_result:
-                formatted_score = json.dumps(score_result, indent=4, sort_keys=False)
+                columns_order = [
+                    'added_ts', 'user_name', 'game_name', 'game_score',
+                    'game_date', 'game_detail', 'game_bonuses', 'source_desc'
+                ]
+                ordered_score_result = OrderedDict((key, score_result[key]) for key in columns_order)
+                formatted_score = json.dumps(ordered_score_result, indent=4)
                 print(f"events.py: processed the following score: \n{formatted_score}")
 
                 # Load games configuration
