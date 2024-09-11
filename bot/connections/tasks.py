@@ -7,6 +7,7 @@ from bot.functions import find_users_to_warn
 from bot.functions import send_df_to_sql, get_df_from_sql
 from bot.functions import check_mini_leaders
 from bot.functions import write_json
+from bot.commands import show_leaderboard
 
 # check for users who haven't completed the mini
 @tasks.loop(hours=1)
@@ -54,7 +55,7 @@ async def send_warning_loop(client: discord.Client):
     await send_df_to_sql(df, 'games.mini_warning_history', if_exists='append')
 
 # check for new mini leaders and post to discord
-@tasks.loop(seconds=10)
+@tasks.loop(seconds=60)
 async def post_new_mini_leaders(client: discord.Client):
 
     # check for leader changes
@@ -62,8 +63,9 @@ async def post_new_mini_leaders(client: discord.Client):
     for guild_name, has_new_leader in guild_differences.items():
         if has_new_leader:
             message = f"New mini leader for {guild_name}!"
-            # will set up query and message later
-            # need to set default channel for each guild
+            print(f"tasks.py: {message}")
+
+            await show_leaderboard(game='mini')
             return
 
 # reset leaders when mini resets

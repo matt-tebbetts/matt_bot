@@ -1,11 +1,13 @@
 import json
 import os
-from discord import app_commands, Interaction
+import discord
+from discord import app_commands
 from discord.ext import commands
 from bot.functions import get_df_from_sql
 from datetime import datetime
 import pandas as pd
 
+# build leaderboard commands
 class Leaderboards(commands.Cog):
     def __init__(self, client, tree):
         self.client = client
@@ -23,7 +25,7 @@ class Leaderboards(commands.Cog):
             self.create_command(command_name, command_description)
 
     def create_command(self, name, description):
-        async def command(interaction: Interaction):
+        async def command(interaction: discord.Interaction):
             print(f"leaderboards.py: running {name}")
             await self.show_leaderboard(interaction, name)
 
@@ -32,25 +34,38 @@ class Leaderboards(commands.Cog):
         self.tree.add_command(app_command)
         print(f"leaderboards.py: added command {name}")
 
-    async def show_leaderboard(self, interaction: Interaction, game: str):
-        await interaction.response.defer()
+    # leaderboard for any game
+    async def show_leaderboard(interaction: discord.Interaction = None, 
+                               game: str = None
+                               ):
+        
+        # if they called the command directly, acknowledge to avoid timeout
+        if interaction:
+            await interaction.response.defer()
+        
+        # get the leaderboard
         query = f"SELECT game_rank as rnk, player, score FROM matt.leaderboards WHERE game_name = '{game}'"
         df = await get_df_from_sql(query)
         if df.empty:
             await interaction.followup.send(f"No data available for {game} leaderboard.")
-        else:
-            # Convert numeric ranks to integers and replace NaN values with '-'
-            df['rnk'] = df['rnk'].fillna(-1).astype(int).replace(-1, '-').astype(str)
-            title = f"{game.capitalize()} Leaderboard"
-            subtitle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            leaderboard = df.to_string(index=False)
-            message = f"**{title}**\n*{subtitle}*\n```\n{leaderboard}\n```"
-            try:
-                await interaction.followup.send(message)
-                print(f"leaderboards.py: returned {game} leaderboard")
-            except Exception as send_error:
-                print(f"leaderboards.py: Error sending message: {send_error}")
+            print(f"leaderboards.py: no data for {game} leaderboard")
+            return
+        
+        # format leaderboard
+        df['rnk'] = df['rnk'].fillna(-1).astype(int).replace(-1, '-').astype(str)
+        title = f"{game.capitalize()} Leaderboard"
+        subtitle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        leaderboard = df.to_string(index=False)
+        message = f"**{title}**\n*{subtitle}*\n```\n{leaderboard}\n```"
+        
+        # if they called the command directly, send it as reply
+        if interaction:
+            await interaction.followup.send(message)
+            return
 
+        # if not interaction, just return the leaderboard as a string
+        return message
+    
 async def setup(client, tree):
     leaderboards = Leaderboards(client, tree)
     # No need to manually add commands here, they are added dynamically
