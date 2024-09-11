@@ -1,5 +1,6 @@
 import discord
 from bot.functions import get_df_from_sql
+from bot.functions import read_json, write_json
 
 # find users who haven't completed the mini
 async def find_users_to_warn():
@@ -14,10 +15,10 @@ async def find_users_to_warn():
         })
     return users_to_message
 
-# save mini leaders
+# check mini leaders
 async def check_mini_leaders():
 
-    # use get_df_from_sql to get the latest leaders
+    # get latest leaders
     query = """
         select 
             guild_nm,
@@ -27,7 +28,6 @@ async def check_mini_leaders():
         where game_date = (select max(game_date) from mini_view)
         and game_rank = 1
     """
-
     df = await get_df_from_sql(query)
 
     # get leaders by guild
@@ -38,8 +38,8 @@ async def check_mini_leaders():
     guild_differences = {}
     for guild in new_leaders:
         guild_name = guild['guild_nm']
-
-        # ignore global guild
+        
+        # skip global
         if guild_name == "Global":
             continue
 
@@ -49,16 +49,9 @@ async def check_mini_leaders():
 
         # check if new leaders are different
         if set(guild['player_name']) != set(previous_leaders):
-
-            # overwrite with new leaders
             write_json(leader_filepath, guild['player_name'])
-
-            # set guild_differences to True
             guild_differences[guild_name] = True
-    
         else:
-            
-            # set guild_differences to False
             guild_differences[guild_name] = False
     
     return guild_differences
