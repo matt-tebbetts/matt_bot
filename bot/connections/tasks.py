@@ -1,8 +1,10 @@
 import discord
 from discord.ext import tasks
-from bot.functions import find_users_to_warn, send_df_to_sql
 from datetime import datetime
 import pandas as pd
+
+from bot.functions import find_users_to_warn, send_df_to_sql
+from bot.functions import check_mini_leaders
 
 @tasks.loop(hours=1)
 async def send_warning_loop(client: discord.Client):
@@ -47,6 +49,25 @@ async def send_warning_loop(client: discord.Client):
     # save warning metadata
     df = pd.DataFrame(warning_data)
     await send_df_to_sql(df, 'games.mini_warning_history', if_exists='append')
+
+@tasks.loop(seconds=10)
+async def check_mini(client: discord.Client):
+
+    # check for leader changes
+    guild_differences = await check_mini_leaders()
+    for guild_name, has_new_leader in guild_differences.items():
+        if has_new_leader:
+            message = f"New mini leader for {guild_name}!"
+            await post_mini(guild_name=guild_name, msg=message)
+
+    # reset after cutoff_hour
+    now = get_now()
+    if now.hour == get_cutoff_hour() and now.minute == 0 and now.second < 10:
+        for guild in client.guilds:
+            guild_name = guild.name
+            leader_filepath = f"files/guilds/{guild_name}/leaders.json"
+            write_json(leader_filepath, []) # makes it an empty list
+
 
 def setup_tasks(client: discord.Client):
     send_warning_loop.start(client)
