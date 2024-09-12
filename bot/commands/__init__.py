@@ -1,2 +1,2 @@
 # import commands
-from .leaderboards import show_leaderboard
+from .leaderboards import Leaderboards

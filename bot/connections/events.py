@@ -1,13 +1,16 @@
 import os
 import discord
 import importlib
-from bot.connections.tasks import setup_tasks
-from bot.functions import save_message_detail
-from bot.functions import process_game_score
 from pprint import pformat
 import pandas as pd
 import json
 from collections import OrderedDict
+
+# local imports
+from bot.functions import save_message_detail
+from bot.functions import process_game_score
+from bot.connections.tasks import setup_tasks
+from bot.connections.config import save_all_guild_configs
 
 # load cogs commands
 async def load_cogs(client, tree):
@@ -31,6 +34,10 @@ async def setup_events(client, tree):
         # print confirmation
         for guild in client.guilds:
             print(f"events.py: {client.user} connected to {guild.name}")
+        
+        # Save guild configs
+        await save_all_guild_configs(client)
+        print("events.py: saved all guild configs")
 
         # load cogs
         try:
@@ -48,7 +55,8 @@ async def setup_events(client, tree):
 
         # start background tasks
         try:
-            setup_tasks(client)
+            print("events.py: starting tasks")
+            setup_tasks(client, tree)
             print("events.py: started tasks")
         except Exception as e:
             print(f"events.py: error starting tasks: {e}")

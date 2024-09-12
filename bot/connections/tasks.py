@@ -7,9 +7,9 @@ from bot.functions import find_users_to_warn
 from bot.functions import send_df_to_sql, get_df_from_sql
 from bot.functions import check_mini_leaders
 from bot.functions import write_json
-from bot.commands import show_leaderboard
+from bot.commands.leaderboards import Leaderboards
 
-# check for users who haven't completed the mini
+# task 1 - check for users who haven't completed the mini
 @tasks.loop(hours=1)
 async def send_warning_loop(client: discord.Client):
     
@@ -49,15 +49,15 @@ async def send_warning_loop(client: discord.Client):
             'message_error': error_msg,
             'message_text': msg
         })
-
+    
     # save warning metadata
     df = pd.DataFrame(warning_data)
     await send_df_to_sql(df, 'games.mini_warning_history', if_exists='append')
 
-# check for new mini leaders and post to discord
+# task 2 - check for new mini leaders and post to discord
 @tasks.loop(seconds=60)
-async def post_new_mini_leaders(client: discord.Client):
-
+async def post_new_mini_leaders(client: discord.Client, tree: discord.app_commands.CommandTree):
+    
     # check for leader changes
     guild_differences = await check_mini_leaders()
     for guild_name, has_new_leader in guild_differences.items():
@@ -65,10 +65,22 @@ async def post_new_mini_leaders(client: discord.Client):
             message = f"New mini leader for {guild_name}!"
             print(f"tasks.py: {message}")
 
-            await show_leaderboard(game='mini')
-            return
+            # Find the guild object
+            guild = discord.utils.get(client.guilds, name=guild_name)
+            if guild:
+                try:
+                    # Create an instance of Leaderboards and call post_leaderboard
+                    print(f"tasks.py: attempting to create Leaderboards instance")
+                    leaderboards = Leaderboards(client, tree)
+                    print(f"tasks.py: attempting to run post_leaderboard for {guild_name}")
+                    await leaderboards.post_leaderboard(game='mini', guild=guild)
+                    print(f"tasks.py: finished running post_leaderboard for {guild_name}")
+                except Exception as e:
+                    print(f"tasks.py: error in post_leaderboard: {e}")
+            else:
+                print(f"tasks.py: Guild {guild_name} not found")
 
-# reset leaders when mini resets
+# task 3 - reset leaders when mini resets
 @tasks.loop(hours=1)
 async def reset_mini_leaders(client: discord.Client):
     now = datetime.now()
@@ -78,8 +90,8 @@ async def reset_mini_leaders(client: discord.Client):
             leader_filepath = f"files/guilds/{guild.name}/leaders.json"
             write_json(leader_filepath, []) # makes it an empty list
 
-def setup_tasks(client: discord.Client):
+def setup_tasks(client: discord.Client, tree: discord.app_commands.CommandTree):
     send_warning_loop.start(client)
+    post_new_mini_leaders.start(client, tree)
     reset_mini_leaders.start(client)
-    post_new_mini_leaders.start(client)
 
