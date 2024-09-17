@@ -9,7 +9,7 @@ from bot.functions import check_mini_leaders
 from bot.functions import write_json
 from bot.commands import Leaderboards
 
-# check for users who haven't completed the mini
+# task 1 - check for users who haven't completed the mini
 @tasks.loop(hours=1)
 async def send_warning_loop(client: discord.Client):
     
@@ -49,12 +49,12 @@ async def send_warning_loop(client: discord.Client):
             'message_error': error_msg,
             'message_text': msg
         })
-
+    
     # save warning metadata
     df = pd.DataFrame(warning_data)
     await send_df_to_sql(df, 'games.mini_warning_history', if_exists='append')
 
-# check for new mini leaders and post to discord
+# task 2 - check for new mini leaders and post to discord
 @tasks.loop(seconds=60)
 async def post_new_mini_leaders(client: discord.Client):
     print("post_new_mini_leaders: Starting task")
@@ -78,7 +78,7 @@ async def post_new_mini_leaders(client: discord.Client):
                 print(f"tasks.py: Guild '{guild_name}' not found")
     print("post_new_mini_leaders: Task completed")
 
-# reset leaders when mini resets
+# task 3 - reset leaders when mini resets
 @tasks.loop(hours=1)
 async def reset_mini_leaders(client: discord.Client):
     print("reset_mini_leaders: Starting task")

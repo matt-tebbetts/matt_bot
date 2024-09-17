@@ -7,7 +7,6 @@ from bot.functions import get_df_from_sql
 from datetime import datetime
 import pandas as pd
 
-# build leaderboard commands
 class Leaderboards(commands.Cog):
     def __init__(self, client, tree):
         self.client = client
@@ -22,12 +21,13 @@ class Leaderboards(commands.Cog):
         for game_name, game_info in games_data.items():
             command_name = game_info["game_name"]
             command_description = f"Show {command_name.capitalize()} leaderboard"
-            self.create_command(command_name, command_description)
+            if not self.tree.get_command(command_name):
+                self.create_command(command_name, command_description)
 
     def create_command(self, name, description):
         async def command(interaction: discord.Interaction):
             print(f"leaderboards.py: running {name}")
-            await self.show_leaderboard(interaction, name)
+            await self.show_leaderboard(game=name, interaction=interaction)
 
         command.__name__ = name
         app_command = app_commands.Command(name=name, description=description, callback=command)
@@ -42,7 +42,7 @@ class Leaderboards(commands.Cog):
             if interaction:
                 await interaction.followup.send(f"No data available for {game} leaderboard.")
             print(f"leaderboards.py: no data for {game} leaderboard")
-            return
+            return "No data available for this leaderboard."
         
         # format leaderboard
         df['rnk'] = df['rnk'].fillna(-1).astype(int).replace(-1, '-').astype(str)
