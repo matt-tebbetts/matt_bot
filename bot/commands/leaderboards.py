@@ -32,22 +32,15 @@ class Leaderboards(commands.Cog):
         command.__name__ = name
         app_command = app_commands.Command(name=name, description=description, callback=command)
         self.tree.add_command(app_command)
-        print(f"leaderboards.py: added command {name}")
 
     # leaderboard for any game
-    async def show_leaderboard(interaction: discord.Interaction = None, 
-                               game: str = None
-                               ):
-        
-        # if they called the command directly, acknowledge to avoid timeout
-        if interaction:
-            await interaction.response.defer()
-        
+    async def show_leaderboard(client: discord.Client, interaction: discord.Interaction = None, guild: discord.Guild = None, game: str = None):
         # get the leaderboard
         query = f"SELECT game_rank as rnk, player, score FROM matt.leaderboards WHERE game_name = '{game}'"
         df = await get_df_from_sql(query)
         if df.empty:
-            await interaction.followup.send(f"No data available for {game} leaderboard.")
+            if interaction:
+                await interaction.followup.send(f"No data available for {game} leaderboard.")
             print(f"leaderboards.py: no data for {game} leaderboard")
             return
         
@@ -58,14 +51,31 @@ class Leaderboards(commands.Cog):
         leaderboard = df.to_string(index=False)
         message = f"**{title}**\n*{subtitle}*\n```\n{leaderboard}\n```"
         
-        # if they called the command directly, send it as reply
+        # if called via command interaction, send the message as a reply
         if interaction:
             await interaction.followup.send(message)
             return
 
-        # if not interaction, just return the leaderboard as a string
-        return message
-    
+        # if called programmatically, send the message to the default channel
+        if guild:
+            # Read the config.json file to get the default_channel_id
+            config_path = f"files/guilds/{guild.name}/config.json"
+            try:
+                with open(config_path, 'r') as config_file:
+                    config = json.load(config_file)
+                    channel_id = int(config.get("default_channel_id"))
+                    channel = client.get_channel(channel_id)
+                    if channel:
+                        await channel.send(message)
+                    else:
+                        print(f"leaderboards.py: Channel ID '{channel_id}' not found in guild '{guild.name}'")
+            except FileNotFoundError:
+                print(f"leaderboards.py: config.json not found for guild '{guild.name}'")
+            except json.JSONDecodeError:
+                print(f"leaderboards.py: Error decoding config.json for guild '{guild.name}'")
+            except ValueError:
+                print(f"leaderboards.py: Invalid channel ID in config.json for guild '{guild.name}'")
+
 async def setup(client, tree):
     leaderboards = Leaderboards(client, tree)
     # No need to manually add commands here, they are added dynamically

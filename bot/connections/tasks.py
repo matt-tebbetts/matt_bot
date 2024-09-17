@@ -7,7 +7,7 @@ from bot.functions import find_users_to_warn
 from bot.functions import send_df_to_sql, get_df_from_sql
 from bot.functions import check_mini_leaders
 from bot.functions import write_json
-from bot.commands import show_leaderboard
+from bot.commands import Leaderboards
 
 # check for users who haven't completed the mini
 @tasks.loop(hours=1)
@@ -57,29 +57,45 @@ async def send_warning_loop(client: discord.Client):
 # check for new mini leaders and post to discord
 @tasks.loop(seconds=60)
 async def post_new_mini_leaders(client: discord.Client):
+    print("post_new_mini_leaders: Starting task")
+    # Create an instance of the Leaderboards class
+    leaderboards = Leaderboards(client, None)  # Pass None for tree if not needed
 
     # check for leader changes
     guild_differences = await check_mini_leaders()
+    print("post_new_mini_leaders: Checked for leader changes")
     for guild_name, has_new_leader in guild_differences.items():
         if has_new_leader:
             message = f"New mini leader for {guild_name}!"
             print(f"tasks.py: {message}")
 
-            await show_leaderboard(game='mini')
-            return
+            # Find the guild by name
+            guild = discord.utils.get(client.guilds, name=guild_name)
+            if guild:
+                print(f"tasks.py: Found guild '{guild_name}'")
+                await leaderboards.show_leaderboard(client, guild=guild, game='mini')
+            else:
+                print(f"tasks.py: Guild '{guild_name}' not found")
+    print("post_new_mini_leaders: Task completed")
 
 # reset leaders when mini resets
 @tasks.loop(hours=1)
 async def reset_mini_leaders(client: discord.Client):
+    print("reset_mini_leaders: Starting task")
     now = datetime.now()
     mini_reset_hour = 22 if now.weekday() >= 5 else 18
     if now.hour == mini_reset_hour and now.minute <= 1: # reset window
         for guild in client.guilds:
             leader_filepath = f"files/guilds/{guild.name}/leaders.json"
             write_json(leader_filepath, []) # makes it an empty list
+    print("reset_mini_leaders: Task completed")
 
 def setup_tasks(client: discord.Client):
+    print("setup_tasks: Starting tasks")
     send_warning_loop.start(client)
+    print("setup_tasks: Started send_warning_loop")
     reset_mini_leaders.start(client)
+    print("setup_tasks: Started reset_mini_leaders")
     post_new_mini_leaders.start(client)
-
+    print("setup_tasks: Started post_new_mini_leaders")
+    print("setup_tasks: All tasks started")
