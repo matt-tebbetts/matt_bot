@@ -6,6 +6,7 @@ from discord.ext import commands
 from bot.functions import get_df_from_sql
 from datetime import datetime
 import pandas as pd
+from typing import Optional
 
 class Leaderboards(commands.Cog):
     def __init__(self, client, tree):
@@ -34,47 +35,38 @@ class Leaderboards(commands.Cog):
         self.tree.add_command(app_command)
 
     # leaderboard for any game
-    async def show_leaderboard(client: discord.Client, interaction: discord.Interaction = None, guild: discord.Guild = None, game: str = None):
+    async def show_leaderboard(self, interaction: Optional[discord.Interaction] = None, game: str = None) -> str:
+        print(f"show_leaderboard: Starting for game '{game}'")
+        
         # get the leaderboard
         query = f"SELECT game_rank as rnk, player, score FROM matt.leaderboards WHERE game_name = '{game}'"
         df = await get_df_from_sql(query)
-        if df.empty:
-            if interaction:
-                await interaction.followup.send(f"No data available for {game} leaderboard.")
-            print(f"leaderboards.py: no data for {game} leaderboard")
-            return "No data available for this leaderboard."
-        
-        # format leaderboard
-        df['rnk'] = df['rnk'].fillna(-1).astype(int).replace(-1, '-').astype(str)
-        title = f"{game.capitalize()} Leaderboard"
-        subtitle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        leaderboard = df.to_string(index=False)
-        message = f"**{title}**\n*{subtitle}*\n```\n{leaderboard}\n```"
-        
-        # if called via command interaction, send the message as a reply
-        if interaction:
-            await interaction.followup.send(message)
-            return
+        print(f"show_leaderboard: Query executed, dataframe size: {df.shape}")
 
-        # if called programmatically, send the message to the default channel
-        if guild:
-            # Read the config.json file to get the default_channel_id
-            config_path = f"files/guilds/{guild.name}/config.json"
-            try:
-                with open(config_path, 'r') as config_file:
-                    config = json.load(config_file)
-                    channel_id = int(config.get("default_channel_id"))
-                    channel = client.get_channel(channel_id)
-                    if channel:
-                        await channel.send(message)
-                    else:
-                        print(f"leaderboards.py: Channel ID '{channel_id}' not found in guild '{guild.name}'")
-            except FileNotFoundError:
-                print(f"leaderboards.py: config.json not found for guild '{guild.name}'")
-            except json.JSONDecodeError:
-                print(f"leaderboards.py: Error decoding config.json for guild '{guild.name}'")
-            except ValueError:
-                print(f"leaderboards.py: Invalid channel ID in config.json for guild '{guild.name}'")
+        if not df.empty:
+            # format leaderboard
+            df['rnk'] = df['rnk'].fillna(-1).astype(int).replace(-1, '-').astype(str)
+            title = f"{game.capitalize()} Leaderboard"
+            subtitle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            leaderboard = df.to_string(index=False)
+            message = f"**{title}**\n*{subtitle}*\n```\n{leaderboard}\n```"
+        else:
+            message = f"No data available for {game} leaderboard."
+        
+        try:
+            # if called via command interaction, send the message as a reply
+            if isinstance(interaction, discord.Interaction):
+                print("show_leaderboard: Handling interaction")
+                await interaction.followup.send(message)
+                print(f"show_leaderboard: Sent message via interaction")
+                return None
+
+            # if called programmatically, return the message
+            print("show_leaderboard: Returning message programmatically")
+            return message
+        except Exception as e:
+            print(f"show_leaderboard: Exception occurred - {e}")
+            raise
 
 async def setup(client, tree):
     leaderboards = Leaderboards(client, tree)

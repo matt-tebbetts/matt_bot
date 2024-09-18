@@ -42,9 +42,25 @@
     },
     "factle": {
         "game_name": "factle",
-        "prefix": "Factle.app",
+        "prefix": "Factle by @FOS",
         "scoring_type": "guesses",
-        "emoji": "📈"
+        "emoji": "📈",
+        "bonus_emojis": {
+            "perfect": "🔥",
+            "impressive": "👩‍🏫",
+            "lost": "❌"
+        }
+    },
+    "factle_sports": {
+        "game_name": "factle_sports",
+        "prefix": "Factle Sports by @FOS",
+        "scoring_type": "guesses",
+        "emoji": "📈",
+        "bonus_emojis": {
+            "perfect": "🔥",
+            "impressive": "🏈",
+            "lost": "❌"
+        }
     },
     "travle": {
         "game_name": "travle",

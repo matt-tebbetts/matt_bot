@@ -8,6 +8,7 @@ from bot.functions import send_df_to_sql, get_df_from_sql
 from bot.functions import check_mini_leaders
 from bot.functions import write_json
 from bot.commands import Leaderboards
+from bot.functions.admin import get_default_channel_id
 
 # task 1 - check for users who haven't completed the mini
 @tasks.loop(hours=1)
@@ -56,26 +57,39 @@ async def send_warning_loop(client: discord.Client):
 
 # task 2 - check for new mini leaders and post to discord
 @tasks.loop(seconds=60)
-async def post_new_mini_leaders(client: discord.Client):
+async def post_new_mini_leaders(client: discord.Client, tree: discord.app_commands.CommandTree):
     print("post_new_mini_leaders: Starting task")
-    # Create an instance of the Leaderboards class
-    leaderboards = Leaderboards(client, None)  # Pass None for tree if not needed
+    leaderboards = Leaderboards(client, tree)
 
     # check for leader changes
     guild_differences = await check_mini_leaders()
+    print(f"guild_differences is: {guild_differences}")
     print("post_new_mini_leaders: Checked for leader changes")
     for guild_name, has_new_leader in guild_differences.items():
         if has_new_leader:
             message = f"New mini leader for {guild_name}!"
             print(f"tasks.py: {message}")
 
-            # Find the guild by name
-            guild = discord.utils.get(client.guilds, name=guild_name)
-            if guild:
-                print(f"tasks.py: Found guild '{guild_name}'")
-                await leaderboards.show_leaderboard(client, guild=guild, game='mini')
+            # Get the default channel ID
+            channel_id = get_default_channel_id(guild_name)
+            if not channel_id:
+                print(f"tasks.py: Could not get default channel ID for guild '{guild_name}'")
+                continue
+
+            basic_message = "There's a new mini leader!"
+            channel = client.get_channel(channel_id)
+            if channel:
+                await channel.send(basic_message)
+                print(f"tasks.py: Sent test message to channel ID '{channel_id}' in guild '{guild_name}'")
+
+                # get leaderboard from this function
+                leaderboard = await leaderboards.show_leaderboard(client, game='mini')
+                await channel.send(leaderboard)
+
             else:
-                print(f"tasks.py: Guild '{guild_name}' not found")
+                print(f"tasks.py: Channel ID '{channel_id}' not found in guild '{guild_name}'")
+        else:
+            print(f"tasks.py: No new leader for guild '{guild_name}'")
     print("post_new_mini_leaders: Task completed")
 
 # task 3 - reset leaders when mini resets
@@ -90,12 +104,12 @@ async def reset_mini_leaders(client: discord.Client):
             write_json(leader_filepath, []) # makes it an empty list
     print("reset_mini_leaders: Task completed")
 
-def setup_tasks(client: discord.Client):
+def setup_tasks(client: discord.Client, tree: discord.app_commands.CommandTree):
     print("setup_tasks: Starting tasks")
-    send_warning_loop.start(client)
-    print("setup_tasks: Started send_warning_loop")
+    # send_warning_loop.start(client)
+    # print("setup_tasks: Started send_warning_loop")
+    post_new_mini_leaders.start(client, tree)
+    print("setup_tasks: Started post_new_mini_leaders")
     reset_mini_leaders.start(client)
     print("setup_tasks: Started reset_mini_leaders")
-    post_new_mini_leaders.start(client)
-    print("setup_tasks: Started post_new_mini_leaders")
     print("setup_tasks: All tasks started")
