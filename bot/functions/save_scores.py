@@ -297,15 +297,15 @@ def process_factle(message):
     if len(lines) > 2:
         # Extract score based on the number of lines starting from the third line
         guesses_taken = len(lines) - 2
-        last_line = lines[-1]
-        if "🐸" * 5 in last_line:
+        last_line = lines[-1].strip()
+        if last_line == "🐸" * 5:
             score = f"{guesses_taken}/5"
             if guesses_taken == 1:
                 bonus = "perfect"
             elif guesses_taken == 2:
                 bonus = "impressive"
         else:
-            score = "X/5" # lost
+            score = "X/5"
             bonus = "lost"
 
     score_info = {
