@@ -294,12 +294,12 @@ def process_factle(message):
     score = None
     bonus = None
 
-    if len(lines) > 2:
-        # Extract score based on the number of lines starting from the third line
-        guesses_taken = len(lines) - 2
-        last_line = lines[-1].strip()
-        if last_line == "🐸" * 5:
+    if len(lines) > 3:
+        guesses_taken = len(lines) - 3
+        emoji_line = lines[-2].strip()
+        if emoji_line == "🐸" * 5:
             score = f"{guesses_taken}/5"
+            print(f"Score: {score}")
             if guesses_taken == 1:
                 bonus = "perfect"
             elif guesses_taken == 2:

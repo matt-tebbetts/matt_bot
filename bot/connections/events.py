@@ -55,9 +55,7 @@ async def setup_events(client, tree):
 
         # start background tasks
         try:
-            print("events.py: starting tasks")
             setup_tasks(client, tree)
-            print("events.py: started tasks")
         except Exception as e:
             print(f"events.py: error starting tasks: {e}")
 

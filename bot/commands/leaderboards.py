@@ -27,7 +27,7 @@ class Leaderboards(commands.Cog):
 
     def create_command(self, name, description):
         async def command(interaction: discord.Interaction):
-            print(f"leaderboards.py: running {name}")
+            print(f"leaderboards.py: running command '{name}'")
             await self.show_leaderboard(game=name, interaction=interaction)
 
         command.__name__ = name
@@ -36,12 +36,17 @@ class Leaderboards(commands.Cog):
 
     # leaderboard for any game
     async def show_leaderboard(self, interaction: Optional[discord.Interaction] = None, game: str = None) -> str:
-        print(f"show_leaderboard: Starting for game '{game}'")
         
+        # Defer the interaction to give more time for processing
+        if interaction and not interaction.response.is_done():
+            # buy some time
+            await interaction.response.defer()
+            # respond to interaction, telling them it's loading
+            await interaction.followup.send("Loading leaderboard...")
+
         # get the leaderboard
         query = f"SELECT game_rank as rnk, player, score FROM matt.leaderboards WHERE game_name = '{game}'"
         df = await get_df_from_sql(query)
-        print(f"show_leaderboard: Query executed, dataframe size: {df.shape}")
 
         if not df.empty:
             # format leaderboard
@@ -56,14 +61,12 @@ class Leaderboards(commands.Cog):
         try:
             # if called via command interaction, send the message as a reply
             if isinstance(interaction, discord.Interaction):
-                print("show_leaderboard: Handling interaction")
                 await interaction.followup.send(message)
-                print(f"show_leaderboard: Sent message via interaction")
                 return None
-
+            
             # if called programmatically, return the message
-            print("show_leaderboard: Returning message programmatically")
             return message
+        
         except Exception as e:
             print(f"show_leaderboard: Exception occurred - {e}")
             raise
