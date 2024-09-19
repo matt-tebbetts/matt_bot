@@ -1,9 +1,9 @@
 import os
+from dotenv import load_dotenv
+import asyncio
 import discord
 from discord import app_commands
-import asyncio
 from bot.connections.events import setup_events
-from dotenv import load_dotenv
 
 # setup
 intents = discord.Intents.all()
