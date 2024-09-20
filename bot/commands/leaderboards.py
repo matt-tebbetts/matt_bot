@@ -4,6 +4,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from bot.functions import get_df_from_sql
+from bot.functions.admin import direct_path_finder
 from datetime import datetime
 import pandas as pd
 from typing import Optional
@@ -15,7 +16,7 @@ class Leaderboards(commands.Cog):
         self.load_commands()
 
     def load_commands(self):
-        games_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'files', 'games.json'))
+        games_file_path = direct_path_finder('files', 'games.json')
         with open(games_file_path, 'r', encoding='utf-8') as file:
             games_data = json.load(file)
 
@@ -26,16 +27,28 @@ class Leaderboards(commands.Cog):
                 self.create_command(command_name, command_description)
 
     def create_command(self, name, description):
-        async def command(interaction: discord.Interaction):
-            print(f"leaderboards.py: running command '{name}'")
-            await self.show_leaderboard(game=name, interaction=interaction)
+        async def command(interaction: discord.Interaction, date_range: Optional[str] = None):
+            print(f"leaderboards.py: running command '{name}' with date_range '{date_range}'")
+            await self.show_leaderboard(game=name, interaction=interaction, date_range=date_range)
 
         command.__name__ = name
-        app_command = app_commands.Command(name=name, description=description, callback=command)
+        app_command = app_commands.Command(
+            name=name,
+            description=description,
+            callback=command,
+            options=[
+                app_commands.Option(
+                    name="date_range",
+                    description="Specify the date range (e.g., 'this month')",
+                    type=str,
+                    required=False
+                )
+            ]
+        )
         self.tree.add_command(app_command)
 
     # leaderboard for any game
-    async def show_leaderboard(self, interaction: Optional[discord.Interaction] = None, game: str = None) -> str:
+    async def show_leaderboard(self, interaction: Optional[discord.Interaction] = None, game: str = None, date_range: Optional[str] = None) -> str:
         
         # Defer the interaction to give more time for processing
         if interaction and not interaction.response.is_done():
@@ -44,8 +57,18 @@ class Leaderboards(commands.Cog):
             # respond to interaction, telling them it's loading
             await interaction.followup.send("Loading leaderboard...")
 
+        # Determine the SQL file based on the date range
+        if date_range and date_range.lower() == "this month":
+            sql_file = 'leaderboard_this_month.sql'
+        else:
+            sql_file = 'leaderboard_today.sql'
+
+        # Read the SQL query from the file
+        sql_file_path = direct_path_finder('files', 'queries', sql_file)
+        with open(sql_file_path, 'r', encoding='utf-8') as file:
+            query = file.read().format(game=game)
+
         # get the leaderboard
-        query = f"SELECT game_rank as rnk, player, score FROM matt.leaderboards WHERE game_name = '{game}'"
         df = await get_df_from_sql(query)
 
         if not df.empty:
