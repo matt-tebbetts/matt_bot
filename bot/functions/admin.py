@@ -27,16 +27,13 @@ def write_json(filepath, data):
 # get default channel id
 def get_default_channel_id(guild_name):
     config_path = f"files/guilds/{guild_name}/config.json"
-    print(f"admin.py: Attempting to read config from {config_path}")
     try:
-        with open(config_path, 'r') as config_file:
-            config = json.load(config_file)
-            channel_id = config.get("default_channel_id")
-            if channel_id is not None:
-                print(f"admin.py: Found default_channel_id: {channel_id} for guild '{guild_name}'")
-                return int(channel_id)
-            else:
-                print(f"admin.py: default_channel_id not found in config.json for guild '{guild_name}'")
+        config = read_json(config_path)
+        channel_id = config.get("default_channel_id")
+        if channel_id is not None:
+            return int(channel_id)
+        else:
+            print(f"admin.py: default_channel_id not found in config.json for guild '{guild_name}'")
     except FileNotFoundError:
         print(f"admin.py: config.json not found for guild '{guild_name}'")
     except json.JSONDecodeError:

@@ -84,11 +84,10 @@ async def post_new_mini_leaders(client: discord.Client, tree: discord.app_comman
         channel = client.get_channel(channel_id)
         if channel:
             await channel.send(basic_message)
-            print(f"tasks.py: Sent test message to channel ID '{channel_id}' in guild '{guild_name}'")
-
-            # get leaderboard function from class
             leaderboards = Leaderboards(client, tree)
-            leaderboard = await leaderboards.show_leaderboard(client, game='mini')
+
+            # this gets the leaderboard as a string
+            leaderboard = await leaderboards.show_leaderboard(game='mini')
             await channel.send(leaderboard)
 
         else:
