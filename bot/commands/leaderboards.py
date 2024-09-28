@@ -24,6 +24,10 @@ class Leaderboards(commands.Cog):
             if not self.tree.get_command(command_name):
                 self.create_command(command_name, command_description)
 
+        # Add the new /my_scores command
+        if not self.tree.get_command("my_scores"):
+            self.create_my_scores_command()
+
     def create_command(self, name, description):
         async def command(interaction: discord.Interaction):
             print(f"leaderboards.py: running {name}")
@@ -33,6 +37,16 @@ class Leaderboards(commands.Cog):
         app_command = app_commands.Command(name=name, description=description, callback=command)
         self.tree.add_command(app_command)
         print(f"leaderboards.py: added command {name}")
+
+    def create_my_scores_command(self):
+        async def my_scores_command(interaction: discord.Interaction):
+            print(f"leaderboards.py: running my_scores for {interaction.user.name}")
+            await self.show_my_scores(interaction=interaction)
+
+        my_scores_command.__name__ = "my_scores"
+        app_command = app_commands.Command(name="my_scores", description="Show your scores", callback=my_scores_command)
+        self.tree.add_command(app_command)
+        print(f"leaderboards.py: added command my_scores")
 
     async def get_leaderboard(self, game: str):
         query = f"SELECT game_rank as rnk, player, score FROM matt.leaderboards WHERE game_name = '{game}'"
@@ -49,7 +63,20 @@ class Leaderboards(commands.Cog):
         leaderboard_as_string = f"**{title}**\n*{subtitle}*\n```\n{leaderboard}\n```"
         return leaderboard_as_string
 
-    # send leaderboard to discord
+    async def get_my_scores(self, discord_name: str):
+        query = f"SELECT * FROM games.my_scores WHERE discord_nm = '{discord_name}'"
+        df = await get_df_from_sql(query)
+        if df.empty:
+            print(f"leaderboards.py: no data for {discord_name} in my_scores")
+            return "No data available for your scores."
+
+        # format my_scores
+        title = f"{discord_name}'s Scores"
+        subtitle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        my_scores = df.to_string(index=False)
+        my_scores_as_string = f"**{title}**\n*{subtitle}*\n```\n{my_scores}\n```"
+        return my_scores_as_string
+
     async def show_leaderboard(self, game: str = None,
                                interaction: discord.Interaction = None, 
                                guild: discord.Guild = None):
@@ -84,6 +111,16 @@ class Leaderboards(commands.Cog):
         # if they called the command directly, send it as reply
         if interaction:
             await interaction.followup.send(leaderboard_as_string)
+
+    async def show_my_scores(self, interaction: discord.Interaction):
+        print(f"leaderboards.py: entered show_my_scores for {interaction.user.name}")
+
+        await interaction.response.defer()
+
+        my_scores_as_string = await self.get_my_scores(interaction.user.name)
+        print(f"leaderboards.py: got my_scores string for {interaction.user.name}")
+
+        await interaction.followup.send(my_scores_as_string)
 
 async def setup(client, tree):
     leaderboards = Leaderboards(client, tree)
