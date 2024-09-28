@@ -5,11 +5,11 @@
 │   │   ├── events.py
 │   │   └── tasks.py
 │   ├── functions
+│   │   ├── admin.py
 │   │   ├── mini_warning.py
 │   │   ├── save_messages.py
 │   │   ├── save_scores.py
 │   │   └── sql_helper.py
-│   └── bot.py
 ├── files
 │   ├── archive
 │   │   ├── get_zoho_acct.py
@@ -19,11 +19,18 @@
 │   │   ├── send_email_original.py
 │   │   └── send_email_via_zoho.py
 │   ├── guilds
-│   │   └── Games Tracker
-│   │       └── messages.json
+│   │   ├── Games Tracker
+│   │   │   ├── config.json
+│   │   │   └── messages.json
+│   │   ├── Nerd City
+│   │   │   └── leaders.json
+│   │   └── Tebbetts Server
+│   │       └── leaders.json
 │   ├── queries
 │   │   ├── add_historical_game_scores.sql
 │   │   ├── game_view_new.sql
+│   │   ├── game_view_quick.sql
+│   │   ├── leaderboard_basic.sql
 │   │   └── test_query.sql
 │   ├── examples.txt
 │   ├── games.json
@@ -38,3 +45,4 @@
 │   │   └── notification.service
 │   ├── mini_scraper.py
 │   └── tree.py
+└── bot.py

@@ -71,7 +71,9 @@ def get_score_info(message, game_name, game_info):
         "octordle": process_octordle,
         "octordle_rescue": process_octordle,
         "octordle_sequence": process_octordle,
-        "timeguessr": process_timeguessr
+        "timeguessr": process_timeguessr,
+        "factle": process_factle,
+        "factle_sports": process_factle
     }
 
     # Check if the game has a specific processor
@@ -278,6 +280,33 @@ def process_timeguessr(message):
         if score_match:
             score = score_match.group(1).replace(',', '')
             bonus = 'over_40k' if int(score) > 40000 else None
+
+    score_info = {
+        'game_score': score,
+        'game_detail': game_detail,
+        'game_bonuses': bonus
+    }
+    return score_info
+
+def process_factle(message):
+    lines = message.split('\n')
+    game_detail = lines[1] if len(lines) > 1 else None
+    score = None
+    bonus = None
+
+    if len(lines) > 3:
+        guesses_taken = len(lines) - 3
+        emoji_line = lines[-2].strip()
+        if emoji_line == "🐸" * 5:
+            score = f"{guesses_taken}/5"
+            print(f"Score: {score}")
+            if guesses_taken == 1:
+                bonus = "perfect"
+            elif guesses_taken == 2:
+                bonus = "impressive"
+        else:
+            score = "X/5"
+            bonus = "lost"
 
     score_info = {
         'game_score': score,

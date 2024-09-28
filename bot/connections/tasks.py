@@ -7,7 +7,8 @@ from bot.functions import find_users_to_warn
 from bot.functions import send_df_to_sql, get_df_from_sql
 from bot.functions import check_mini_leaders
 from bot.functions import write_json
-from bot.commands.leaderboards import Leaderboards
+from bot.commands import Leaderboards
+from bot.functions.admin import get_default_channel_id
 
 # task 1 - check for users who haven't completed the mini
 @tasks.loop(hours=1)
@@ -16,7 +17,6 @@ async def send_warning_loop(client: discord.Client):
     # see if anyone needs a warning
     users_to_warn = await find_users_to_warn()
     if len(users_to_warn) == 0:
-        print("tasks.py: No users to warn about the Mini right now")
         return
     
     # send warning to each user
@@ -57,28 +57,42 @@ async def send_warning_loop(client: discord.Client):
 # task 2 - check for new mini leaders and post to discord
 @tasks.loop(seconds=60)
 async def post_new_mini_leaders(client: discord.Client, tree: discord.app_commands.CommandTree):
-    
+
     # check for leader changes
     guild_differences = await check_mini_leaders()
-    for guild_name, has_new_leader in guild_differences.items():
-        if has_new_leader:
-            message = f"New mini leader for {guild_name}!"
-            print(f"tasks.py: {message}")
 
-            # Find the guild object
-            guild = discord.utils.get(client.guilds, name=guild_name)
-            if guild:
-                try:
-                    # Create an instance of Leaderboards and call post_leaderboard
-                    print(f"tasks.py: attempting to create Leaderboards instance")
-                    leaderboards = Leaderboards(client, tree)
-                    print(f"tasks.py: attempting to run post_leaderboard for {guild_name}")
-                    await leaderboards.post_leaderboard(game='mini', guild=guild)
-                    print(f"tasks.py: finished running post_leaderboard for {guild_name}")
-                except Exception as e:
-                    print(f"tasks.py: error in post_leaderboard: {e}")
-            else:
-                print(f"tasks.py: Guild {guild_name} not found")
+    # Filter guild_differences to include only connected guilds
+    connected_guilds = {guild.name for guild in client.guilds}
+    filtered_guild_differences = {guild_name: has_new_leader for guild_name, has_new_leader in guild_differences.items() if guild_name in connected_guilds}
+
+    for guild_name, has_new_leader in filtered_guild_differences.items():
+
+        if not has_new_leader:
+            continue
+
+        # otherwise, send message to discord
+        message = f"New mini leader for {guild_name}!"
+        print(f"tasks.py: {message}")
+
+        # Get the default channel ID
+        channel_id = get_default_channel_id(guild_name)
+        if not channel_id:
+            print(f"tasks.py: Could not get default channel ID for guild '{guild_name}'")
+            continue
+
+        basic_message = "There's a new mini leader!"
+        channel = client.get_channel(channel_id)
+        if channel:
+            await channel.send(basic_message)
+            print(f"tasks.py: Sent test message to channel ID '{channel_id}' in guild '{guild_name}'")
+
+            # get leaderboard function from class
+            leaderboards = Leaderboards(client, tree)
+            leaderboard = await leaderboards.show_leaderboard(client, game='mini')
+            await channel.send(leaderboard)
+
+        else:
+            print(f"tasks.py: Channel ID '{channel_id}' not found in guild '{guild_name}'")
 
 # task 3 - reset leaders when mini resets
 @tasks.loop(hours=1)
@@ -89,9 +103,9 @@ async def reset_mini_leaders(client: discord.Client):
         for guild in client.guilds:
             leader_filepath = f"files/guilds/{guild.name}/leaders.json"
             write_json(leader_filepath, []) # makes it an empty list
+            print(f"tasks.py: reset mini leaders for {guild.name}")
 
 def setup_tasks(client: discord.Client, tree: discord.app_commands.CommandTree):
     send_warning_loop.start(client)
     post_new_mini_leaders.start(client, tree)
     reset_mini_leaders.start(client)
-

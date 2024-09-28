@@ -55,9 +55,7 @@ async def setup_events(client, tree):
 
         # start background tasks
         try:
-            print("events.py: starting tasks")
             setup_tasks(client, tree)
-            print("events.py: started tasks")
         except Exception as e:
             print(f"events.py: error starting tasks: {e}")
 
@@ -81,9 +79,12 @@ async def setup_events(client, tree):
                     'added_ts', 'user_name', 'game_name', 'game_score',
                     'game_date', 'game_detail', 'game_bonuses', 'source_desc'
                 ]
-                ordered_score_result = OrderedDict((key, score_result[key]) for key in columns_order)
-                formatted_score = json.dumps(ordered_score_result, indent=4)
-                print(f"events.py: processed the following score: \n{formatted_score}")
+                 
+                
+                # for testing
+                ## ordered_score_result = OrderedDict((key, score_result[key]) for key in columns_order)
+                ## formatted_score = json.dumps(ordered_score_result, indent=4)
+                ## print(f"events.py: processed the following score: \n{formatted_score}")
 
                 # Load games configuration
                 with open('files/games.json', 'r', encoding='utf-8') as f:

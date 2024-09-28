@@ -44,7 +44,6 @@ async def get_df_from_sql(query, params=None):
             conn = await aiomysql.connect(**db_config, loop=asyncio.get_running_loop())
             async with conn.cursor(aiomysql.DictCursor) as cursor:
                 try:
-                    print(f"sql_helper.py: executing query: {query}")
                     await cursor.execute(query, params)
                 except Exception as execute_error:
                     print(f"sql_helper.py: error executing query: {execute_error}")

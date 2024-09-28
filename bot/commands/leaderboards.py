@@ -5,7 +5,6 @@ from discord import app_commands
 from discord.ext import commands
 from bot.functions import get_df_from_sql
 from datetime import datetime
-import pandas as pd
 
 class Leaderboards(commands.Cog):
     def __init__(self, client, tree):
@@ -30,13 +29,12 @@ class Leaderboards(commands.Cog):
 
     def create_command(self, name, description):
         async def command(interaction: discord.Interaction):
-            print(f"leaderboards.py: running {name}")
+            print(f"leaderboards.py: running command '{name}'")
             await self.show_leaderboard(game=name, interaction=interaction)
 
         command.__name__ = name
         app_command = app_commands.Command(name=name, description=description, callback=command)
         self.tree.add_command(app_command)
-        print(f"leaderboards.py: added command {name}")
 
     def create_my_scores_command(self):
         async def my_scores_command(interaction: discord.Interaction):
@@ -84,33 +82,35 @@ class Leaderboards(commands.Cog):
 
         if interaction:
             await interaction.response.defer()
+            # respond to interaction, telling them it's loading
+            await interaction.followup.send("Loading leaderboard...")
 
-        leaderboard_as_string = await self.get_leaderboard(game)
-        print(f"leaderboards.py: got leaderboard string for {game}")
+        # get the leaderboard
+        query = f"SELECT game_rank as rnk, player, score FROM matt.leaderboards WHERE game_name = '{game}'"
+        df = await get_df_from_sql(query)
 
-        if guild:
-            print(f"leaderboards.py: sending leaderboard to default channel for {guild.name}")
-            config_path = f"files/guilds/{guild.name}/config.json"
-            if os.path.exists(config_path):
-                with open(config_path, 'r') as f:
-                    config = json.load(f)
-                default_channel_id = config.get('default_channel_id')
-                if default_channel_id:
-                    channel = guild.get_channel(default_channel_id)
-                    if channel:
-                        print(f"Posting leaderboard to {channel.name} in {guild.name}")
-                        await channel.send(leaderboard_as_string)
-                        return
-                    else:
-                        print(f"Channel with ID {default_channel_id} not found in {guild.name}")
-                else:
-                    print(f"No default_channel_id found in config for {guild.name}")
-            else:
-                print(f"Config file not found for {guild.name}")
-
-        # if they called the command directly, send it as reply
-        if interaction:
-            await interaction.followup.send(leaderboard_as_string)
+        if not df.empty:
+            # format leaderboard
+            df['rnk'] = df['rnk'].fillna(-1).astype(int).replace(-1, '-').astype(str)
+            title = f"{game.capitalize()} Leaderboard"
+            subtitle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            leaderboard = df.to_string(index=False)
+            message = f"**{title}**\n*{subtitle}*\n```\n{leaderboard}\n```"
+        else:
+            message = f"No data available for {game} leaderboard."
+        
+        try:
+            # if called via command interaction, send the message as a reply
+            if isinstance(interaction, discord.Interaction):
+                await interaction.followup.send(message)
+                return None
+            
+            # if called programmatically, return the message
+            return message
+        
+        except Exception as e:
+            print(f"show_leaderboard: Exception occurred - {e}")
+            raise
 
     async def show_my_scores(self, interaction: discord.Interaction):
         print(f"leaderboards.py: entered show_my_scores for {interaction.user.name}")
