@@ -1,4 +1,4 @@
-# alter view games.my_scores as
+alter view games.my_scores as
 with
 recent_games as (
 	select distinct game_name
@@ -29,12 +29,12 @@ player_scores as (
 )
 SELECT 
 	a.discord_id as discord_nm,
-    a.game_name,
-    coalesce(b.game_score, '-') as game_score,
-    b.game_rank
+    a.game_name as game,
+    coalesce(b.game_score, '-') as score,
+    coalesce(b.game_rank, '-') as rnk
 FROM matrix a
 LEFT JOIN player_scores b
     ON a.game_name = b.game_name
     and a.discord_id = b.member_nm
-order by game_name
+order by game
 ;

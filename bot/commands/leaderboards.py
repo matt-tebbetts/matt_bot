@@ -23,9 +23,16 @@ class Leaderboards(commands.Cog):
             if not self.tree.get_command(command_name):
                 self.create_command(command_name, command_description)
 
-        # Add the new /my_scores command
-        if not self.tree.get_command("my_scores"):
-            self.create_my_scores_command()
+        # Add dynamic commands for different views
+        views = {
+            "my_scores": "Show your scores",
+            "winners": "Show winners"
+            # Add more views here as needed
+        }
+
+        for command_name, description in views.items():
+            if not self.tree.get_command(command_name):
+                self.create_dynamic_command(command_name, description)
 
     def create_command(self, name, description):
         async def command(interaction: discord.Interaction):
@@ -36,15 +43,15 @@ class Leaderboards(commands.Cog):
         app_command = app_commands.Command(name=name, description=description, callback=command)
         self.tree.add_command(app_command)
 
-    def create_my_scores_command(self):
-        async def my_scores_command(interaction: discord.Interaction):
-            print(f"leaderboards.py: running my_scores for {interaction.user.name}")
-            await self.show_my_scores(interaction=interaction)
+    def create_dynamic_command(self, name, description):
+        async def dynamic_command(interaction: discord.Interaction):
+            print(f"leaderboards.py: running {name} for {interaction.user.name}")
+            await self.show_view_data(view_name=name, interaction=interaction)
 
-        my_scores_command.__name__ = "my_scores"
-        app_command = app_commands.Command(name="my_scores", description="Show your scores", callback=my_scores_command)
+        dynamic_command.__name__ = name
+        app_command = app_commands.Command(name=name, description=description, callback=dynamic_command)
         self.tree.add_command(app_command)
-        print(f"leaderboards.py: added command my_scores")
+        print(f"leaderboards.py: added command {name}")
 
     async def get_leaderboard(self, game: str):
         query = f"SELECT game_rank as rnk, player, score FROM matt.leaderboards WHERE game_name = '{game}'"
@@ -61,24 +68,42 @@ class Leaderboards(commands.Cog):
         leaderboard_as_string = f"**{title}**\n*{subtitle}*\n```\n{leaderboard}\n```"
         return leaderboard_as_string
 
-    async def get_my_scores(self, discord_name: str):
-        query = f"SELECT * FROM games.my_scores WHERE discord_nm = '{discord_name}'"
+    async def get_view_data(self, view_name: str, discord_name: str = None):
+        if view_name == "my_scores":
+            query = f"SELECT * FROM games.{view_name} WHERE discord_nm = '{discord_name}'"
+        else:
+            query = f"SELECT * FROM games.{view_name}"
+
         df = await get_df_from_sql(query)
         if df.empty:
-            print(f"leaderboards.py: no data for {discord_name} in my_scores")
-            return "No data available for your scores."
+            print(f"leaderboards.py: no data in {view_name} for {discord_name if discord_name else 'view'}")
+            return f"No data available for {view_name.replace('_', ' ')}."
 
-        # format my_scores
-        title = f"{discord_name}'s Scores"
+        # format data
+        title = f"{view_name.replace('_', ' ').capitalize()}"
         subtitle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        my_scores = df.to_string(index=False)
-        my_scores_as_string = f"**{title}**\n*{subtitle}*\n```\n{my_scores}\n```"
-        return my_scores_as_string
+        data = df.to_string(index=False)
+        data_as_string = f"**{title}**\n*{subtitle}*\n```\n{data}\n```"
+        return data_as_string
+
+    async def show_view_data(self, view_name: str, interaction: discord.Interaction):
+        print(f"leaderboards.py: entered show_view_data for {view_name}")
+
+        await interaction.response.defer()
+
+        if view_name == "my_scores":
+            data_as_string = await self.get_view_data(view_name, interaction.user.name)
+        else:
+            data_as_string = await self.get_view_data(view_name)
+
+        print(f"leaderboards.py: got data string for {view_name}")
+
+        await interaction.followup.send(data_as_string)
 
     async def show_leaderboard(self, game: str = None,
                                interaction: discord.Interaction = None, 
                                guild: discord.Guild = None):
-        print(f"leaderboards.py: entered show_leaderboard for {guild.name} with game {game}")
+        print(f"leaderboards.py: entered show_leaderboard for {guild.name if guild else 'unknown guild'} with game {game}")
 
         if interaction:
             await interaction.response.defer()
@@ -88,6 +113,7 @@ class Leaderboards(commands.Cog):
         # get the leaderboard
         query = f"SELECT game_rank as rnk, player, score FROM matt.leaderboards WHERE game_name = '{game}'"
         df = await get_df_from_sql(query)
+        print(f"leaderboards.py: fetched data for {game} leaderboard")
 
         if not df.empty:
             # format leaderboard
@@ -101,12 +127,13 @@ class Leaderboards(commands.Cog):
         
         try:
             # if called via command interaction, send the message as a reply
-            if isinstance(interaction, discord.Interaction):
+            if interaction:
                 await interaction.followup.send(message)
-                return None
-            
-            # if called programmatically, return the message
-            return message
+                print(f"leaderboards.py: sent leaderboard message for {game}")
+            else:
+                # if called programmatically, return the message
+                print(f"leaderboards.py: returning leaderboard message for {game}")
+                return message
         
         except Exception as e:
             print(f"show_leaderboard: Exception occurred - {e}")
@@ -121,6 +148,16 @@ class Leaderboards(commands.Cog):
         print(f"leaderboards.py: got my_scores string for {interaction.user.name}")
 
         await interaction.followup.send(my_scores_as_string)
+
+    async def show_winners(self, interaction: discord.Interaction):
+        print(f"leaderboards.py: entered show_winners for {interaction.user.name}")
+
+        await interaction.response.defer()
+
+        winners_as_string = await self.get_winners()
+        print(f"leaderboards.py: got winners string for {interaction.user.name}")
+
+        await interaction.followup.send(winners_as_string)
 
 async def setup(client, tree):
     leaderboards = Leaderboards(client, tree)
