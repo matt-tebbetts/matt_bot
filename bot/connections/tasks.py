@@ -66,15 +66,8 @@ async def post_new_mini_leaders(client: discord.Client, tree: discord.app_comman
     filtered_guild_differences = {guild_name: has_new_leader for guild_name, has_new_leader in guild_differences.items() if guild_name in connected_guilds}
 
     for guild_name, has_new_leader in filtered_guild_differences.items():
-
         if not has_new_leader:
             continue
-
-        # otherwise, send message to discord
-        message = f"New mini leader for {guild_name}!"
-        print(f"tasks.py: {message}")
-
-        # Get the default channel ID
         channel_id = get_default_channel_id(guild_name)
         if not channel_id:
             print(f"tasks.py: Could not get default channel ID for guild '{guild_name}'")
@@ -84,13 +77,15 @@ async def post_new_mini_leaders(client: discord.Client, tree: discord.app_comman
         channel = client.get_channel(channel_id)
         if channel:
             await channel.send(basic_message)
-            print(f"tasks.py: Sent test message to channel ID '{channel_id}' in guild '{guild_name}'")
-
+            
             # get leaderboard function from class
             leaderboards = Leaderboards(client, tree)
-            leaderboard = await leaderboards.show_leaderboard(client, game='mini')
-            await channel.send(leaderboard)
-
+            try:
+                leaderboard_message = await leaderboards.show_leaderboard(game='mini')
+                if leaderboard_message:
+                    await channel.send(leaderboard_message)
+            except Exception as e:
+                print(f"tasks.py: Error getting leaderboard - {str(e)}")
         else:
             print(f"tasks.py: Channel ID '{channel_id}' not found in guild '{guild_name}'")
 

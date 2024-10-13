@@ -1,5 +1,5 @@
 -- if the old bot is adding scores that the new bot has missed, this will backfill
-/*
+
 INSERT INTO games.game_history (
     added_ts,
     user_name,
@@ -10,7 +10,6 @@ INSERT INTO games.game_history (
     game_bonuses,
     source_desc
 )
-*/
 SELECT 
     old.added_ts,
     old.discord_id AS user_name,
@@ -18,18 +17,7 @@ SELECT
     old.game_score,
     old.game_date,
     old.game_dtl AS game_detail,
-    CASE 
-        WHEN old.game_name = 'boxoffice' THEN
-            CASE 
-                WHEN old.metric_01 = '1' THEN 'guessed_1'
-                WHEN old.metric_01 = '2' THEN 'guessed_2'
-                WHEN old.metric_01 = '3' THEN 'guessed_3'
-                WHEN old.metric_01 = '4' THEN 'guessed_4'
-                WHEN old.metric_01 = '5' THEN 'guessed_5'
-                ELSE NULL
-            END
-        ELSE NULL
-    END AS game_bonuses,
+    null AS game_bonuses,
     'discord' AS source_desc
 FROM matt.game_history old
 LEFT JOIN games.game_history new

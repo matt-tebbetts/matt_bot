@@ -1,15 +1,20 @@
--- alter view games.game_view as
-WITH 
+alter view games.game_view as
+with
+latest_records as (
+	select	
+		*,
+		ROW_NUMBER() OVER(PARTITION BY game_name, game_date, user_name ORDER BY added_ts desc) AS added_rank
+	from games.game_history
+),
 all_games as (
 SELECT 
 	x.game_date,
 	x.game_name,
 	x.game_score,
 	x.added_ts,
-	x.discord_id,
-	x.game_dtl,
+	x.user_name,
+	x.game_detail,
 	g.scoring_type,
-	ROW_NUMBER() OVER(PARTITION BY x.game_name, game_date, discord_id ORDER BY added_ts) AS added_rank,
 	
 	# get the score into an integer so that we can sort and rank correctly
 	case    when g.scoring_type = 'timed'
@@ -38,12 +43,11 @@ SELECT
 			else 1
 	end as game_completed
 	
-FROM games.game_history x
-join matt.game_details g
+FROM latest_records x
+join games.game_details g
 	on x.game_name = g.game_name
--- where x.game_name = 'connections' and x.game_date = '2024-06-17'
+where x.added_rank = 1
 ),
-
 games_by_guild as (
 SELECT
 	x.*,
@@ -64,21 +68,15 @@ SELECT
 				
 				end
 	end as game_rank,
-	y.guild_id,
-	y.guild_nm,
 	y.player_name,
 	y.member_nm
 FROM all_games x
-join user_view y
-	on (lower(x.discord_id) = lower(y.member_nm) or lower(x.discord_id) = lower(y.alt_member_nm))
-WHERE x.added_rank = 1
--- and y.guild_nm = 'global'
+join matt.user_view y
+	on (lower(x.user_name) = lower(y.member_nm) or lower(x.user_name) = lower(y.alt_member_nm))
+WHERE y.guild_nm = 'global'
 ),
-
 combined as (
 select 
-	guild_id,
-    guild_nm,
     game_name,
     game_date,
     player_name,
@@ -91,16 +89,12 @@ select
 				then 0
 				else power(11 - game_rank, 2) # all games for now use the same points based on rank
     end as signed) as points,
-    case 	when score_as_int = 0 then null else score_as_int end as seconds,
+    case when score_as_int = 0 then null else score_as_int end as seconds,
     added_ts,
-    game_dtl
+    game_detail
 from games_by_guild
-
 union all
-
 select
-	guild_id,
-	guild_nm,
 	'mini' as game_name,
 	game_date,
 	player_name,
@@ -111,11 +105,10 @@ select
 	cast(points as signed) as points,
 	seconds,
 	added_ts,
-	null as game_dtl
-from mini_view
-
+	null as game_detail
+from matt.mini_view
+where guild_id = 'global'
 )
-
-select *, row_number() over(partition by guild_id, player_name, game_name order by game_date) as player_game_nbr
+select *, row_number() over(partition by player_name, game_name order by game_date) as player_game_nbr
 from combined
 
