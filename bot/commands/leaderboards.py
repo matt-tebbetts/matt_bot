@@ -28,22 +28,21 @@ class Leaderboards(commands.Cog):
 
     # this creates a leaderboard command for each game so you can call /mini or /octordle
     def create_command(self, name, description):
-        async def command(interaction: discord.Interaction, date_range: Optional[str] = None):
-            print(f"leaderboards.py: running command '{name}' with date_range '{date_range}'")
-            await self.show_leaderboard(game=name, interaction=interaction, date_range=date_range)
+        async def command(interaction: discord.Interaction, date_range: app_commands.Choice[str]):
+            print(f"leaderboards.py: running command '{name}' with date_range '{date_range.value}'")
+            await self.show_leaderboard(game=name, interaction=interaction, date_range=date_range.value)
+
+        # Define the list of date range options
+        date_ranges = ["today", "this month", "last month", "this year", "all time"]
+
+        # Create the choices using a list comprehension
+        choices = [app_commands.Choice(name=option, value=option) for option in date_ranges]
 
         command.__name__ = name
         app_command = app_commands.Command(
             name=name,
             callback=command,
-            options=[
-                app_commands.Option(
-                    name="date_range",
-                    description="Specify the date range (e.g., 'this month')",
-                    type=str,
-                    required=False
-                )
-            ]
+            choices=[app_commands.Choice(name=option, value=option) for option in date_ranges]
         )
         self.tree.add_command(app_command)
 
