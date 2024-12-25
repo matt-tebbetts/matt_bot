@@ -26,6 +26,7 @@ class Leaderboards(commands.Cog):
             if not self.tree.get_command(command_name):
                 self.create_command(command_name, command_description)
 
+    # this creates a leaderboard command for each game so you can call /mini or /octordle
     def create_command(self, name, description):
         async def command(interaction: discord.Interaction, date_range: Optional[str] = None):
             print(f"leaderboards.py: running command '{name}' with date_range '{date_range}'")
@@ -34,7 +35,6 @@ class Leaderboards(commands.Cog):
         command.__name__ = name
         app_command = app_commands.Command(
             name=name,
-            description=description,
             callback=command,
             options=[
                 app_commands.Option(
@@ -73,10 +73,10 @@ class Leaderboards(commands.Cog):
 
         if not df.empty:
             # format leaderboard
+            leaderboard = df.to_string(index=False)
             df['rnk'] = df['rnk'].fillna(-1).astype(int).replace(-1, '-').astype(str)
             title = f"{game.capitalize()} Leaderboard"
             subtitle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            leaderboard = df.to_string(index=False)
             message = f"**{title}**\n*{subtitle}*\n```\n{leaderboard}\n```"
         else:
             message = f"No data available for {game} leaderboard."
