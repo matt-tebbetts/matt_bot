@@ -28,6 +28,7 @@ class Leaderboards(commands.Cog):
             command_description = f"Show {command_name.capitalize()} leaderboard"
             if not self.tree.get_command(command_name):
                 self.create_command(command_name, command_description)
+                print(f"Command '{command_name}' created and added to the command tree.")
 
     # this creates a leaderboard command for each game so you can call /mini or /octordle
     def create_command(self, name, description):
@@ -46,45 +47,93 @@ class Leaderboards(commands.Cog):
 
     # leaderboard for any game
     async def show_leaderboard(self, interaction: Optional[discord.Interaction] = None, game: str = None, date_range: Optional[str] = None) -> str:
-        
+
+        # describe the interaction
+        print(f"leaderboards.py: interaction is {interaction} called by {interaction.user} and game is {game} and date_range is {date_range}")
+
+
         # Defer the interaction to give more time for processing
         if interaction and not interaction.response.is_done():
             # buy some time
             await interaction.response.defer()
-            # respond to interaction, telling them it's loading
-            await interaction.followup.send("Loading leaderboard...")
 
-        # Determine the SQL file to use, based on the choices
-        if date_range and date_range.lower() == "this month":
-            sql_file = 'leaderboard_this_month.sql'
+        # Determine the SQL file and parameters to use, based on the game and date range
+        if game == "winners":
+            if date_range and date_range.lower() == "this month":
+                sql_file = 'winners_this_month.sql'
+            else:
+                sql_file = 'winners_today.sql'
+            params = ()  # No parameters needed for winners
+        elif game == "my_scores":
+            if date_range and date_range.lower() == "this month":
+                sql_file = 'my_scores_this_month.sql'
+            else:
+                sql_file = 'my_scores_today.sql'
+            params = (interaction.user.name,)
         else:
-            sql_file = 'leaderboard_today.sql'
+            if date_range and date_range.lower() == "this month":
+                sql_file = 'leaderboard_this_month.sql'
+            else:
+                sql_file = 'leaderboard_today.sql'
+            params = (game,)  # Use the game name as the parameter
+
+        # Construct the full path to the SQL file
+        print(f"leaderboards.py: sql_file is {sql_file}")
+        sql_file_path = direct_path_finder('files', 'queries', sql_file)
+
+        # Check if the SQL file exists
+        if not os.path.exists(sql_file_path):
+            error_message = f"Error: SQL file '{sql_file}' not found."
+            print(error_message)
+            if interaction:
+                await interaction.followup.send(error_message)
+            return error_message
 
         # Read the SQL query from the file
-        sql_file_path = direct_path_finder('files', 'queries', sql_file)
         with open(sql_file_path, 'r', encoding='utf-8') as file:
             query = file.read()
 
+        # Debugging print statements
+        print(f"Executing SQL Query for game: {game}")
+
         # get the leaderboard
-        df = await get_df_from_sql(query, (game,))
+        df = await get_df_from_sql(query, params)
+
+        # Check if DataFrame is empty
+        if df.empty:
+            print(f"No data returned for game: {game}")
+        else:
+            print(f"Data retrieved for game: {game}")
+            print(f"DataFrame Shape: {df.shape}")
 
         if not df.empty:
+            print("DataFrame is not empty, proceeding to format leaderboard.")
+            
             # format leaderboard
             leaderboard = df.to_string(index=False)
-            df['rnk'] = df['rnk'].fillna(-1).astype(int).replace(-1, '-').astype(str)
+            print("Converted DataFrame to string for leaderboard.")
+            
+            # fix rank column
+            df['rnk'] = df['rnk'].replace('', -1).fillna(-1).astype(int).replace({-1: '-', 0: '-'}).astype(str)
+            
+            # set title
             title = f"{game.capitalize()} Leaderboard"
             subtitle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
             message = f"**{title}**\n*{subtitle}*\n```\n{leaderboard}\n```"
         else:
             message = f"No data available for {game} leaderboard."
-        
+
         try:
             # if called via command interaction, send the message as a reply
             if isinstance(interaction, discord.Interaction):
+                print("Sending message via interaction followup...")
                 await interaction.followup.send(message)
+                print("Message sent successfully via interaction.")
                 return None
             
             # if called programmatically, return the message
+            print("Returning message programmatically.")
             return message
         
         except Exception as e:

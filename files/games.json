@@ -139,5 +139,11 @@
             "won": "🏆",
             "lost": "❌"
         }
+    },
+    "my_scores": {
+        "game_name": "my_scores"
+    },
+    "winners": {
+        "game_name": "winners"
     }
 }

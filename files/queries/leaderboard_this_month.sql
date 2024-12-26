@@ -1,5 +1,4 @@
 SELECT
-	game_name as game,
 	month_rank as rnk,
 	player_name as player,
 	points,
@@ -8,3 +7,4 @@ SELECT
 	avg_rank as avg_rnk,
 	games
 FROM games.leaderboard_curr_month
+where game_name = %s
