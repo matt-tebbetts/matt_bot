@@ -113,12 +113,13 @@ class Leaderboards(commands.Cog):
             leaderboard = df.to_string(index=False)
             print("Converted DataFrame to string for leaderboard.")
             
-            # fix rank column
-            df['rnk'] = df['rnk'].replace('', -1).fillna(-1).astype(int).replace({-1: '-', 0: '-'}).astype(str)
+            # fix rank column if it exists
+            if 'rnk' in df.columns:
+                df['rnk'] = df['rnk'].replace('', -1).fillna(-1).astype(int).replace({-1: '-', 0: '-'}).astype(str)
             
             # set title
             title = f"{game.capitalize()} Leaderboard"
-            subtitle = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            subtitle = " " # datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             message = f"**{title}**\n*{subtitle}*\n```\n{leaderboard}\n```"
         else:
