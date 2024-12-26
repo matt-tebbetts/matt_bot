@@ -13,3 +13,6 @@ test/*
 
 # any guild-specific files
 files/guilds/
+
+# auto generated from dbeaver
+Scripts/*

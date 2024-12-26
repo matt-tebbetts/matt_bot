@@ -7,7 +7,9 @@ from bot.functions import get_df_from_sql
 from bot.functions.admin import direct_path_finder
 from datetime import datetime
 import pandas as pd
-from typing import Optional
+from typing import Optional, Literal
+
+list_of_date_ranges = ["today", "this month", "last month", "this year", "all time"]
 
 class Leaderboards(commands.Cog):
     def __init__(self, client, tree):
@@ -15,6 +17,7 @@ class Leaderboards(commands.Cog):
         self.tree = tree
         self.load_commands()
 
+    # this calls create_command for each game name in the games.json configuration
     def load_commands(self):
         games_file_path = direct_path_finder('files', 'games.json')
         with open(games_file_path, 'r', encoding='utf-8') as file:
@@ -28,21 +31,16 @@ class Leaderboards(commands.Cog):
 
     # this creates a leaderboard command for each game so you can call /mini or /octordle
     def create_command(self, name, description):
-        async def command(interaction: discord.Interaction, date_range: app_commands.Choice[str]):
-            print(f"leaderboards.py: running command '{name}' with date_range '{date_range.value}'")
-            await self.show_leaderboard(game=name, interaction=interaction, date_range=date_range.value)
-
-        # Define the list of date range options
-        date_ranges = ["today", "this month", "last month", "this year", "all time"]
-
-        # Create the choices using a list comprehension
-        choices = [app_commands.Choice(name=option, value=option) for option in date_ranges]
+        async def command(interaction: discord.Interaction,
+                          date_range: Literal["today", "this month", "last month", "this year", "all time"]):
+            print(f"leaderboards.py: running command '{name}' with date_range '{date_range}'")
+            await self.show_leaderboard(game=name, interaction=interaction, date_range=date_range)
 
         command.__name__ = name
         app_command = app_commands.Command(
             name=name,
             callback=command,
-            choices=[app_commands.Choice(name=option, value=option) for option in date_ranges]
+            description=description
         )
         self.tree.add_command(app_command)
 
@@ -56,7 +54,7 @@ class Leaderboards(commands.Cog):
             # respond to interaction, telling them it's loading
             await interaction.followup.send("Loading leaderboard...")
 
-        # Determine the SQL file based on the date range
+        # Determine the SQL file to use, based on the choices
         if date_range and date_range.lower() == "this month":
             sql_file = 'leaderboard_this_month.sql'
         else:
@@ -65,10 +63,10 @@ class Leaderboards(commands.Cog):
         # Read the SQL query from the file
         sql_file_path = direct_path_finder('files', 'queries', sql_file)
         with open(sql_file_path, 'r', encoding='utf-8') as file:
-            query = file.read().format(game=game)
+            query = file.read()
 
         # get the leaderboard
-        df = await get_df_from_sql(query)
+        df = await get_df_from_sql(query, (game,))
 
         if not df.empty:
             # format leaderboard

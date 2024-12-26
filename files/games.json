@@ -129,5 +129,15 @@
             "failed_any": "💀",
             "bonus_9": "🔥"
         }
+    },
+    "moviedle": {
+        "game_name": "moviedle",
+        "prefix": "Moviedle #",
+        "scoring_type": "guesses",
+        "emoji": "🎥",
+        "bonus_emojis": {
+            "won": "🏆",
+            "lost": "❌"
+        }
     }
 }
