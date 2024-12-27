@@ -119,9 +119,9 @@ class Leaderboards(commands.Cog):
             
             # set title
             title = f"{game.capitalize()} Leaderboard"
-            subtitle = " " # datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            subtitle = f"{date_range.capitalize()}"
 
-            message = f"**{title}**\n*{subtitle}*\n```\n{leaderboard}\n```"
+            message = f"{title}\n{subtitle}\n```\n{leaderboard}\n```"
         else:
             message = f"No data available for {game} leaderboard."
 

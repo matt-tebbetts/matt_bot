@@ -105,6 +105,17 @@ async def reset_mini_leaders(client: discord.Client):
             print(f"tasks.py: reset mini leaders for {guild.name}")
 
 def setup_tasks(client: discord.Client, tree: discord.app_commands.CommandTree):
+    # Restart send_warning_loop if it's already running
+    if send_warning_loop.is_running():
+        send_warning_loop.stop()
     send_warning_loop.start(client)
+
+    # Restart post_new_mini_leaders if it's already running
+    if post_new_mini_leaders.is_running():
+        post_new_mini_leaders.stop()
     post_new_mini_leaders.start(client, tree)
+
+    # Restart reset_mini_leaders if it's already running
+    if reset_mini_leaders.is_running():
+        reset_mini_leaders.stop()
     reset_mini_leaders.start(client)
