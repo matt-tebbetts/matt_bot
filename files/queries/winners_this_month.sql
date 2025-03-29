@@ -7,7 +7,7 @@ WITH winners AS (
 	FROM games.game_view
 	WHERE extract(year from game_date) = extract(year from curdate())
 	AND extract(month from game_date) = extract(month from curdate())
-	AND game_rank = 1
+	-- AND game_rank = 1
 	GROUP BY 1,2
 	union all
 	SELECT 
@@ -18,7 +18,7 @@ WITH winners AS (
 	FROM games.game_view
 	WHERE extract(year from game_date) = extract(year from curdate())
 	AND extract(month from game_date) = extract(month from curdate())
-	AND game_rank = 1
+	-- AND game_rank = 1
 	GROUP BY 1,2
 ),
 ranks as (

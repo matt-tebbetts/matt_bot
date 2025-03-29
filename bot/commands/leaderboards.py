@@ -28,7 +28,6 @@ class Leaderboards(commands.Cog):
             command_description = f"Show {command_name.capitalize()} leaderboard"
             if not self.tree.get_command(command_name):
                 self.create_command(command_name, command_description)
-                print(f"Command '{command_name}' created and added to the command tree.")
 
     # this creates a leaderboard command for each game so you can call /mini or /octordle
     def create_command(self, name, description):
@@ -46,11 +45,17 @@ class Leaderboards(commands.Cog):
         self.tree.add_command(app_command)
 
     # leaderboard for any game
-    async def show_leaderboard(self, interaction: Optional[discord.Interaction] = None, game: str = None, date_range: Optional[str] = None) -> str:
+    async def show_leaderboard(self, interaction: Optional[discord.Interaction] = None, game: str = None, date_range: Optional[str] = 'today') -> str:
 
-        # describe the interaction
-        print(f"leaderboards.py: interaction is {interaction} called by {interaction.user} and game is {game} and date_range is {date_range}")
+        print("leaderboards.py: show_leaderboard called")
 
+        # Check if interaction is provided
+        if interaction:
+            # describe the interaction
+            print(f"leaderboards.py: interaction is {interaction} called by {interaction.user} and game is {game} and date_range is {date_range}")
+        else:
+            # If not called via interaction, print alternative details
+            print(f"leaderboards.py: called without interaction, game is {game} and date_range is {date_range}")
 
         # Defer the interaction to give more time for processing
         if interaction and not interaction.response.is_done():
@@ -114,20 +119,27 @@ class Leaderboards(commands.Cog):
             print("Converted DataFrame to string for leaderboard.")
             
             # fix rank column if it exists
-            if 'rnk' in df.columns:
-                df['rnk'] = df['rnk'].replace('', -1).fillna(-1).astype(int).replace({-1: '-', 0: '-'}).astype(str)
-            
+            try:
+                if 'rnk' in df.columns:
+                    df['rnk'] = df['rnk'].replace('', -1).fillna(-1).astype(int).replace({-1: '-', 0: '-'}).astype(str)
+                    print("Fixed rnk column")
+            except Exception as e:
+                print(f"Error processing 'rnk' column: {e}")
+
+            print(f"leaderboards.py: setting up title...")
             # set title
             title = f"{game.capitalize()} Leaderboard"
             subtitle = f"{date_range.capitalize()}"
 
             message = f"{title}\n{subtitle}\n```\n{leaderboard}\n```"
+            print(f"leaderboards.py: message is {message}")
         else:
             message = f"No data available for {game} leaderboard."
 
+        print(f"leaderboards.py: now going to try to send message")
         try:
             # if called via command interaction, send the message as a reply
-            if isinstance(interaction, discord.Interaction):
+            if interaction:
                 print("Sending message via interaction followup...")
                 await interaction.followup.send(message)
                 print("Message sent successfully via interaction.")

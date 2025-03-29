@@ -87,7 +87,10 @@ async def post_new_mini_leaders(client: discord.Client, tree: discord.app_comman
             leaderboards = Leaderboards(client, tree)
 
             # this gets the leaderboard as a string
+            print(f"tasks.py: attempting to get leaderboard for {guild_name}")
             leaderboard = await leaderboards.show_leaderboard(game='mini')
+
+            print(f"tasks.py: attempting to send leaderboard to {guild_name}")
             await channel.send(leaderboard)
 
         else:
@@ -96,26 +99,43 @@ async def post_new_mini_leaders(client: discord.Client, tree: discord.app_comman
 # task 3 - reset leaders when mini resets
 @tasks.loop(hours=1)
 async def reset_mini_leaders(client: discord.Client):
-    now = datetime.now()
-    mini_reset_hour = 22 if now.weekday() >= 5 else 18
-    if now.hour == mini_reset_hour and now.minute <= 1: # reset window
-        for guild in client.guilds:
-            leader_filepath = f"files/guilds/{guild.name}/leaders.json"
-            write_json(leader_filepath, []) # makes it an empty list
-            print(f"tasks.py: reset mini leaders for {guild.name}")
+    print("tasks.py: reset_mini_leaders called")
+    try:
+        now = datetime.now()
+        mini_reset_hour = 22 if now.weekday() >= 5 else 18
+        
+        if now.hour == mini_reset_hour and now.minute <= 1:  # reset window
+            print("tasks.py: Within reset window")
+            for guild in client.guilds:
+                print(f"tasks.py: Processing guild {guild.name}")
+                leader_filepath = f"files/guilds/{guild.name}/leaders.json"
+                write_json(leader_filepath, [])  # makes it an empty list
+                print(f"tasks.py: Reset mini leaders for {guild.name}")
+
+    except Exception as e:
+        print(f"Error in reset_mini_leaders: {e}")
 
 def setup_tasks(client: discord.Client, tree: discord.app_commands.CommandTree):
     # Restart send_warning_loop if it's already running
     if send_warning_loop.is_running():
+        print("Stopping send_warning_loop...")
         send_warning_loop.stop()
+    print("Starting send_warning_loop...")
     send_warning_loop.start(client)
+    print("tasks.py: send_warning_loop started successfully")
 
     # Restart post_new_mini_leaders if it's already running
     if post_new_mini_leaders.is_running():
+        print("Stopping post_new_mini_leaders...")
         post_new_mini_leaders.stop()
+    print("Starting post_new_mini_leaders...")
     post_new_mini_leaders.start(client, tree)
+    print("tasks.py: post_new_mini_leaders started successfully")
 
     # Restart reset_mini_leaders if it's already running
     if reset_mini_leaders.is_running():
+        print("Stopping reset_mini_leaders...")
         reset_mini_leaders.stop()
+    print("Starting reset_mini_leaders...")
     reset_mini_leaders.start(client)
+    print("tasks.py: reset_mini_leaders started successfully")
