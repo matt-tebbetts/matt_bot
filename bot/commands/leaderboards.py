@@ -5,6 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 from bot.functions import get_df_from_sql
 from bot.functions.admin import direct_path_finder
+from bot.functions.df_to_image import df_to_image
 from datetime import datetime
 import pandas as pd
 from typing import Optional, Literal
@@ -115,24 +116,46 @@ class Leaderboards(commands.Cog):
             print("DataFrame is not empty, proceeding to format leaderboard.")
             
             # format leaderboard
-            leaderboard = df.to_string(index=False)
-            print("Converted DataFrame to string for leaderboard.")
+            print("Converting DataFrame to image...")
             
-            # fix rank column if it exists
             try:
-                if 'rnk' in df.columns:
-                    df['rnk'] = df['rnk'].replace('', -1).fillna(-1).astype(int).replace({-1: '-', 0: '-'}).astype(str)
-                    print("Fixed rnk column")
+                # Create image filepath - using a single file that gets overwritten
+                img_dir = direct_path_finder('files', 'images')
+                os.makedirs(img_dir, exist_ok=True)  # Create directory if it doesn't exist
+                img_filepath = os.path.join(img_dir, 'leaderboard.png')
+                
+                # Convert DataFrame to image
+                img_path = df_to_image(
+                    df=df,
+                    img_filepath=img_filepath,
+                    img_title=f"{game.capitalize()} Leaderboard",
+                    img_subtitle=f"{date_range.capitalize()}"
+                )
+                
+                print(f"leaderboards.py: image created at {img_path}")
+                
+                # Send the image
+                if interaction:
+                    print("Sending image via interaction followup...")
+                    await interaction.followup.send(file=discord.File(img_path))
+                    print("Image sent successfully via interaction.")
+                    return None
+                
+                # if called programmatically, return the image path
+                print("Returning image path programmatically.")
+                return img_path
+
             except Exception as e:
-                print(f"Error processing 'rnk' column: {e}")
-
-            print(f"leaderboards.py: setting up title...")
-            # set title
-            title = f"{game.capitalize()} Leaderboard"
-            subtitle = f"{date_range.capitalize()}"
-
-            message = f"{title}\n{subtitle}\n```\n{leaderboard}\n```"
-            print(f"leaderboards.py: message is {message}")
+                error_message = f"Error generating leaderboard image: {str(e)}"
+                print(error_message)
+                # Fallback to text-based leaderboard
+                leaderboard = df.to_string(index=False)
+                message = f"{game.capitalize()} Leaderboard\n{date_range.capitalize()}\n```\n{leaderboard}\n```"
+                
+                if interaction:
+                    await interaction.followup.send(message)
+                return message
+        
         else:
             message = f"No data available for {game} leaderboard."
 

@@ -2,7 +2,7 @@ import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
 import platform
 # returns the image filepath
-def dataframe_to_image_dark_mode(df, 
+def df_to_image(df, 
                                  img_filepath='files/images/leaderboard.png', 
                                  img_title="Today's Mini", 
                                  img_subtitle="Nerd City",
