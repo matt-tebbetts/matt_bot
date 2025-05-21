@@ -16,3 +16,29 @@ files/guilds/
 
 # auto generated from dbeaver
 Scripts/*
+
+# Generated images
+files/images/
+
+# Python virtual environment
+.venv/
+venv/
+ENV/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+*.log
+logs/
+
+# OS specific files
+.DS_Store
+Thumbs.db
