@@ -41,3 +41,13 @@ def get_default_channel_id(guild_name):
     except ValueError:
         print(f"admin.py: Invalid channel ID in config.json for guild '{guild_name}'")
     return None
+
+def direct_path_finder(*relative_path_parts: str) -> str:
+    """
+    Constructs an absolute path by joining the project root directory with the relative path parts.
+
+    :param relative_path_parts: The parts of the relative path to join.
+    :return: The absolute path.
+    """
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+    return os.path.join(project_root, *relative_path_parts)

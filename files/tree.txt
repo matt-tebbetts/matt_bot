@@ -2,6 +2,7 @@
 │   ├── commands
 │   │   └── leaderboards.py
 │   ├── connections
+│   │   ├── config.py
 │   │   ├── events.py
 │   │   └── tasks.py
 │   ├── functions
@@ -21,16 +22,21 @@
 │   ├── guilds
 │   │   ├── Games Tracker
 │   │   │   ├── config.json
+│   │   │   ├── leaders.json
 │   │   │   └── messages.json
 │   │   ├── Nerd City
 │   │   │   └── leaders.json
 │   │   └── Tebbetts Server
-│   │       └── leaders.json
+│   │       ├── config.json
+│   │       ├── leaders.json
+│   │       └── messages.json
 │   ├── queries
 │   │   ├── add_historical_game_scores.sql
 │   │   ├── game_view_new.sql
 │   │   ├── game_view_quick.sql
 │   │   ├── leaderboard_basic.sql
+│   │   ├── leaderboard_dynamic.sql
+│   │   ├── leaderboard_monthly.sql
 │   │   └── test_query.sql
 │   ├── examples.txt
 │   ├── games.json

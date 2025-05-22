@@ -1,108 +1,112 @@
-
 import asyncio
 import aiomysql
 import pandas as pd
 import os
 from dotenv import load_dotenv
+import random
+import traceback
+from typing import List, Dict, Any, Optional
 
 lock = asyncio.Lock()
+_pools = {}
+
+# Global connection pool
+_pool = None
 
 # get sql config
 async def get_db_config():
-
     # load env variables
     load_dotenv()
 
     # Retrieve environment variables
-    SQLUSER = os.getenv('SQLUSER')
-    SQLPASS = os.getenv('SQLPASS')
-    SQLHOST = os.getenv('SQLHOST')
-    SQLPORT = os.getenv('SQLPORT')
-    SQLDATA = os.getenv('SQLDATA')
+    SQL_USER = os.getenv('SQL_USER')
+    SQL_PASS = os.getenv('SQL_PASS')
+    SQL_HOST = os.getenv('SQL_HOST')
+    SQL_PORT = os.getenv('SQL_PORT')
+    SQL_DATA = os.getenv('SQL_DATA')
 
     # Check if all environment variables were found
-    for var_name, var_value in [('SQLUSER', SQLUSER), ('SQLPASS', SQLPASS), ('SQLHOST', SQLHOST), ('SQLPORT', SQLPORT), ('SQLDATA', SQLDATA)]:
+    for var_name, var_value in [('SQL_USER', SQL_USER), ('SQL_PASS', SQL_PASS), 
+                              ('SQL_HOST', SQL_HOST), ('SQL_PORT', SQL_PORT), 
+                              ('SQL_DATA', SQL_DATA)]:
         if var_value is None:
             raise ValueError(f"Environment variable '{var_name}' not found.")
 
     db_config = {
-        'host': SQLHOST,
-        'port': int(SQLPORT), # set port as integer
-        'user': SQLUSER,
-        'password': SQLPASS,
-        'db': SQLDATA
+        'host': SQL_HOST,
+        'port': int(SQL_PORT),
+        'user': SQL_USER,
+        'password': SQL_PASS,
+        'db': SQL_DATA,
+        'connect_timeout': 10,  # 10 second connection timeout
+        'autocommit': True,     # Enable autocommit
+        'pool_recycle': 3600,   # Recycle connections after 1 hour
+        'echo': False,          # Disable SQL query logging
+        'minsize': 1,           # Minimum pool size
+        'maxsize': 10           # Maximum pool size
     }
 
     return db_config
 
-# get df from sql query
-async def get_df_from_sql(query, params=None):
-    db_config = await get_db_config()
-    attempts = 0
-    while attempts < 3:
-        try:
-            conn = await aiomysql.connect(**db_config, loop=asyncio.get_running_loop())
-            async with conn.cursor(aiomysql.DictCursor) as cursor:
-                try:
-                    await cursor.execute(query, params)
-                except Exception as execute_error:
-                    print(f"sql_helper.py: error executing query: {execute_error}")
-                    raise execute_error
+async def get_pool():
+    """Get or create the connection pool."""
+    global _pool
+    if _pool is None:
+        db_config = await get_db_config()
+        print(f"[SQL] Initializing connection pool to {db_config['host']}/{db_config['db']}")
+        _pool = await aiomysql.create_pool(**db_config)
+    return _pool
 
-                try:
-                    result = await cursor.fetchall()
-                except Exception as fetch_error:
-                    print(f"sql_helper.py: error fetching results: {fetch_error}")
-                    raise fetch_error
-            conn.close()
+async def execute_query(query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
+    """Execute a SQL query and return the results."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        async with conn.cursor(aiomysql.DictCursor) as cur:
+            await cur.execute(query, params or ())
+            return await cur.fetchall()
 
-            # return df
-            return pd.DataFrame(result) if result else pd.DataFrame()
-        
-        except (asyncio.TimeoutError, aiomysql.OperationalError) as e:
-            print(f"sql_helper.py: SQL Connection/Timeout Error: {e}")
-            attempts += 1
-            if attempts >= 3:
-                print("sql_helper.py: max attempts reached")
-                raise e
-            await asyncio.sleep(1)
-        except Exception as e:
-            raise e
-    return pd.DataFrame()
+async def execute_many(query: str, params_list: List[tuple]) -> None:
+    """Execute multiple SQL queries with different parameters."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.executemany(query, params_list)
 
-# save df to sql table
+async def close_pool():
+    """Close the connection pool."""
+    global _pool
+    if _pool is not None:
+        _pool.close()
+        await _pool.wait_closed()
+        _pool = None
+
 async def send_df_to_sql(df, table_name, if_exists='append'):
-    db_config = await get_db_config()
-    async with lock:
-        # Convert DataFrame to tuples
-        data_tuples = [tuple(x) for x in df.to_numpy()]
+    if df.empty:
+        print(f"[SQL] Warning: Attempting to insert empty DataFrame into {table_name}")
+        return
 
-        # Construct SQL query for inserting data
-        cols = ', '.join(df.columns)
-        placeholders = ', '.join(['%s'] * len(df.columns))
-        insert_query = f"INSERT INTO {table_name} ({cols}) VALUES ({placeholders})"
-
-        # Handle the 'if_exists' cases
-        if if_exists == 'replace':
-            delete_query = f"DELETE FROM {table_name}"
-        elif if_exists == 'fail':
-            check_query = f"SELECT 1 FROM {table_name} LIMIT 1"
-
-        # Connect and execute
-        async with aiomysql.create_pool(**db_config, loop=asyncio.get_running_loop()) as pool:
+    try:
+        async with lock:
+            pool = await get_pool()
             async with pool.acquire() as conn:
                 async with conn.cursor() as cur:
-
-                    # If 'replace', delete existing data
                     if if_exists == 'replace':
-                        await cur.execute(delete_query)
+                        await cur.execute(f"DELETE FROM {table_name}")
+                        print(f"[SQL] Cleared existing data from {table_name}")
 
-                    # If 'fail', check if the table is empty
-                    elif if_exists == 'fail':
-                        await cur.execute(check_query)
-                        if await cur.fetchone():
-                            raise ValueError(f"Table {table_name} is not empty. Aborting operation.")
-
-                    # Execute the insert query
-                    await cur.executemany(insert_query, data_tuples)
+                    # Prepare the data
+                    columns = df.columns.tolist()
+                    placeholders = ', '.join(['%s'] * len(columns))
+                    query = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
+                    
+                    # Convert DataFrame to list of tuples
+                    data_tuples = [tuple(x) for x in df.values]
+                    
+                    # Execute the insert
+                    await cur.executemany(query, data_tuples)
                     await conn.commit()
+                    print(f"[SQL] Inserted {len(data_tuples)} rows into {table_name}")
+
+    except Exception as e:
+        print(f"[SQL] Failed to insert data into {table_name}: {str(e)}")
+        raise
