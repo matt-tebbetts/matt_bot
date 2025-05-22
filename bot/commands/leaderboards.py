@@ -8,7 +8,7 @@ from bot.functions.admin import direct_path_finder
 from bot.functions.df_to_image import df_to_image
 from datetime import datetime, timedelta
 import pandas as pd
-from typing import Optional, Literal
+from typing import Optional, Literal, Tuple
 
 class Leaderboards(commands.Cog):
     def __init__(self, client, tree):
@@ -46,7 +46,7 @@ class Leaderboards(commands.Cog):
         )
         self.tree.add_command(app_command)
 
-    def get_date_range(self, timeframe: str, specific_date: Optional[str] = None) -> tuple[datetime, datetime]:
+    def get_date_range(self, timeframe: str, specific_date: Optional[str] = None) -> Tuple[datetime, datetime]:
         today = datetime.now().date()
         
         # If specific date is provided, use that instead of timeframe
