@@ -19,24 +19,48 @@ class Leaderboards(commands.Cog):
     # this calls create_command for each game name in the games.json configuration
     def load_commands(self):
         games_file_path = direct_path_finder('files', 'games.json')
+        print(f"Loading commands from: {games_file_path}")
         with open(games_file_path, 'r', encoding='utf-8') as file:
             games_data = json.load(file)
+            # print(f"Loaded games data: {games_data}")  # Commented out to reduce noise
 
         for game_name, game_info in games_data.items():
             command_name = game_info["game_name"]
             command_description = f"Show {command_name.capitalize()} leaderboard"
+            print(f"Registering command: {command_name}")
             if not self.tree.get_command(command_name):
                 self.create_command(command_name, command_description)
+                print(f"Successfully registered command: {command_name}")
+            else:
+                print(f"Command {command_name} already exists")
 
     # this creates a leaderboard command for each game so you can call /mini or /octordle
     def create_command(self, name, description):
         async def command(interaction: discord.Interaction,
-                         timeframe: Literal["today", "yesterday", "this month", "last month", "this year", "all time"] = "today",
-                         specific_date: Optional[str] = None):
+                         timeframe: Literal["today", "yesterday", "this month", "last month", "this year", "all time"] = "today"):
             print(f"leaderboards.py: running command '{name}' with timeframe '{timeframe}'")
-            if specific_date:
-                print(f"leaderboards.py: using specific date '{specific_date}'")
-            await self.show_leaderboard(game=name, interaction=interaction, timeframe=timeframe, specific_date=specific_date)
+            try:
+                # Defer the response immediately
+                await interaction.response.defer()
+                print("Response deferred successfully")
+                
+                # Get the leaderboard
+                result = await self.show_leaderboard(game=name, interaction=interaction, timeframe=timeframe)
+                
+                # If we haven't sent a response yet, send one
+                if not interaction.response.is_done():
+                    await interaction.followup.send(result)
+                print("Command completed successfully")
+                
+            except Exception as e:
+                print(f"Error in command {name}: {str(e)}")
+                try:
+                    if not interaction.response.is_done():
+                        await interaction.response.send_message(f"Error: {str(e)}", ephemeral=True)
+                    else:
+                        await interaction.followup.send(f"Error: {str(e)}", ephemeral=True)
+                except Exception as followup_error:
+                    print(f"Error sending error message: {str(followup_error)}")
 
         command.__name__ = name
         app_command = app_commands.Command(
@@ -46,17 +70,9 @@ class Leaderboards(commands.Cog):
         )
         self.tree.add_command(app_command)
 
-    def get_date_range(self, timeframe: str, specific_date: Optional[str] = None) -> Tuple[datetime, datetime]:
+    def get_date_range(self, timeframe: str) -> Tuple[datetime, datetime]:
         today = datetime.now().date()
         
-        # If specific date is provided, use that instead of timeframe
-        if specific_date:
-            try:
-                target_date = datetime.strptime(specific_date, '%Y-%m-%d').date()
-                return target_date, target_date
-            except ValueError:
-                raise ValueError("Invalid date format. Please use YYYY-MM-DD")
-
         if timeframe == "today":
             return today, today
         elif timeframe == "yesterday":
@@ -85,20 +101,14 @@ class Leaderboards(commands.Cog):
 
     # leaderboard for any game
     async def show_leaderboard(self, interaction: Optional[discord.Interaction] = None, game: str = None, 
-                             timeframe: Optional[str] = 'today', specific_date: Optional[str] = None) -> str:
+                             timeframe: Optional[str] = 'today') -> str:
         try:
-            # Determine if this is an interaction or a programmatic call
-            if interaction:
-                await interaction.response.defer()
-                user = interaction.user
-            else:
-                user = None
-
             # Get date range
-            start_date, end_date = self.get_date_range(timeframe, specific_date)
+            start_date, end_date = self.get_date_range(timeframe)
+            print(f"Date range: {start_date} to {end_date}")
             
             # Determine if we need daily scores or aggregate stats
-            if timeframe in ["today", "yesterday"] or specific_date:
+            if timeframe in ["today", "yesterday"]:
                 # Use daily scores query
                 sql_file = "game_daily_scores.sql"
                 params = [start_date, game]
@@ -108,51 +118,72 @@ class Leaderboards(commands.Cog):
                 params = [start_date, end_date, game]
 
             sql_file_path = direct_path_finder('files', 'queries', 'active', sql_file)
+            print(f"Looking for SQL file at: {sql_file_path}")
+            print(f"File exists: {os.path.exists(sql_file_path)}")
 
             # Check if the SQL file exists
             if not os.path.exists(sql_file_path):
                 error_message = f"Error: SQL file '{sql_file}' not found."
-                if interaction:
-                    await interaction.followup.send(error_message)
+                print(error_message)
                 return error_message
 
             # Read the SQL query from the file
+            print(f"Reading SQL query from file...")
             with open(sql_file_path, 'r', encoding='utf-8') as file:
                 query = file.read()
+            print(f"SQL query read successfully")
 
             # Get the leaderboard
-            df = await execute_query(query, params)
+            print(f"Executing query with params: {params}")
+            try:
+                df = await execute_query(query, params)
+                print(f"Query executed successfully, got {len(df)} rows")
+                print(f"DataFrame columns: {df.columns.tolist()}")
+                print(f"DataFrame head:\n{df.head()}")
+            except Exception as e:
+                print(f"Error executing query: {str(e)}")
+                return f"Error executing query: {str(e)}"
 
             # Check if DataFrame is empty
             if df.empty:
-                if interaction:
-                    await interaction.followup.send(f"No data available for {game}")
+                print(f"No data found for {game}")
                 return f"No data available for {game}"
 
             # Format the leaderboard based on query type
-            if timeframe == "today":
-                leaderboard = self.format_daily_leaderboard(df, game)
-            else:
-                leaderboard = self.format_aggregate_leaderboard(df, game, timeframe)
+            print(f"Starting to format leaderboard...")
+            try:
+                print(f"DataFrame info before formatting:")
+                print(f"Columns: {df.columns.tolist()}")
+                print(f"Data types: {df.dtypes}")
+                
+                if timeframe == "today":
+                    print("Using daily leaderboard format")
+                    leaderboard = self.format_daily_leaderboard(df, game)
+                else:
+                    print("Using aggregate leaderboard format")
+                    leaderboard = self.format_aggregate_leaderboard(df, game, timeframe)
+                print(f"Leaderboard formatted successfully: {leaderboard[:100]}...")  # Print first 100 chars
+            except Exception as e:
+                print(f"Error formatting leaderboard: {str(e)}")
+                print(f"DataFrame state at error: {df.info()}")
+                return f"Error formatting leaderboard: {str(e)}"
 
-            # Handle the response based on whether it's an interaction or programmatic call
-            if interaction:
-                # Try to create and send an image first
-                try:
-                    img_path = df_to_image(df, f"{game} Leaderboard")
-                    await interaction.followup.send(file=discord.File(img_path))
-                    return img_path
-                except Exception as e:
-                    # If image creation fails, send as text
-                    await interaction.followup.send(leaderboard)
-                    return leaderboard
-            else:
+            # Try to create and send an image
+            try:
+                print(f"Starting to create image from DataFrame...")
+                print(f"DataFrame state before image creation: {df.info()}")
+                img_path = df_to_image(df, f"{game} Leaderboard")
+                print(f"Image created successfully at {img_path}")
+                return img_path
+            except Exception as e:
+                print(f"Error in image creation process: {str(e)}")
+                print(f"DataFrame state at error: {df.info()}")
+                # If image creation fails, return text version
                 return leaderboard
 
         except Exception as e:
             error_message = f"Error showing leaderboard: {str(e)}"
-            if interaction:
-                await interaction.followup.send(error_message)
+            print(error_message)
             return error_message
 
     def format_daily_leaderboard(self, df: pd.DataFrame, game: str) -> str:
