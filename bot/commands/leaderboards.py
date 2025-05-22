@@ -3,7 +3,7 @@ import os
 import discord
 from discord import app_commands
 from discord.ext import commands
-from bot.functions import get_df_from_sql
+from bot.functions import execute_query
 from bot.functions.admin import direct_path_finder
 from bot.functions.df_to_image import df_to_image
 from datetime import datetime
@@ -72,7 +72,7 @@ class Leaderboards(commands.Cog):
 
             # Get the leaderboard
             params = [game] if game else None
-            df = await get_df_from_sql(query, params)
+            df = await execute_query(query, params)
 
             # Check if DataFrame is empty
             if df.empty:

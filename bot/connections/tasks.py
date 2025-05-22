@@ -4,7 +4,7 @@ from datetime import datetime
 import pandas as pd
 
 from bot.functions import find_users_to_warn
-from bot.functions import send_df_to_sql, get_df_from_sql
+from bot.functions import send_df_to_sql, execute_query
 from bot.functions import check_mini_leaders
 from bot.functions import write_json
 from bot.commands import Leaderboards
