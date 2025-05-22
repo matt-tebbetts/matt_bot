@@ -26,7 +26,7 @@ def df_to_image(df,
     elif platform.system() == 'Darwin':  # macOS
         font_path = '/Library/Fonts/Arial.ttf'
     else:  # linux on remote
-        font_path = '/usr/share/fonts/truetype/arial.ttf'  # Adjust if necessary
+        font_path = '/usr/share/fonts/truetype/ARIAL.TTF'  # Using uppercase as it was working before
 
     font_size = 18
     font = ImageFont.truetype(font_path, font_size)

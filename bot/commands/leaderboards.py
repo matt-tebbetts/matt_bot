@@ -45,14 +45,18 @@ class Leaderboards(commands.Cog):
                 print("Response deferred successfully")
                 
                 # Get the leaderboard
-                img_path = await self.show_leaderboard(game=name, interaction=interaction, timeframe=timeframe)
-                
-                # Send the image file
-                if os.path.exists(img_path):
-                    await interaction.followup.send(file=discord.File(img_path))
-                else:
-                    await interaction.followup.send(f"Error: Could not find leaderboard image at {img_path}")
-                print("Command completed successfully")
+                try:
+                    img_path = await self.show_leaderboard(game=name, interaction=interaction, timeframe=timeframe)
+                    
+                    # Send the image file
+                    if os.path.exists(img_path):
+                        await interaction.followup.send(file=discord.File(img_path))
+                    else:
+                        await interaction.followup.send(f"Error: Could not find leaderboard image at {img_path}")
+                    print("Command completed successfully")
+                except Exception as e:
+                    print(f"Error creating leaderboard: {str(e)}")
+                    await interaction.followup.send(f"Error: {str(e)}", ephemeral=True)
                 
             except Exception as e:
                 print(f"Error in command {name}: {str(e)}")
