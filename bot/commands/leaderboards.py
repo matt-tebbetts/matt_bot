@@ -155,17 +155,19 @@ class Leaderboards(commands.Cog):
             # Create and return the image
             try:
                 print(f"Starting to create image from DataFrame...")
-                img_path = df_to_image(df, f"files/images/{game}_leaderboard.png", f"{game} Leaderboard")
+                img_path = df_to_image(df, "files/images/leaderboard.png", f"{game} Leaderboard")
                 print(f"Image created successfully at {img_path}")
+                if not os.path.exists(img_path):
+                    raise FileNotFoundError(f"Image file was not created at {img_path}")
                 return img_path
             except Exception as e:
                 print(f"Error in image creation process: {str(e)}")
-                return f"Error creating leaderboard image: {str(e)}"
+                raise Exception(f"Failed to create leaderboard image: {str(e)}")
 
         except Exception as e:
             error_message = f"Error showing leaderboard: {str(e)}"
             print(error_message)
-            return error_message
+            raise Exception(error_message)
 
 async def setup(client, tree):
     leaderboards = Leaderboards(client, tree)
