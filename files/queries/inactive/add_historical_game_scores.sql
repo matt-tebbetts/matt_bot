@@ -1,5 +1,4 @@
 -- if the old bot is adding scores that the new bot has missed, this will backfill
-/*
 INSERT INTO games.game_history (
     added_ts,
     user_name,
@@ -10,7 +9,6 @@ INSERT INTO games.game_history (
     game_bonuses,
     source_desc
 )
-*/
 SELECT 
     old.added_ts,
     old.discord_id AS user_name,
@@ -38,4 +36,13 @@ LEFT JOIN games.game_history new
     AND new.game_date = old.game_date
     AND new.added_ts = old.added_ts
 WHERE new.added_ts IS NULL -- not in our new table yet
-ORDER BY 1 DESC;
+ORDER BY 1;
+
+
+select
+	extract(year from game_date) as yr,
+	extract(month from game_date) as mn,
+	count(*) as records
+from games.game_history
+group by 1,2
+order by 1,2

@@ -1,10 +1,10 @@
 import discord
-from bot.functions import get_df_from_sql
+from bot.functions import execute_query
 from bot.functions.admin import read_json, write_json
 
 # find users who haven't completed the mini
 async def find_users_to_warn():
-    df = await get_df_from_sql("SELECT * FROM matt.mini_not_completed")
+    df = await execute_query("SELECT * FROM matt.mini_not_completed")
     if df.empty:
         return []
     users_to_message = []
@@ -28,7 +28,7 @@ async def check_mini_leaders():
         where game_date = (select max(game_date) from matt.mini_view)
         and game_rank = 1
     """
-    df = await get_df_from_sql(query)
+    df = await execute_query(query)
 
     # get leaders by guild
     aggregated_df = df.groupby('guild_nm')['player_name'].apply(list).reset_index()

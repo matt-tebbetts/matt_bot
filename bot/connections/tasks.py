@@ -4,7 +4,7 @@ from datetime import datetime
 import pandas as pd
 
 from bot.functions import find_users_to_warn
-from bot.functions import send_df_to_sql, get_df_from_sql
+from bot.functions import send_df_to_sql, execute_query
 from bot.functions import check_mini_leaders
 from bot.functions import write_json
 from bot.commands import Leaderboards
@@ -70,14 +70,9 @@ async def post_new_mini_leaders(client: discord.Client, tree: discord.app_comman
         if not has_new_leader:
             continue
 
-        # otherwise, send message to discord
-        message = f"New mini leader for {guild_name}!"
-        print(f"tasks.py: {message}")
-
         # Get the default channel ID
         channel_id = get_default_channel_id(guild_name)
         if not channel_id:
-            print(f"tasks.py: Could not get default channel ID for guild '{guild_name}'")
             continue
 
         basic_message = "There's a new mini leader!"
@@ -85,26 +80,36 @@ async def post_new_mini_leaders(client: discord.Client, tree: discord.app_comman
         if channel:
             await channel.send(basic_message)
             leaderboards = Leaderboards(client, tree)
-
-            # this gets the leaderboard as a string
             leaderboard = await leaderboards.show_leaderboard(game='mini')
             await channel.send(leaderboard)
-
-        else:
-            print(f"tasks.py: Channel ID '{channel_id}' not found in guild '{guild_name}'")
 
 # task 3 - reset leaders when mini resets
 @tasks.loop(hours=1)
 async def reset_mini_leaders(client: discord.Client):
-    now = datetime.now()
-    mini_reset_hour = 22 if now.weekday() >= 5 else 18
-    if now.hour == mini_reset_hour and now.minute <= 1: # reset window
-        for guild in client.guilds:
-            leader_filepath = f"files/guilds/{guild.name}/leaders.json"
-            write_json(leader_filepath, []) # makes it an empty list
-            print(f"tasks.py: reset mini leaders for {guild.name}")
+    try:
+        now = datetime.now()
+        mini_reset_hour = 22 if now.weekday() >= 5 else 18
+        
+        if now.hour == mini_reset_hour and now.minute <= 1:  # reset window
+            for guild in client.guilds:
+                leader_filepath = f"files/guilds/{guild.name}/leaders.json"
+                write_json(leader_filepath, [])  # makes it an empty list
+
+    except Exception as e:
+        print(f"Error in reset_mini_leaders: {e}")
 
 def setup_tasks(client: discord.Client, tree: discord.app_commands.CommandTree):
-    send_warning_loop.start(client)
+    # Disabled warning loop for now
+    # if send_warning_loop.is_running():
+    #     send_warning_loop.stop()
+    # send_warning_loop.start(client)
+
+    # Restart post_new_mini_leaders if it's already running
+    if post_new_mini_leaders.is_running():
+        post_new_mini_leaders.stop()
     post_new_mini_leaders.start(client, tree)
+
+    # Restart reset_mini_leaders if it's already running
+    if reset_mini_leaders.is_running():
+        reset_mini_leaders.stop()
     reset_mini_leaders.start(client)
