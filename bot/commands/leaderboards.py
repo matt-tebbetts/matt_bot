@@ -45,11 +45,13 @@ class Leaderboards(commands.Cog):
                 print("Response deferred successfully")
                 
                 # Get the leaderboard
-                result = await self.show_leaderboard(game=name, interaction=interaction, timeframe=timeframe)
+                img_path = await self.show_leaderboard(game=name, interaction=interaction, timeframe=timeframe)
                 
-                # If we haven't sent a response yet, send one
-                if not interaction.response.is_done():
-                    await interaction.followup.send(result)
+                # Send the image file
+                if os.path.exists(img_path):
+                    await interaction.followup.send(file=discord.File(img_path))
+                else:
+                    await interaction.followup.send(f"Error: Could not find leaderboard image at {img_path}")
                 print("Command completed successfully")
                 
             except Exception as e:
@@ -136,7 +138,8 @@ class Leaderboards(commands.Cog):
             # Get the leaderboard
             print(f"Executing query with params: {params}")
             try:
-                df = await execute_query(query, params)
+                result = await execute_query(query, params)
+                df = pd.DataFrame(result)
                 print(f"Query executed successfully, got {len(df)} rows")
                 print(f"DataFrame columns: {df.columns.tolist()}")
                 print(f"DataFrame head:\n{df.head()}")
@@ -149,63 +152,20 @@ class Leaderboards(commands.Cog):
                 print(f"No data found for {game}")
                 return f"No data available for {game}"
 
-            # Format the leaderboard based on query type
-            print(f"Starting to format leaderboard...")
-            try:
-                print(f"DataFrame info before formatting:")
-                print(f"Columns: {df.columns.tolist()}")
-                print(f"Data types: {df.dtypes}")
-                
-                if timeframe == "today":
-                    print("Using daily leaderboard format")
-                    leaderboard = self.format_daily_leaderboard(df, game)
-                else:
-                    print("Using aggregate leaderboard format")
-                    leaderboard = self.format_aggregate_leaderboard(df, game, timeframe)
-                print(f"Leaderboard formatted successfully: {leaderboard[:100]}...")  # Print first 100 chars
-            except Exception as e:
-                print(f"Error formatting leaderboard: {str(e)}")
-                print(f"DataFrame state at error: {df.info()}")
-                return f"Error formatting leaderboard: {str(e)}"
-
-            # Try to create and send an image
+            # Create and return the image
             try:
                 print(f"Starting to create image from DataFrame...")
-                print(f"DataFrame state before image creation: {df.info()}")
-                img_path = df_to_image(df, f"{game} Leaderboard")
+                img_path = df_to_image(df, f"files/images/{game}_leaderboard.png", f"{game} Leaderboard")
                 print(f"Image created successfully at {img_path}")
                 return img_path
             except Exception as e:
                 print(f"Error in image creation process: {str(e)}")
-                print(f"DataFrame state at error: {df.info()}")
-                # If image creation fails, return text version
-                return leaderboard
+                return f"Error creating leaderboard image: {str(e)}"
 
         except Exception as e:
             error_message = f"Error showing leaderboard: {str(e)}"
             print(error_message)
             return error_message
-
-    def format_daily_leaderboard(self, df: pd.DataFrame, game: str) -> str:
-        # Format for daily scores
-        lines = [f"**{game.capitalize()} Leaderboard - {df['game_date'].iloc[0].strftime('%Y-%m-%d')}**"]
-        for _, row in df.iterrows():
-            lines.append(f"{row['game_rank']}. {row['player_name']}: {row['game_score']} ({row['seconds']}s)")
-        return "\n".join(lines)
-
-    def format_aggregate_leaderboard(self, df: pd.DataFrame, game: str, timeframe: str) -> str:
-        # Format for aggregate stats
-        lines = [f"**{game.capitalize()} Leaderboard - {timeframe.title()}**"]
-        for _, row in df.iterrows():
-            lines.append(
-                f"{row['rank']}. {row['player_name']}: "
-                f"{row['total_points']} pts, "
-                f"{row['games_played']} games, "
-                f"avg {row['avg_seconds']}s, "
-                f"best {row['best_time']}s, "
-                f"{row['wins']} wins"
-            )
-        return "\n".join(lines)
 
 async def setup(client, tree):
     leaderboards = Leaderboards(client, tree)

@@ -1,27 +1,23 @@
 WITH game_stats AS (
     SELECT 
-        player_name,
-        COUNT(*) as games_played,
-        SUM(points) as total_points,
-        AVG(seconds) as avg_seconds,
-        MIN(seconds) as best_time,
-        COUNT(CASE WHEN game_rank = 1 THEN 1 END) as wins
+        player_name as player,
+        COUNT(*) as games,
+        SUM(points) as points,
+        AVG(seconds) as avg_score,
+        COUNT(CASE WHEN game_rank = 1 THEN 1 END) as wins,
+        COUNT(CASE WHEN game_rank < 6 THEN 1 END) as top_5
     FROM game_view
     WHERE game_date BETWEEN %s AND %s
         AND game_name = %s
     GROUP BY player_name
 )
 SELECT 
-    player_name,
-    games_played,
-    total_points,
-    ROUND(avg_seconds) as avg_seconds,
-    best_time,
+    player,
+    games,
+    points,
+    ROUND(avg_score) as avg_score,
     wins,
-    ROW_NUMBER() OVER (ORDER BY total_points DESC, avg_seconds ASC) as `rank`
+    ROW_NUMBER() OVER (ORDER BY points DESC, avg_score ASC) as game_rank
 FROM game_stats
-ORDER BY 
-    rank ASC,
-    total_points DESC,
-    avg_seconds ASC
-LIMIT 10; 
+ORDER BY  points DESC
+;
