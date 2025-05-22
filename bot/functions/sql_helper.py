@@ -5,9 +5,13 @@ import os
 from dotenv import load_dotenv
 import random
 import traceback
+from typing import List, Dict, Any, Optional
 
 lock = asyncio.Lock()
-pool = None
+_pools = {}
+
+# Global connection pool
+_pool = None
 
 # get sql config
 async def get_db_config():
@@ -15,23 +19,25 @@ async def get_db_config():
     load_dotenv()
 
     # Retrieve environment variables
-    SQLUSER = os.getenv('SQLUSER')
-    SQLPASS = os.getenv('SQLPASS')
-    SQLHOST = os.getenv('SQLHOST')
-    SQLPORT = os.getenv('SQLPORT')
-    SQLDATA = os.getenv('SQLDATA')
+    SQL_USER = os.getenv('SQL_USER')
+    SQL_PASS = os.getenv('SQL_PASS')
+    SQL_HOST = os.getenv('SQL_HOST')
+    SQL_PORT = os.getenv('SQL_PORT')
+    SQL_DATA = os.getenv('SQL_DATA')
 
     # Check if all environment variables were found
-    for var_name, var_value in [('SQLUSER', SQLUSER), ('SQLPASS', SQLPASS), ('SQLHOST', SQLHOST), ('SQLPORT', SQLPORT), ('SQLDATA', SQLDATA)]:
+    for var_name, var_value in [('SQL_USER', SQL_USER), ('SQL_PASS', SQL_PASS), 
+                              ('SQL_HOST', SQL_HOST), ('SQL_PORT', SQL_PORT), 
+                              ('SQL_DATA', SQL_DATA)]:
         if var_value is None:
             raise ValueError(f"Environment variable '{var_name}' not found.")
 
     db_config = {
-        'host': SQLHOST,
-        'port': int(SQLPORT),
-        'user': SQLUSER,
-        'password': SQLPASS,
-        'db': SQLDATA,
+        'host': SQL_HOST,
+        'port': int(SQL_PORT),
+        'user': SQL_USER,
+        'password': SQL_PASS,
+        'db': SQL_DATA,
         'connect_timeout': 10,  # 10 second connection timeout
         'autocommit': True,     # Enable autocommit
         'pool_recycle': 3600,   # Recycle connections after 1 hour
@@ -42,51 +48,37 @@ async def get_db_config():
 
     return db_config
 
-async def get_connection():
-    global pool
-    if pool is None:
+async def get_pool():
+    """Get or create the connection pool."""
+    global _pool
+    if _pool is None:
         db_config = await get_db_config()
         print(f"[SQL] Initializing connection pool to {db_config['host']}/{db_config['db']}")
-        pool = await aiomysql.create_pool(**db_config)
+        _pool = await aiomysql.create_pool(**db_config)
+    return _pool
 
-async def execute_query(query, params=None, max_attempts=3):
-    attempts = 0
-    delay = 1.0  # Initial delay in seconds
-    
-    while attempts < max_attempts:
-        try:
-            async with lock:
-                await get_connection()
-                async with pool.acquire() as conn:
-                    async with conn.cursor() as cur:
-                        query_type = "SELECT" if query.strip().upper().startswith("SELECT") else "INSERT/UPDATE"
-                        if params:
-                            await cur.execute(query, params)
-                        else:
-                            await cur.execute(query)
-                        
-                        if query_type == "SELECT":
-                            columns = [desc[0] for desc in cur.description]
-                            rows = await cur.fetchall()
-                            df = pd.DataFrame(rows, columns=columns)
-                            return df
-                        else:
-                            await conn.commit()
-                            return None
-                            
-        except aiomysql.OperationalError as e:
-            attempts += 1
-            if attempts == max_attempts:
-                print(f"[SQL] Connection failed after {max_attempts} attempts: {str(e)}")
-                raise
-            await asyncio.sleep(delay)
-            delay *= 2  # Exponential backoff
-            
-        except Exception as e:
-            print(f"[SQL] Query execution failed: {str(e)}")
-            if params:
-                print(f"[SQL] Query: {query[:100]}... Params: {params}")
-            raise
+async def execute_query(query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
+    """Execute a SQL query and return the results."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        async with conn.cursor(aiomysql.DictCursor) as cur:
+            await cur.execute(query, params or ())
+            return await cur.fetchall()
+
+async def execute_many(query: str, params_list: List[tuple]) -> None:
+    """Execute multiple SQL queries with different parameters."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.executemany(query, params_list)
+
+async def close_pool():
+    """Close the connection pool."""
+    global _pool
+    if _pool is not None:
+        _pool.close()
+        await _pool.wait_closed()
+        _pool = None
 
 async def send_df_to_sql(df, table_name, if_exists='append'):
     if df.empty:
@@ -95,7 +87,7 @@ async def send_df_to_sql(df, table_name, if_exists='append'):
 
     try:
         async with lock:
-            await get_connection()
+            pool = await get_pool()
             async with pool.acquire() as conn:
                 async with conn.cursor() as cur:
                     if if_exists == 'replace':

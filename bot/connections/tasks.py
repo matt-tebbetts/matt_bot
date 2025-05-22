@@ -99,10 +99,10 @@ async def reset_mini_leaders(client: discord.Client):
         print(f"Error in reset_mini_leaders: {e}")
 
 def setup_tasks(client: discord.Client, tree: discord.app_commands.CommandTree):
-    # Restart send_warning_loop if it's already running
-    if send_warning_loop.is_running():
-        send_warning_loop.stop()
-    send_warning_loop.start(client)
+    # Disabled warning loop for now
+    # if send_warning_loop.is_running():
+    #     send_warning_loop.stop()
+    # send_warning_loop.start(client)
 
     # Restart post_new_mini_leaders if it's already running
     if post_new_mini_leaders.is_running():

@@ -30,42 +30,60 @@ async def setup_events(client, tree):
     # on ready
     @client.event
     async def on_ready():
+        print("\n=== Bot Startup Sequence ===")
         
-        # print confirmation
+        # print guild connections
+        print("\nConnected to guilds:")
         for guild in client.guilds:
-            print(f"events.py: {client.user} connected to {guild.name}")
+            print(f"  • {guild.name} (ID: {guild.id})")
         
         # Save guild configs
+        print("\nSaving guild configurations...")
         await save_all_guild_configs(client)
-        print("events.py: saved all guild configs")
+        print("✓ Guild configs saved successfully")
 
         # load cogs
+        print("\nLoading command modules...")
         try:
             await load_cogs(client, tree)
+            print("✓ Command modules loaded successfully")
         except Exception as e:
-            print(f"events.py: error in load_cogs: {e}")
+            print(f"✗ Error loading command modules: {e}")
 
         # sync commands
+        print("\nSyncing commands with Discord...")
         try:
             await tree.sync(guild=None)  # Ensure global sync
-            commands = ", ".join([cmd.name for cmd in await tree.fetch_commands()])
-            print(f"events.py: synced these commands: {commands}")
+            commands = [cmd.name for cmd in await tree.fetch_commands()]
+            print(f"✓ Successfully synced {len(commands)} commands:")
+            for cmd in sorted(commands):
+                print(f"  • /{cmd}")
         except Exception as e:
-            print(f"events.py: error syncing commands: {e}")
+            print(f"✗ Error syncing commands: {e}")
 
         # start background tasks
+        print("\nStarting background tasks...")
         try:
-            print("events.py: calling setup_tasks")
             setup_tasks(client, tree)
-            print("events.py: setup_tasks completed successfully")
+            print("✓ Background tasks started successfully")
         except Exception as e:
-            print(f"events.py: error starting tasks: {e}")
+            print(f"✗ Error starting background tasks: {e}")
+
+        print("\n=== Bot is ready! ===\n")
 
     # on message
     @client.event
     async def on_message(message):
         if message.author == client.user:
             return
+
+        # log message
+        try:
+            channel_name = f"#{message.channel.name}" if isinstance(message.channel, discord.TextChannel) else "DM"
+            message_preview = message.content[:32] + "..." if len(message.content) > 32 else message.content
+            print(f"User {message.author.name} posted in {channel_name}: {message_preview}")
+        except Exception as e:
+            print(f"events.py: error logging message: {e}")
 
         # save message
         try:
