@@ -107,7 +107,7 @@ class Leaderboards(commands.Cog):
                 sql_file = "game_aggregate_stats.sql"
                 params = [start_date, end_date, game]
 
-            sql_file_path = os.path.join("files", "queries", sql_file)
+            sql_file_path = direct_path_finder('files', 'queries', 'active', sql_file)
 
             # Check if the SQL file exists
             if not os.path.exists(sql_file_path):
