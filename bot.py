@@ -14,7 +14,6 @@ tree = app_commands.CommandTree(client)
 
 # main
 async def main():
-
     # config
     await setup_events(client, tree)
 

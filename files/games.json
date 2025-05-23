@@ -15,7 +15,7 @@
         "scoring_type": "guesses",
         "emoji": "🌎",
         "bonus_emojis": {
-            "first_guess": "🔥"
+            "first_guess": "🎯"
         }
     },
     "crosswordle": {
@@ -24,20 +24,17 @@
         "scoring_type": "timed",
         "emoji": "🧩",
         "bonus_emojis": {
-            "under_30": "🔥"
+            "under_30": "🚀",
+            "over_60": "🐌"
         }
     },
     "boxoffice": {
         "game_name": "boxoffice",
         "prefix": "boxofficega.me",
         "scoring_type": "points",
-        "emoji": "🎬",
+        "emoji": "🎥",
         "bonus_emojis": {
-            "guessed_1": "1️⃣",
-            "guessed_2": "2️⃣",
-            "guessed_3": "3️⃣",
-            "guessed_4": "4️⃣",
-            "guessed_5": "🔥"
+            "guessed_5": "🎉"
         }
     },
     "factle": {
@@ -79,7 +76,8 @@
         "emoji": "🔠",
         "bonus_emojis": {
             "rainbow_first": "🌈",
-            "purple_second": "🟪"
+            "purple_first": "🟪",
+            "lost": "❌"
         }
     },
     "timeguessr": {
@@ -88,7 +86,7 @@
         "scoring_type": "points",
         "emoji": "⏱️",
         "bonus_emojis": {
-            "over_40k": "🔥"
+            "over_40k": "🎯"
         }
     },
     "actorle": {
@@ -97,7 +95,8 @@
         "scoring_type": "guesses",
         "emoji": "🎭",
         "bonus_emojis": {
-            "single_guess": "🔥"
+            "single_guess": "🌟",
+            "under_3": "✨"
         }
     },
     "octordle": {
@@ -107,7 +106,7 @@
         "emoji": "🐙",
         "bonus_emojis": {
             "failed_any": "💀",
-            "under_52": "🔥"
+            "under_52": "🎉"
         }
     },
     "octordle_sequence": {
@@ -117,7 +116,7 @@
         "emoji": "🔢",
         "bonus_emojis": {
             "failed_any": "💀",
-            "under_52": "🔥"
+            "under_52": "🎉"
         }
     },
     "octordle_rescue": {
@@ -127,7 +126,7 @@
         "emoji": "🚑",
         "bonus_emojis": {
             "failed_any": "💀",
-            "bonus_9": "🔥"
+            "bonus_9": "🎉"
         }
     },
     "moviedle": {

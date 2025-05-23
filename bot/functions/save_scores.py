@@ -6,60 +6,69 @@ from datetime import datetime
 import pytz
 from bot.functions import send_df_to_sql
 
-async def process_game_score(message):
-    
+def is_game_score(message_content: str) -> tuple[bool, str, dict]:
+    """
+    Check if a message contains a game score by checking against game prefixes.
+    Returns a tuple of (is_score, game_name, game_info) if it matches, or (False, None, None) if not.
+    """
     # load games.json
     games_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'files', 'games.json'))
     with open(games_file_path, 'r', encoding='utf-8') as file:
         games_data = json.load(file)
 
-    # if it's a game score, parse it and add to database
+    # check if message matches any game prefix
     for game_name, game_info in games_data.items():
-        if "prefix" in game_info and message.content.startswith(game_info["prefix"]):
+        if "prefix" in game_info and message_content.startswith(game_info["prefix"]):
+            return True, game_info["game_name"].lower(), game_info
+
+    return False, None, None
+
+async def process_game_score(message):
+    """Process and save a game score if the message contains one."""
+    # check if it's a game score
+    is_score, game_name, game_info = is_game_score(message.content)
+    if not is_score:
+        return None
             
-            # send for processing
-            game_name = game_info["game_name"].lower()
-            try:
-                score_info = get_score_info(message.content, game_name, game_info)
-            except Exception as e:
-                return None
-            
-            # get basic info
-            basic_info = {
-                'added_ts': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                'game_date': message.created_at.astimezone(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d"),
-                'game_name': game_name,
-                'user_name': message.author.name
-            }
+    # send for processing
+    try:
+        score_info = get_score_info(message.content, game_name, game_info)
+    except Exception as e:
+        return None
+        
+    # get basic info
+    basic_info = {
+        'added_ts': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        'game_date': message.created_at.astimezone(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d"),
+        'game_name': game_name,
+        'user_name': message.author.name
+    }
 
-            # combine basic info and score info
-            game_score_to_add = {**basic_info, **score_info}
+    # combine basic info and score info
+    game_score_to_add = {**basic_info, **score_info}
 
-            # prepare for database
-            game_score_to_add.setdefault('game_bonuses', None)
-            game_score_to_add['source_desc'] = 'discord'
-            
-            columns_order = [
-                'added_ts', 'user_name', 'game_name', 'game_score',
-                'game_date', 'game_detail', 'game_bonuses', 'source_desc'
-            ]
+    # prepare for database
+    game_score_to_add.setdefault('game_bonuses', None)
+    game_score_to_add['source_desc'] = 'discord'
+    
+    columns_order = [
+        'added_ts', 'user_name', 'game_name', 'game_score',
+        'game_date', 'game_detail', 'game_bonuses', 'source_desc'
+    ]
 
-            # Reorder the dictionary
-            ordered_game_score = {col: game_score_to_add[col] for col in columns_order}
+    # Reorder the dictionary
+    ordered_game_score = {col: game_score_to_add[col] for col in columns_order}
 
-            # Create DataFrame with specified column order
-            df = pd.DataFrame([ordered_game_score])
+    # Create DataFrame with specified column order
+    df = pd.DataFrame([ordered_game_score])
 
-            try:
-                await send_df_to_sql(df, 'games.game_history', if_exists='append')
-            except Exception as e:
-                print(f"save_scores.py: error sending score to sql: {e}")
+    try:
+        await send_df_to_sql(df, 'games.game_history', if_exists='append')
+    except Exception as e:
+        print(f"save_scores.py: error sending score to sql: {e}")
 
-            # send back for further processing
-            return ordered_game_score
-
-    # else it's not a game score
-    return None
+    # send back for further processing
+    return ordered_game_score
 
 def get_score_info(message, game_name, game_info):
     game_processors = {
@@ -123,15 +132,17 @@ def process_connections(message):
         
         # get bonuses
         got_rainbow_first = len(set(lines[2])) == 4
-        got_purple_second = lines[3].count("🟪") == 4
+        got_purple_first = lines[2].count("🟪") == 4
+        got_lost = completed_lines < 4
 
-        # make list/string of bonuses
+        # make list of bonuses
         bonuses = []
         if got_rainbow_first:
             bonuses.append('rainbow_first')
-        if got_purple_second:
-            bonuses.append('purple_second')
-        bonuses_str = ', '.join(bonuses) if bonuses else None
+        if got_purple_first:
+            bonuses.append('purple_first')
+        if got_lost:
+            bonuses.append('lost')
         
         # get game detail
         game_detail = lines[1].strip()
