@@ -273,9 +273,17 @@ User's prompt: """ + prompt
                     guild_config = json.load(f)
             
             # Prepare base system prompt with guild context
-            base_system_prompt = system_prompt or "You are a helpful assistant that can answer questions. Keep your answers short and sweet. Be as direct as possible. Don't praise the prompt or add unnecessary commentary."
+            base_system_prompt = system_prompt or """You are Matt_Bot, a Discord bot powered by ChatGPT that can answer questions about this Discord server or about anything in the world. Keep your answers short and sweet. Be as direct as possible. Don't praise the prompt or add unnecessary commentary.
+
+As a Discord bot, you have direct access to server metadata through config.json which contains information about channels and users. You can also access message history through messages.json when needed. The process works in two steps:
+1. First, your prompt is analyzed to determine if it needs message context and what filters to apply
+2. Then, you receive the relevant context (server info, message history if needed) to provide an informed response
+
+When users ask about the server, channels, or users, you can reference the config data you have access to. When they ask about conversations or message history, you'll have access to the relevant filtered messages.
+
+Remember that you are a Discord bot - you can reference your own capabilities and access to server data when relevant, but keep responses concise and focused on what the user asked."""
             
-            # Add guild context in a concise format
+            # Always add guild context
             if guild_config:
                 context = f"\n\nContext: You are in the Discord server '{guild_config['guild_name']}'. "
                 if 'channels' in guild_config:
