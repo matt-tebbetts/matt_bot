@@ -18,6 +18,7 @@ class GPT:
         # Load prompts
         self.analysis_prompt_template = self._load_prompt('analysis_prompt.txt')
         self.system_prompt_template = self._load_prompt('system_prompt.txt')
+        self.summary_prompt_template = self._load_prompt('summary_prompt.txt')
         
         # Initialize tokenizer
         self.encoding = tiktoken.encoding_for_model("gpt-4")
@@ -168,8 +169,17 @@ class GPT:
             return needs_context, analysis, filter_params
             
         except Exception as e:
-            # If analysis fails, return a safe default with required fields
-            return False, f"Error in analysis: {str(e)}", {
+            # For conversation-related queries, default to using context
+            conversation_keywords = ['summarize', 'conversation', 'messages', 'chat', 'discussion', 'talk']
+            prompt_lower = prompt.lower()
+            
+            # Check if the prompt is about conversations
+            is_conversation_query = any(keyword in prompt_lower for keyword in conversation_keywords)
+            
+            # Default to using context for conversation queries
+            needs_context = is_conversation_query
+            
+            return needs_context, f"Error in analysis: {str(e)}", {
                 'guild_name': guild_name,
                 'current_channel': current_channel,
                 'channels': [current_channel]
@@ -305,41 +315,63 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
             # Get current channel
             current_channel = filter_params.get('current_channel', 'unknown')
             
+            # Check if this is a conversation summary request
+            is_summary_request = any(keyword in prompt.lower() for keyword in ['summarize', 'summary', 'what happened', 'what was said'])
+            
+            # Use appropriate system prompt
+            if is_summary_request and messages_data:
+                custom_system_prompt = self.summary_prompt_template
+            else:
+                custom_system_prompt = system_prompt if system_prompt else ""
+            
             # Format the system prompt
             base_system_prompt = self.system_prompt_template.format(
                 guild_info=guild_info,
                 current_channel=current_channel,
-                custom_prompt=system_prompt if system_prompt else ""
+                custom_prompt=custom_system_prompt
             )
             
             # Prepare messages for the API call
             messages = [
-                {"role": "system", "content": base_system_prompt},
-                {"role": "user", "content": prompt}
+                {"role": "system", "content": base_system_prompt}
             ]
             
             # If we have message data, filter and format efficiently
             if messages_data:
                 filtered_messages = self.filter_messages(messages_data, filter_params)
                 
+                # Sort messages by timestamp
+                sorted_messages = sorted(
+                    filtered_messages.values(),
+                    key=lambda x: datetime.strptime(x['create_ts'], '%Y-%m-%d %H:%M:%S')
+                )
+                
                 # Format messages efficiently
                 formatted_messages = []
-                for msg in filtered_messages.values():
-                    formatted_msg = {
-                        "author": msg['author_nm'],
-                        "channel": msg['channel_nm'],
-                        "content": msg['content']
-                    }
-                    formatted_messages.append(formatted_msg)
+                for msg in sorted_messages:
+                    if msg['content'].strip():  # Only include non-empty messages
+                        formatted_msg = {
+                            "author": msg['author_nm'],
+                            "channel": msg['channel_nm'],
+                            "content": msg['content'],
+                            "timestamp": msg['create_ts']
+                        }
+                        formatted_messages.append(formatted_msg)
                 
-                # Convert to a more compact format
+                # Convert to a more compact format with timestamps
                 message_text = "\n".join([
-                    f"#{msg['channel']} - {msg['author']}: {msg['content']}"
+                    f"[{msg['timestamp']}] #{msg['channel']} - {msg['author']}: {msg['content']}"
                     for msg in formatted_messages
                 ])
                 
-                # Add message history to system prompt
-                messages[0]["content"] += f"\n\nRecent messages:\n{message_text}"
+                # Add message history as a separate message
+                messages.append({
+                    "role": "system",
+                    "content": f"Here is the message history to analyze:\n\n{message_text}"
+                })
+            
+            # Add the user's prompt
+            messages.append({"role": "user", "content": prompt})
             
             # Count input tokens
             input_tokens = sum(self._count_tokens(msg["content"]) for msg in messages)
@@ -347,7 +379,7 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
             response = await client.chat.completions.create(
                 model="gpt-4",  # Using GPT-4 for better responses
                 messages=messages,
-                max_tokens=500,
+                max_tokens=1000 if is_summary_request else 500,  # Allow longer responses for summaries
                 temperature=0.7
             )
             
