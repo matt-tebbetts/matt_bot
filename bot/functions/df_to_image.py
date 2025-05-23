@@ -1,11 +1,12 @@
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
+from bot.connections.config import FONT_PATH
 import platform
 # returns the image filepath
 def df_to_image(df, 
                                  img_filepath='files/images/leaderboard.png', 
                                  img_title="Today's Mini", 
-                                 img_subtitle="Nerd City",
+                                 img_subtitle="Leaderboard",
                                  left_aligned_columns=['Game', 'Name', 'Player', 'Genre'],
                                  right_aligned_columns=['Rank', 'Time', 'Score','Points', 'Wins',
                                                         'Top 3', 'Top 5', 'Played', 'Games', 
@@ -29,7 +30,7 @@ def df_to_image(df,
         font_path = '/usr/share/fonts/truetype/ARIAL.TTF'  # Using uppercase as it was working before
 
     font_size = 18
-    font = ImageFont.truetype(font_path, font_size)
+    font = ImageFont.truetype(FONT_PATH, font_size)
 
     # Temporary image and draw object for calculating column widths
     temp_img = Image.new('RGB', (1, 1))

@@ -1,6 +1,29 @@
 import os
 import json
 import discord
+import platform
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Platform-specific configurations
+IS_MAC = platform.system() == 'Darwin'
+IS_WINDOWS = platform.system() == 'Windows'
+IS_LINUX = platform.system() == 'Linux'
+
+# Bot token configuration
+BOT_TOKEN = os.getenv("MATT_BOT") if IS_LINUX else os.getenv("TEST_BOT")
+BOT_NAME = "Matt_Bot" if IS_LINUX else "Test_Bot"
+SYSTEM_NAME = platform.system()
+
+# Font configuration
+FONT_PATHS = {
+    'Windows': 'C:/Windows/Fonts/arial.ttf',
+    'Darwin': '/Library/Fonts/Arial.ttf',  # macOS
+    'Linux': '/usr/share/fonts/truetype/ARIAL.TTF'
+}
+FONT_PATH = FONT_PATHS.get(platform.system(), FONT_PATHS['Linux'])
 
 async def save_guild_config(guild: discord.Guild):
     guild_info = {

@@ -5,6 +5,7 @@ from pprint import pformat
 import pandas as pd
 import json
 from collections import OrderedDict
+from bot.connections.config import BOT_NAME, SYSTEM_NAME
 
 # local imports
 from bot.functions import save_message_detail
@@ -22,7 +23,7 @@ async def load_cogs(client, tree):
         module = importlib.import_module(module_name)
         if hasattr(module, 'setup'):
             await module.setup(client, tree)
-        print(f"events.py: loaded {module_name}")
+        print(f"✓ Loaded command module: {module_name}")
 
 # Register event listeners
 async def setup_events(client, tree):
@@ -31,9 +32,12 @@ async def setup_events(client, tree):
     @client.event
     async def on_ready():
         print("\n=== Bot Startup Sequence ===")
-        
+        print()
+        print(f"✓ Running *{BOT_NAME}* on platform: {SYSTEM_NAME}")
+        print()
+
         # print guild connections
-        print("\nConnected to guilds:")
+        print("✓ Connected to guilds:")
         for guild in client.guilds:
             print(f"  • {guild.name} (ID: {guild.id})")
         
@@ -46,7 +50,7 @@ async def setup_events(client, tree):
         print("\nLoading command modules...")
         try:
             await load_cogs(client, tree)
-            print("✓ Command modules loaded successfully")
+            print("✓ Command modules loaded")
         except Exception as e:
             print(f"✗ Error loading command modules: {e}")
 
@@ -55,17 +59,16 @@ async def setup_events(client, tree):
         try:
             await tree.sync(guild=None)  # Ensure global sync
             commands = [cmd.name for cmd in await tree.fetch_commands()]
-            print(f"✓ Successfully synced {len(commands)} commands:")
+            print(f"✓ Synced {len(commands)} commands:")
             for cmd in sorted(commands):
                 print(f"  • /{cmd}")
         except Exception as e:
             print(f"✗ Error syncing commands: {e}")
 
         # start background tasks
-        print("\nStarting background tasks...")
         try:
             setup_tasks(client, tree)
-            print("✓ Background tasks started successfully")
+            print("✓ Background tasks started")
         except Exception as e:
             print(f"✗ Error starting background tasks: {e}")
 

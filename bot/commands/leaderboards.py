@@ -19,7 +19,6 @@ class Leaderboards(commands.Cog):
     # this calls create_command for each game name in the games.json configuration
     def load_commands(self):
         games_file_path = direct_path_finder('files', 'games.json')
-        print(f"Loading commands from: {games_file_path}")
         with open(games_file_path, 'r', encoding='utf-8') as file:
             games_data = json.load(file)
             # print(f"Loaded games data: {games_data}")  # Commented out to reduce noise
@@ -27,10 +26,8 @@ class Leaderboards(commands.Cog):
         for game_name, game_info in games_data.items():
             command_name = game_info["game_name"]
             command_description = f"Show {command_name.capitalize()} leaderboard"
-            print(f"Registering command: {command_name}")
             if not self.tree.get_command(command_name):
                 self.create_command(command_name, command_description)
-                print(f"Successfully registered command: {command_name}")
             else:
                 print(f"Command {command_name} already exists")
 
