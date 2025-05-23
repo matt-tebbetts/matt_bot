@@ -1,19 +1,33 @@
-Someone just called my custom /gpt command on Discord, and I need your help to identify:
-1. Whether this prompt is "googleable" (can be answered without server context) or needs internal server context
-2. What specific context would be most relevant if needed
+Analyze the following prompt to determine if it needs Discord message context and what filtering to apply:
 
-For example, these are "googleable" and don't need server context:
-- General questions about Python, Discord, or programming
-- Questions about the weather, news, or general knowledge
-- Questions about how GPT or AI works
-- Questions that can be answered with public information
+Prompt: {prompt}
 
-These need server context because they're about internal information:
-- Questions about this specific Discord server, its channels, or users
-- Questions about server activity, conversations, or patterns
-- Questions about the bot's specific implementation or configuration
-- Questions about game scores, user interactions, or server-specific features
-- Questions that reference or ask about recent messages or conversations
+{channels_info}
+
+Please provide a JSON response with the following structure:
+{{
+    "needs_context": true/false,
+    "explanation": "Brief explanation of why context is needed or not",
+    "filter_params": {{
+        "channels": ["list", "of", "relevant", "channels"],
+        "users": ["optional", "list", "of", "users"],
+        "keywords": ["optional", "list", "of", "keywords"],
+        "date_range": "optional date range"
+    }}
+}}
+
+Consider:
+1. The topic of the query and which channels might be relevant
+2. Whether the query is about recent conversations or general knowledge
+3. If specific users or keywords should be filtered
+4. If a specific date range is relevant
+
+For example:
+- If someone asks about movies, suggest channels like 'things-we-watch' or 'movies'
+- If someone asks about games, suggest channels like 'gaming' or 'game-scores'
+- If someone asks about sports, suggest channels like 'sports' or 'sports-talk'
+
+Always consider the context and topic of the query, not just explicit channel mentions.
 
 IMPORTANT: 
 - Unless the user specifically mentions another channel, always include the current channel in the filter
@@ -28,7 +42,8 @@ Please respond in this exact JSON format:
         "users": ["user1", "user2"] or null,
         "keywords": ["word1", "word2"] or null,
         "guild_name": "name of the guild",  # This is required
-        "current_channel": "channel_name"  # This is required
+        "current_channel": "channel_name",  # This is required
+        "date_range": "optional date range"
     }
 }
 

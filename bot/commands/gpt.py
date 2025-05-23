@@ -8,6 +8,7 @@ import openai
 from typing import Optional, Dict, List, Tuple
 import pytz
 import tiktoken
+import re
 
 class GPT:
     def __init__(self, client, tree):
@@ -17,6 +18,7 @@ class GPT:
         
         # Load prompts
         self.analysis_prompt_template = self._load_prompt('analysis_prompt.txt')
+        self.analysis_system_prompt = self._load_prompt('analysis_system_prompt.txt')
         self.system_prompt_template = self._load_prompt('system_prompt.txt')
         self.summary_prompt_template = self._load_prompt('summary_prompt.txt')
         
@@ -173,13 +175,27 @@ class GPT:
         try:
             client = openai.AsyncOpenAI()
             
-            # Format the analysis prompt with the user's prompt
-            analysis_prompt = self.analysis_prompt_template.format(prompt=prompt)
+            # Get guild config to know available channels
+            config_path = direct_path_finder('files', 'guilds', guild_name, 'config.json')
+            guild_config = {}
+            if os.path.exists(config_path):
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    guild_config = json.load(f)
+            
+            # Get list of available channels
+            available_channels = [ch['name'] for ch in guild_config.get('channels', [])]
+            channels_info = f"Available channels: {', '.join(available_channels)}"
+            
+            # Format the analysis prompt with the user's prompt and channel info
+            analysis_prompt = self.analysis_prompt_template.format(
+                prompt=prompt,
+                channels_info=channels_info
+            )
 
             response = await client.chat.completions.create(
                 model="gpt-4",  # Using GPT-4 for better analysis
                 messages=[
-                    {"role": "system", "content": "You are a helpful assistant that analyzes prompts to determine if they need Discord message context and what filtering to apply."},
+                    {"role": "system", "content": self.analysis_system_prompt},
                     {"role": "user", "content": analysis_prompt}
                 ],
                 max_tokens=300,
@@ -193,11 +209,22 @@ class GPT:
             
             # Ensure required fields are set
             filter_params['guild_name'] = guild_name
-            filter_params['current_channel'] = current_channel
             
-            # If no channels specified, default to current channel
-            if not filter_params.get('channels'):
+            # If channels were suggested by GPT, use those
+            if filter_params.get('channels'):
+                # Validate that suggested channels exist
+                valid_channels = [ch for ch in filter_params['channels'] if ch in available_channels]
+                if valid_channels:
+                    filter_params['channels'] = valid_channels
+                    filter_params['current_channel'] = valid_channels[0]  # Use first valid channel as current
+                else:
+                    # If no valid channels were suggested, default to current
+                    filter_params['channels'] = [current_channel]
+                    filter_params['current_channel'] = current_channel
+            else:
+                # Default to current channel if no channels suggested
                 filter_params['channels'] = [current_channel]
+                filter_params['current_channel'] = current_channel
             
             return needs_context, analysis, filter_params
             

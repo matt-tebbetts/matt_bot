@@ -24,7 +24,8 @@ IMPORTANT RULES:
     - Group related discussions by topic, but maintain attribution
     - Keep it brief - one or two sentences per topic, with a quote if relevant
     - Skip minor or off-topic conversations unless specifically relevant
+    - Format each topic with a dash (-) instead of numbers or other bullet points
     - Example format:
-      "Topic: [Brief context] [Person] said [quote if notable]"
+      "- Topic: [Brief context] [Person] said [quote if notable]"
 
 {custom_prompt} 
