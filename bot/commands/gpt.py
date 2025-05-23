@@ -50,6 +50,39 @@ class GPT:
         output_cost = (output_tokens / 1000) * costs['output_cost']
         return input_cost + output_cost
         
+    def _trim_messages_to_token_limit(self, messages: List[Dict], max_tokens: int = 7000) -> List[Dict]:
+        """Trim messages to fit within token limit, keeping the most recent ones."""
+        total_tokens = sum(self._count_tokens(msg["content"]) for msg in messages)
+        
+        if total_tokens <= max_tokens:
+            return messages
+            
+        # Always keep the system prompt and user's question
+        system_prompt = messages[0]
+        user_question = messages[-1]
+        
+        # Get message history (everything in between)
+        message_history = messages[1:-1]
+        
+        # Calculate tokens for system prompt and user question
+        base_tokens = self._count_tokens(system_prompt["content"]) + self._count_tokens(user_question["content"])
+        remaining_tokens = max_tokens - base_tokens
+        
+        # Start with most recent messages and work backwards
+        trimmed_history = []
+        current_tokens = 0
+        
+        for msg in reversed(message_history):
+            msg_tokens = self._count_tokens(msg["content"])
+            if current_tokens + msg_tokens <= remaining_tokens:
+                trimmed_history.insert(0, msg)
+                current_tokens += msg_tokens
+            else:
+                break
+        
+        # Reconstruct the messages list
+        return [system_prompt] + trimmed_history + [user_question]
+        
     def _load_prompt(self, filename: str) -> str:
         """Load a prompt template from file."""
         prompt_path = direct_path_finder('files', 'gpt', filename)
@@ -194,6 +227,7 @@ class GPT:
         current_time = datetime.now(pytz.timezone('US/Eastern'))
         cutoff_time = current_time - timedelta(days=7)  # Only include last 7 days
         
+        # First pass: apply basic filters
         for msg_id, msg in messages.items():
             # Skip if message doesn't have required fields
             if not all(k in msg for k in ['create_ts', 'channel_nm', 'author_nm', 'content']):
@@ -223,6 +257,16 @@ class GPT:
                     continue
             
             filtered_messages[msg_id] = msg
+        
+        # Second pass: limit total messages if needed
+        if len(filtered_messages) > 100:  # Arbitrary limit, adjust as needed
+            # Sort by timestamp and keep most recent
+            sorted_msgs = sorted(
+                filtered_messages.values(),
+                key=lambda x: datetime.strptime(x['create_ts'], '%Y-%m-%d %H:%M:%S'),
+                reverse=True
+            )
+            filtered_messages = {str(msg['id']): msg for msg in sorted_msgs[:100]}
             
         return filtered_messages
 
@@ -350,19 +394,12 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
                 formatted_messages = []
                 for msg in sorted_messages:
                     if msg['content'].strip():  # Only include non-empty messages
-                        formatted_msg = {
-                            "author": msg['author_nm'],
-                            "channel": msg['channel_nm'],
-                            "content": msg['content'],
-                            "timestamp": msg['create_ts']
-                        }
+                        # More compact format for messages
+                        formatted_msg = f"{msg['author_nick']}: {msg['content']}"
                         formatted_messages.append(formatted_msg)
                 
-                # Convert to a more compact format with timestamps
-                message_text = "\n".join([
-                    f"[{msg['timestamp']}] #{msg['channel']} - {msg['author']}: {msg['content']}"
-                    for msg in formatted_messages
-                ])
+                # Convert to a more compact format
+                message_text = "\n".join(formatted_messages)
                 
                 # Add message history as a separate message
                 messages.append({
@@ -372,6 +409,9 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
             
             # Add the user's prompt
             messages.append({"role": "user", "content": prompt})
+            
+            # Trim messages if they exceed token limit
+            messages = self._trim_messages_to_token_limit(messages)
             
             # Count input tokens
             input_tokens = sum(self._count_tokens(msg["content"]) for msg in messages)

@@ -17,5 +17,6 @@ IMPORTANT RULES:
 6. You can discuss the bot's code structure and how it works with Discord
 7. You can explain how you process messages and handle different types of queries
 8. Be honest about what you know and don't know about the implementation
+9. Always use users' display names (nicknames) rather than their usernames when referring to them in responses
 
 {custom_prompt} 
