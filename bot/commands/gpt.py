@@ -55,7 +55,10 @@ class GPT:
                     filter_params=filter_params
                 )
                 
-                await interaction.followup.send(f"**Prompt:** {prompt}\n\n**Response:** {response}")
+                # Get user's display name
+                user_display = interaction.user.display_name
+                
+                await interaction.followup.send(f"**{user_display}:** {prompt}\n\n**ChatGPT:** {response}")
                 
             except Exception as e:
                 await interaction.followup.send(f"Error: {str(e)}", ephemeral=True)
@@ -232,9 +235,9 @@ User's prompt: """ + prompt
                 "interaction_id": str(interaction.id),
                 "filter_params": filter_params
             }
-            print(f"[DEBUG] Adding new log entry: {new_entry}")
             
             logs.append(new_entry)
+            print(f"[DEBUG] Added log entry to gpt_prompt_history.json")
             
             # Save updated logs
             print("[DEBUG] Saving updated logs")
