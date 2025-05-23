@@ -53,8 +53,8 @@ async def get_pool():
     global _pool
     if _pool is None:
         db_config = await get_db_config()
-        print(f"[SQL] Initializing connection pool to {db_config['host']}/{db_config['db']}")
         _pool = await aiomysql.create_pool(**db_config)
+        print(f"✓ Connected to {db_config['host']}/{db_config['db']}")
     return _pool
 
 async def execute_query(query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
@@ -92,7 +92,7 @@ async def send_df_to_sql(df, table_name, if_exists='append'):
                 async with conn.cursor() as cur:
                     if if_exists == 'replace':
                         await cur.execute(f"DELETE FROM {table_name}")
-                        print(f"[SQL] Cleared existing data from {table_name}")
+                        print(f"✓ Cleared existing data from {table_name}")
 
                     # Prepare the data
                     columns = df.columns.tolist()
@@ -105,7 +105,7 @@ async def send_df_to_sql(df, table_name, if_exists='append'):
                     # Execute the insert
                     await cur.executemany(query, data_tuples)
                     await conn.commit()
-                    print(f"[SQL] Inserted {len(data_tuples)} rows into {table_name}")
+                    print(f"✓ Inserted {len(data_tuples)} rows into {table_name}")
 
     except Exception as e:
         print(f"[SQL] Failed to insert data into {table_name}: {str(e)}")

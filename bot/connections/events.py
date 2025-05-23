@@ -12,6 +12,8 @@ from bot.functions import save_message_detail
 from bot.functions import process_game_score
 from bot.connections.tasks import setup_tasks
 from bot.connections.config import save_all_guild_configs
+from bot.functions.message_history import initialize_message_history
+from bot.functions.sql_helper import get_pool
 
 # load cogs commands
 async def load_cogs(client, tree):
@@ -23,7 +25,7 @@ async def load_cogs(client, tree):
         module = importlib.import_module(module_name)
         if hasattr(module, 'setup'):
             await module.setup(client, tree)
-        print(f"✓ Loaded command module: {module_name}")
+        print(f"✓ Loaded {module_name}")
 
 # Register event listeners
 async def setup_events(client, tree):
@@ -37,11 +39,17 @@ async def setup_events(client, tree):
 
         # print guild connections
         for guild in client.guilds:
-            print(f"✓ Connected to discord server: {guild.name}")
+            print(f"✓ Connected to {guild.name}")
         
         # Save guild configs
         await save_all_guild_configs(client)
-        print("✓ Guild configs saved successfully")
+        print("✓ Saved guild configs")
+
+        # Initialize message history
+        try:
+            await initialize_message_history(client)
+        except Exception as e:
+            print(f"✗ Error initializing message history: {e}")
 
         # load cogs
         try:
@@ -57,19 +65,21 @@ async def setup_events(client, tree):
             # Also sync to each guild
             for guild in client.guilds:
                 await tree.sync(guild=guild)
-                print(f"✓ Synced commands to guild: {guild.name}")
-            
-            commands = [cmd.name for cmd in await tree.fetch_commands()]
-            print(f"✓ Synced {len(commands)} commands")
-            for cmd in sorted(commands):
-                print(f"  • /{cmd}")
+                print(f"✓ Synced commands to {guild.name}")
+
         except Exception as e:
             print(f"✗ Error syncing commands: {e}")
+
+        # Establish SQL connection
+        try:
+            await get_pool()
+        except Exception as e:
+            print(f"✗ Error connecting to database: {e}")
 
         # start background tasks
         try:
             setup_tasks(client, tree)
-            print("✓ Background tasks started")
+            print(f"✓ Started background tasks")
         except Exception as e:
             print(f"✗ Error starting background tasks: {e}")
 
@@ -97,19 +107,13 @@ async def setup_events(client, tree):
 
         # save game scores
         try:
-            score_result = await process_game_score(message) 
+            score_result = await process_game_score(message)
             if score_result:
                 columns_order = [
                     'added_ts', 'user_name', 'game_name', 'game_score',
                     'game_date', 'game_detail', 'game_bonuses', 'source_desc'
                 ]
-                 
                 
-                # for testing
-                ## ordered_score_result = OrderedDict((key, score_result[key]) for key in columns_order)
-                ## formatted_score = json.dumps(ordered_score_result, indent=4)
-                ## print(f"events.py: processed the following score: \n{formatted_score}")
-
                 # Load games configuration
                 with open('files/games.json', 'r', encoding='utf-8') as f:
                     games_config = json.load(f)

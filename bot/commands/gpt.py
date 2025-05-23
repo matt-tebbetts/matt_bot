@@ -5,7 +5,8 @@ import discord
 from discord import app_commands
 from bot.functions.admin import direct_path_finder
 import openai
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Tuple
+import pytz
 
 class GPT:
     def __init__(self, client, tree):
@@ -17,40 +18,44 @@ class GPT:
         async def gpt_command(interaction: discord.Interaction, prompt: str):
             print(f"/gpt called by {interaction.user.name} in {interaction.guild.name}")
             try:
-                # Defer the response since this might take a moment
                 await interaction.response.defer()
                 
-                # Get the guild's message history
-                guild_name = interaction.guild.name
-                messages_file = direct_path_finder('files', 'guilds', guild_name, 'messages.json')
+                # First, analyze if this prompt needs message context
+                needs_context, analysis, filter_params = await self.analyze_prompt(prompt)
                 
-                # Load messages
-                with open(messages_file, 'r', encoding='utf-8') as f:
-                    messages = json.load(f)
-                
-                # Check if the prompt is asking about recent messages
-                if any(word in prompt.lower() for word in ['what', 'who', 'when', 'where', 'why', 'how']):
-                    # Get recent messages (last 50 messages)
-                    recent_messages = self.get_recent_messages(messages, limit=50)
+                # Get the final response
+                if needs_context:
+                    # Load messages if needed
+                    guild_name = interaction.guild.name
+                    messages_file = direct_path_finder('files', 'guilds', guild_name, 'messages.json')
+                    with open(messages_file, 'r', encoding='utf-8') as f:
+                        messages = json.load(f)
                     
-                    # Create context from recent messages
-                    context = self.create_message_context(recent_messages)
-                    
-                    # Add context to the prompt
-                    enhanced_prompt = f"""Recent messages in the channel:
-{context}
-
-User question: {prompt}
-
-Please provide a helpful response, using the message context if relevant."""
+                    # Get response with context
+                    response = await self.get_gpt_response(
+                        prompt=prompt,
+                        system_prompt="You are a helpful assistant that analyzes Discord conversations. Use the provided message history to answer the user's question about the conversation.",
+                        messages_data=messages,
+                        filter_params=filter_params
+                    )
+                    message_count = len(messages)
                 else:
-                    enhanced_prompt = prompt
+                    # Get regular response
+                    response = await self.get_gpt_response(prompt)
+                    message_count = 0
                 
-                # Get response from OpenAI
-                response = await self.get_gpt_response(enhanced_prompt)
+                # Log the analysis and response
+                self.log_prompt_analysis(
+                    interaction=interaction,
+                    prompt=prompt,
+                    needs_context=needs_context,
+                    analysis=analysis,
+                    final_response=response,
+                    message_count=message_count,
+                    filter_params=filter_params
+                )
                 
-                # Send the response
-                await interaction.followup.send(response)
+                await interaction.followup.send(f"**Prompt:** {prompt}\n\n**Response:** {response}")
                 
             except Exception as e:
                 await interaction.followup.send(f"Error: {str(e)}", ephemeral=True)
@@ -59,58 +64,247 @@ Please provide a helpful response, using the message context if relevant."""
         app_command = app_commands.Command(
             name="gpt",
             callback=gpt_command,
-            description="Ask ChatGPT a question or get context-aware responses about recent messages"
+            description="Ask ChatGPT a question or about recent conversations"
         )
         self.tree.add_command(app_command)
     
-    def get_recent_messages(self, messages: Dict, limit: int = 50) -> List[Dict]:
-        """Get the most recent messages, sorted by timestamp."""
-        # Convert messages to list and sort by timestamp
-        message_list = list(messages.values())
-        message_list.sort(key=lambda x: x['create_ts'], reverse=True)
-        
-        # Return the most recent messages
-        return message_list[:limit]
-    
-    def create_message_context(self, messages: List[Dict]) -> str:
-        """Create a readable context from recent messages."""
-        context = []
-        for msg in messages:
-            # Skip empty messages
-            if not msg['content'].strip():
-                continue
-                
-            # Format the message
-            timestamp = datetime.strptime(msg['create_ts'], '%Y-%m-%d %H:%M:%S')
-            formatted_time = timestamp.strftime('%I:%M %p')
-            author = msg['author_nick'] or msg['author_nm']
-            channel = msg['channel_nm']
-            
-            context.append(f"[{formatted_time}] {author} in #{channel}: {msg['content']}")
-        
-        return "\n".join(context)
-    
-    async def get_gpt_response(self, prompt: str) -> str:
-        """Get a response from OpenAI's GPT model."""
+    async def analyze_prompt(self, prompt: str) -> Tuple[bool, str, Dict]:
+        """Analyze if the prompt needs message context and what filtering to apply.
+        Returns (needs_context, analysis, filter_params)"""
         try:
-            # Initialize OpenAI client
+            print(f"\n[DEBUG] Starting prompt analysis for: {prompt}")
             client = openai.AsyncOpenAI()
             
-            # Get response from GPT
+            analysis_prompt = """Someone just called my custom /gpt command on Discord, and I need your help to identify:
+1. Whether this prompt needs Discord message context
+2. What specific context filtering would be most relevant
+
+For example:
+- If they ask "what did John say about the movie yesterday?", we need messages from yesterday mentioning John and movies
+- If they ask "summarize the recent discussion about games", we need recent messages about games
+- If they ask "what's the most active channel?", we need message counts per channel
+- If they ask "what was discussed last Tuesday?", we need messages from that specific date
+
+Please respond in this exact JSON format:
+{
+    "needs_context": true/false,
+    "explanation": "brief explanation of why",
+    "filter_params": {
+        "channels": ["channel1", "channel2"] or null,
+        "users": ["user1", "user2"] or null,
+        "date_range": {
+            "type": "relative" or "specific",
+            "value": "last_hour/last_day/last_week/all" or "YYYY-MM-DD",
+            "end_date": "YYYY-MM-DD" or null  # Only for specific ranges
+        },
+        "keywords": ["word1", "word2"] or null
+    }
+}
+
+User's prompt: """ + prompt
+
+            print("[DEBUG] Sending analysis request to GPT")
             response = await client.chat.completions.create(
-                model="gpt-4-turbo-preview",  # or your preferred model
+                model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "You are a helpful assistant that can answer questions and provide context-aware responses based on recent messages in a Discord channel."},
-                    {"role": "user", "content": prompt}
+                    {"role": "system", "content": "You are a helpful assistant that analyzes prompts to determine if they need Discord message context and what filtering to apply."},
+                    {"role": "user", "content": analysis_prompt}
                 ],
+                max_tokens=300,
+                temperature=0.3
+            )
+            
+            analysis_result = json.loads(response.choices[0].message.content)
+            needs_context = analysis_result["needs_context"]
+            analysis = analysis_result["explanation"]
+            filter_params = analysis_result["filter_params"]
+            
+            print(f"[DEBUG] Analysis result: {analysis}")
+            print(f"[DEBUG] Needs context: {needs_context}")
+            print(f"[DEBUG] Filter params: {filter_params}")
+            
+            return needs_context, analysis, filter_params
+            
+        except Exception as e:
+            print(f"[ERROR] Error analyzing prompt: {str(e)}")
+            return False, f"Error in analysis: {str(e)}", {}
+    
+    def filter_messages(self, messages: Dict, filter_params: Dict) -> Dict:
+        """Filter messages based on the provided parameters."""
+        if not filter_params:
+            return messages
+
+        filtered_messages = {}
+        current_time = datetime.now(pytz.timezone('US/Eastern'))
+        
+        for msg_id, msg in messages.items():
+            # Skip if message doesn't have required fields
+            if not all(k in msg for k in ['create_ts', 'channel_nm', 'author_nm', 'content']):
+                continue
+                
+            # Apply channel filter
+            if filter_params.get('channels') and msg['channel_nm'] not in filter_params['channels']:
+                continue
+                
+            # Apply user filter
+            if filter_params.get('users') and msg['author_nm'] not in filter_params['users']:
+                continue
+                
+            # Apply date range filter
+            if filter_params.get('date_range'):
+                msg_time = datetime.strptime(msg['create_ts'], '%Y-%m-%d %H:%M:%S')
+                msg_time = pytz.timezone('US/Eastern').localize(msg_time)
+                
+                date_range = filter_params['date_range']
+                if date_range['type'] == 'relative':
+                    time_diff = current_time - msg_time
+                    if date_range['value'] == 'last_hour' and time_diff.total_seconds() > 3600:
+                        continue
+                    elif date_range['value'] == 'last_day' and time_diff.total_seconds() > 86400:
+                        continue
+                    elif date_range['value'] == 'last_week' and time_diff.total_seconds() > 604800:
+                        continue
+                elif date_range['type'] == 'specific':
+                    msg_date = msg_time.date()
+                    start_date = datetime.strptime(date_range['value'], '%Y-%m-%d').date()
+                    if date_range.get('end_date'):
+                        end_date = datetime.strptime(date_range['end_date'], '%Y-%m-%d').date()
+                        if not (start_date <= msg_date <= end_date):
+                            continue
+                    elif msg_date != start_date:
+                        continue
+            
+            # Apply keyword filter
+            if filter_params.get('keywords'):
+                content_lower = msg['content'].lower()
+                if not any(keyword.lower() in content_lower for keyword in filter_params['keywords']):
+                    continue
+            
+            filtered_messages[msg_id] = msg
+            
+        return filtered_messages
+
+    def log_prompt_analysis(self, interaction: discord.Interaction, prompt: str, needs_context: bool, analysis: str, final_response: str = None, message_count: int = 0, filter_params: Dict = None):
+        """Log the prompt analysis to a JSON file."""
+        try:
+            print("\n[DEBUG] Starting prompt analysis logging")
+            log_file = direct_path_finder('files', 'gpt_prompt_history.json')
+            print(f"[DEBUG] Log file path: {log_file}")
+            
+            # Create directory if it doesn't exist
+            os.makedirs(os.path.dirname(log_file), exist_ok=True)
+            
+            # Load existing logs or create new
+            if os.path.exists(log_file):
+                print("[DEBUG] Loading existing log file")
+                with open(log_file, 'r', encoding='utf-8') as f:
+                    logs = json.load(f)
+            else:
+                print("[DEBUG] Creating new log file")
+                logs = []
+            
+            # Add new log entry
+            new_entry = {
+                "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                "user": {
+                    "name": interaction.user.name,
+                    "id": str(interaction.user.id),
+                    "nickname": interaction.user.nick if hasattr(interaction.user, 'nick') else None
+                },
+                "guild": {
+                    "name": interaction.guild.name,
+                    "id": str(interaction.guild.id)
+                },
+                "channel": {
+                    "name": interaction.channel.name,
+                    "id": str(interaction.channel.id),
+                    "type": str(interaction.channel.type)
+                },
+                "prompt": prompt,
+                "needs_context": needs_context,
+                "analysis": analysis,
+                "final_response": final_response,
+                "context_info": {
+                    "message_count": message_count,
+                    "model_used": "gpt-3.5-turbo",
+                    "has_messages": needs_context
+                },
+                "interaction_id": str(interaction.id),
+                "filter_params": filter_params
+            }
+            print(f"[DEBUG] Adding new log entry: {new_entry}")
+            
+            logs.append(new_entry)
+            
+            # Save updated logs
+            print("[DEBUG] Saving updated logs")
+            with open(log_file, 'w', encoding='utf-8') as f:
+                json.dump(logs, f, indent=2)
+            
+            print("[DEBUG] Logging completed successfully")
+                
+        except Exception as e:
+            print(f"[ERROR] Error logging prompt analysis: {str(e)}")
+            print(f"[ERROR] Full error details: {str(e.__class__.__name__)}: {str(e)}")
+    
+    async def get_gpt_response(self, prompt: str, system_prompt: str = None, messages_data: Dict = None, filter_params: Dict = None) -> str:
+        """Get a response from OpenAI's GPT model."""
+        try:
+            print("\n[DEBUG] Getting GPT response")
+            print(f"[DEBUG] Prompt: {prompt}")
+            print(f"[DEBUG] Has messages data: {messages_data is not None}")
+            
+            client = openai.AsyncOpenAI()
+            
+            # Prepare messages for the API call
+            messages = [
+                {"role": "system", "content": system_prompt or "You are a helpful assistant that can answer questions."},
+                {"role": "user", "content": prompt}
+            ]
+            
+            # If we have message data, filter and format efficiently
+            if messages_data:
+                print("[DEBUG] Filtering message data")
+                filtered_messages = self.filter_messages(messages_data, filter_params)
+                print(f"[DEBUG] Filtered to {len(filtered_messages)} messages")
+                
+                # Format messages efficiently
+                formatted_messages = []
+                for msg in filtered_messages.values():
+                    # Only include essential fields
+                    formatted_msg = {
+                        "author": msg['author_nm'],
+                        "channel": msg['channel_nm'],
+                        "time": msg['create_ts'],
+                        "content": msg['content']
+                    }
+                    formatted_messages.append(formatted_msg)
+                
+                # Sort by timestamp
+                formatted_messages.sort(key=lambda x: x['time'])
+                
+                # Convert to a more compact format
+                message_text = "\n".join([
+                    f"[{msg['time']}] {msg['author']} in #{msg['channel']}: {msg['content']}"
+                    for msg in formatted_messages
+                ])
+                
+                # Add to system prompt
+                messages[0]["content"] += f"\n\nHere are the relevant messages to analyze:\n{message_text}"
+            
+            print("[DEBUG] Sending request to GPT")
+            response = await client.chat.completions.create(
+                model="gpt-3.5-turbo",  # Using GPT-3.5 Turbo for cost efficiency
+                messages=messages,
                 max_tokens=1000,
                 temperature=0.7
             )
             
+            print("[DEBUG] Got response from GPT")
             return response.choices[0].message.content
             
         except Exception as e:
-            print(f"Error getting GPT response: {str(e)}")
+            print(f"[ERROR] Error getting GPT response: {str(e)}")
             raise Exception(f"Failed to get response from GPT: {str(e)}")
 
 async def setup(client, tree):

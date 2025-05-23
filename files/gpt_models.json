@@ -1,0 +1,59 @@
+{
+    "current_model": "gpt-3.5-turbo",
+    "models": {
+        "gpt-4-turbo-preview": {
+            "name": "GPT-4 Turbo Preview",
+            "description": "Most capable model, optimized for speed",
+            "input_cost": 0.01,
+            "output_cost": 0.03
+        },
+        "gpt-4": {
+            "name": "GPT-4",
+            "description": "Most capable model",
+            "input_cost": 0.03,
+            "output_cost": 0.06
+        },
+        "gpt-4-32k": {
+            "name": "GPT-4 32K",
+            "description": "Most capable model with 32K context window",
+            "input_cost": 0.06,
+            "output_cost": 0.12
+        },
+        "gpt-3.5-turbo": {
+            "name": "GPT-3.5 Turbo",
+            "description": "Fast and cost-effective model for most use cases",
+            "input_cost": 0.0005,
+            "output_cost": 0.0015
+        },
+        "gpt-3.5-turbo-16k": {
+            "name": "GPT-3.5 Turbo 16K",
+            "description": "Cost-effective model with 16K context window",
+            "input_cost": 0.003,
+            "output_cost": 0.004
+        },
+        "gpt-3.5-turbo-instruct": {
+            "name": "GPT-3.5 Turbo Instruct",
+            "description": "Optimized for instruction following",
+            "input_cost": 0.0015,
+            "output_cost": 0.002
+        },
+        "gpt-3.5-turbo-1106": {
+            "name": "GPT-3.5 Turbo 1106",
+            "description": "Latest GPT-3.5 Turbo model",
+            "input_cost": 0.001,
+            "output_cost": 0.002
+        },
+        "gpt-4-1106-preview": {
+            "name": "GPT-4 1106 Preview",
+            "description": "Latest GPT-4 model",
+            "input_cost": 0.01,
+            "output_cost": 0.03
+        },
+        "gpt-4-vision-preview": {
+            "name": "GPT-4 Vision Preview",
+            "description": "GPT-4 with vision capabilities",
+            "input_cost": 0.01,
+            "output_cost": 0.03
+        }
+    }
+} 

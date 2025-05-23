@@ -1,0 +1,34 @@
+[
+  {
+    "timestamp": "2025-05-23 12:37:15",
+    "user": "svendiamond",
+    "guild": "Test Server",
+    "prompt": "What archaeological site at the northern tip of Newfoundland was named a UNESCO World Heritage Site in 1978, nearly 1,000 years after its establishment as a Norse settlement?, The two most massive Trans-Neptunian Objects (TNOs) that are currently known are Eris (formally designated 136199 Eris) and what other body? This other body is slightly larger than Eris (though less massive) and is itself the largest Kuiper Belt Object (unless one considers Triton a KBO)., A film franchise with six installments from 2010 to 2024, including two prequels that focus on a set of side characters and on the main character's path to villainy, has become by some measures the highest-grossing animated franchise of all time. What is the franchise (or its first film, which gives the franchise it name)?, \"We tell ourselves stories in order to live\" is the famous opening line of \"The White Album\", the title essay in a critically acclaimed 1979 collection by what journalist, novelist, playwright, memoirist, and (with her husband) screenwriter?, What word, originally American slang for a remarkable or wonderful person or thing, was adopted by musician Perry Farrell for the usage with which it is most associated today?, Sixteen dice, arranged in a 4\u00d74 grid, and each with a unique set of six letters (or in one case, \"QU\"), are distinctive characteristics of what game first published by Parker Brothers in 1972?",
+    "needs_context": false,
+    "analysis": "No. The prompt does not reference specific Discord messages, discussions, or interactions. It consists of general knowledge questions that can be answered independently of any Discord context."
+  },
+  {
+    "timestamp": "2025-05-23 12:37:36",
+    "user": "svendiamond",
+    "guild": "Test Server",
+    "prompt": "name five great movies from 1999",
+    "needs_context": false,
+    "analysis": "No. This prompt does not reference specific Discord messages, conversations, or interactions. It is a general question asking for a list of movies from a specific year. This can be answered without needing context from Discord messages."
+  },
+  {
+    "timestamp": "2025-05-23 12:38:10",
+    "user": "svendiamond",
+    "guild": "Test Server",
+    "prompt": "summarize the recent conversation",
+    "needs_context": true,
+    "analysis": "Yes, this prompt seems to be referencing a specific conversation that occurred on Discord. It is asking for a summary of the recent discussion, which indicates that it is likely related to interactions or messages within the Discord server. It would be best to provide context from the Discord conversation when generating a response."
+  },
+  {
+    "timestamp": "2025-05-23 12:39:14",
+    "user": "svendiamond",
+    "guild": "Test Server",
+    "prompt": "what did Mark say about Susie",
+    "needs_context": true,
+    "analysis": "Yes, this prompt seems to be referencing specific conversations or interactions in the Discord. The mention of Mark and Susie indicates that the user is seeking information about a particular exchange between these individuals. This context suggests that the prompt may require information from previous messages or discussions in the Discord server to provide an accurate response."
+  }
+]
