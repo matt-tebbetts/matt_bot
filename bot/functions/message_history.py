@@ -80,21 +80,31 @@ async def collect_recent_messages(channel) -> Tuple[int, int]:
 async def initialize_message_history(client) -> None:
     """Initialize message history collection for all channels the bot can see."""
     try:
+        print("\n[DEBUG] Starting message history initialization...")
         total_messages = 0
         total_scores = 0
         
         for guild in client.guilds:
+            print(f"[DEBUG] Processing guild: {guild.name}")
             for channel in guild.text_channels:
                 # Skip channels the bot can't read
                 if not channel.permissions_for(guild.me).read_messages:
+                    print(f"[DEBUG] Skipping channel {channel.name} - no read permissions")
                     continue
                     
+                print(f"[DEBUG] Collecting messages from {channel.name}")
                 messages, scores = await collect_recent_messages(channel)
                 total_messages += messages
                 total_scores += scores
+                print(f"[DEBUG] Collected {messages} messages and {scores} scores from {channel.name}")
         
         if total_messages > 0:
             print(f"✓ Saved {total_messages} historical messages including {total_scores} game scores")
+        else:
+            print("✓ No new messages to save")
         
     except Exception as e:
-        print(f"[ERROR] Error initializing message history: {str(e)}") 
+        print(f"[ERROR] Error initializing message history: {str(e)}")
+        print(f"[ERROR] Full error details: {str(e.__class__.__name__)}: {str(e)}")
+        import traceback
+        print(f"[ERROR] Traceback: {traceback.format_exc()}") 
