@@ -143,6 +143,11 @@ class Leaderboards(commands.Cog):
             try:
                 # Get game detail from the first row if available
                 game_detail = df['game_detail'].iloc[0] if 'game_detail' in df.columns and not df.empty else None
+                
+                # Drop the game_detail column before creating the image
+                if 'game_detail' in df.columns:
+                    df = df.drop(columns=['game_detail'])
+                
                 img_path = df_to_image(
                     df, 
                     "files/images/leaderboard.png", 

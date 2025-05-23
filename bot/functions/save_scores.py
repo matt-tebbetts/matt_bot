@@ -69,7 +69,8 @@ def get_score_info(message, game_name, game_info):
         "octordle_sequence": process_octordle,
         "timeguessr": process_timeguessr,
         "factle": process_factle,
-        "factle_sports": process_factle
+        "factle_sports": process_factle,
+        "actorle": process_actorle
     }
 
     # Check if the game has a specific processor
@@ -282,6 +283,29 @@ def process_factle(message):
             score = "X/5"
             bonus = "lost"
 
+    score_info = {
+        'game_score': score,
+        'game_detail': game_detail,
+        'game_bonuses': bonus
+    }
+    return score_info
+
+def process_actorle(message):
+    # Extract game detail (e.g., "Actorle #1164")
+    game_detail = message.split('\n')[0].strip()
+    
+    # Extract score (e.g., "2/6")
+    score_match = re.search(r'(\d+|\?|X)/\d+', message)
+    score = score_match.group(0) if score_match else None
+    
+    # Calculate bonuses
+    bonus = None
+    if score:
+        if score.startswith('1/'):
+            bonus = 'single_guess'
+        elif score.startswith('2/') or score.startswith('3/'):
+            bonus = 'under_3'
+    
     score_info = {
         'game_score': score,
         'game_detail': game_detail,
