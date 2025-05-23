@@ -35,11 +35,10 @@ class Leaderboards(commands.Cog):
     def create_command(self, name, description):
         async def command(interaction: discord.Interaction,
                          timeframe: Literal["today", "yesterday", "this month", "last month", "this year", "all time"] = "today"):
-            print(f"leaderboards.py: running command '{name}' with timeframe '{timeframe}'")
+            print(f"/{name} called by {interaction.user.name} in {interaction.guild.name}")
             try:
                 # Defer the response immediately
                 await interaction.response.defer()
-                print("Response deferred successfully")
                 
                 # Get the leaderboard
                 try:
@@ -50,20 +49,17 @@ class Leaderboards(commands.Cog):
                         await interaction.followup.send(file=discord.File(img_path))
                     else:
                         await interaction.followup.send(f"Error: Could not find leaderboard image at {img_path}")
-                    print("Command completed successfully")
                 except Exception as e:
-                    print(f"Error creating leaderboard: {str(e)}")
                     await interaction.followup.send(f"Error: {str(e)}", ephemeral=True)
                 
             except Exception as e:
-                print(f"Error in command {name}: {str(e)}")
                 try:
                     if not interaction.response.is_done():
                         await interaction.response.send_message(f"Error: {str(e)}", ephemeral=True)
                     else:
                         await interaction.followup.send(f"Error: {str(e)}", ephemeral=True)
                 except Exception as followup_error:
-                    print(f"Error sending error message: {str(followup_error)}")
+                    pass
 
         command.__name__ = name
         app_command = app_commands.Command(
@@ -108,7 +104,6 @@ class Leaderboards(commands.Cog):
         try:
             # Get date range
             start_date, end_date = self.get_date_range(timeframe)
-            print(f"Date range: {start_date} to {end_date}")
             
             # Determine if we need daily scores or aggregate stats
             if timeframe in ["today", "yesterday"]:
@@ -120,30 +115,21 @@ class Leaderboards(commands.Cog):
                 sql_file = "game_aggregate_stats.sql"
                 params = [start_date, end_date, game]
 
-            sql_file_path = direct_path_finder('files', 'queries', 'active', sql_file)
-            print(f"Looking for SQL file at: {sql_file_path}")
-            print(f"File exists: {os.path.exists(sql_file_path)}")
-
             # Check if the SQL file exists
+            sql_file_path = direct_path_finder('files', 'queries', 'active', sql_file)
             if not os.path.exists(sql_file_path):
                 error_message = f"Error: SQL file '{sql_file}' not found."
                 print(error_message)
                 return error_message
 
             # Read the SQL query from the file
-            print(f"Reading SQL query from file...")
             with open(sql_file_path, 'r', encoding='utf-8') as file:
                 query = file.read()
-            print(f"SQL query read successfully")
 
             # Get the leaderboard
-            print(f"Executing query with params: {params}")
             try:
                 result = await execute_query(query, params)
                 df = pd.DataFrame(result)
-                print(f"Query executed successfully, got {len(df)} rows")
-                print(f"DataFrame columns: {df.columns.tolist()}")
-                print(f"DataFrame size: {df.shape}")
             except Exception as e:
                 print(f"Error executing query: {str(e)}")
                 return f"Error executing query: {str(e)}"
@@ -155,9 +141,7 @@ class Leaderboards(commands.Cog):
 
             # Create and return the image
             try:
-                print(f"Starting to create image from DataFrame...")
                 img_path = df_to_image(df, "files/images/leaderboard.png", f"{game} Leaderboard")
-                print(f"Image created successfully at {img_path}")
                 if not os.path.exists(img_path):
                     raise FileNotFoundError(f"Image file was not created at {img_path}")
                 return img_path

@@ -51,7 +51,14 @@ async def setup_events(client, tree):
 
         # sync commands
         try:
-            await tree.sync(guild=None)  # Ensure global sync
+            # Sync globally
+            await tree.sync(guild=None)
+            
+            # Also sync to each guild
+            for guild in client.guilds:
+                await tree.sync(guild=guild)
+                print(f"✓ Synced commands to guild: {guild.name}")
+            
             commands = [cmd.name for cmd in await tree.fetch_commands()]
             print(f"✓ Synced {len(commands)} commands")
             for cmd in sorted(commands):

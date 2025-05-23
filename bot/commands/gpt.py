@@ -3,23 +3,19 @@ import os
 from datetime import datetime, timedelta
 import discord
 from discord import app_commands
-from discord.ext import commands
 from bot.functions.admin import direct_path_finder
 import openai
 from typing import Optional, Dict, List
 
-class GPT(commands.Cog):
+class GPT:
     def __init__(self, client, tree):
         self.client = client
         self.tree = tree
         self.load_command()
         
     def load_command(self):
-        @self.tree.command(
-            name="gpt",
-            description="Ask ChatGPT a question or get context-aware responses about recent messages"
-        )
         async def gpt_command(interaction: discord.Interaction, prompt: str):
+            print(f"/gpt called by {interaction.user.name} in {interaction.guild.name}")
             try:
                 # Defer the response since this might take a moment
                 await interaction.response.defer()
@@ -57,8 +53,15 @@ Please provide a helpful response, using the message context if relevant."""
                 await interaction.followup.send(response)
                 
             except Exception as e:
-                print(f"Error in GPT command: {str(e)}")
                 await interaction.followup.send(f"Error: {str(e)}", ephemeral=True)
+
+        gpt_command.__name__ = "gpt"
+        app_command = app_commands.Command(
+            name="gpt",
+            callback=gpt_command,
+            description="Ask ChatGPT a question or get context-aware responses about recent messages"
+        )
+        self.tree.add_command(app_command)
     
     def get_recent_messages(self, messages: Dict, limit: int = 50) -> List[Dict]:
         """Get the most recent messages, sorted by timestamp."""
@@ -73,8 +76,8 @@ Please provide a helpful response, using the message context if relevant."""
         """Create a readable context from recent messages."""
         context = []
         for msg in messages:
-            # Skip bot messages and empty messages
-            if msg['author_is_bot'] or not msg['content'].strip():
+            # Skip empty messages
+            if not msg['content'].strip():
                 continue
                 
             # Format the message
