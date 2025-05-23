@@ -119,42 +119,41 @@ def get_score_info(message, game_name, game_info):
     return score_info
 
 def process_connections(message):
-    
     # analyze line squares
-        lines = message.strip().split("\n")
-        guesses_taken = len([line for line in lines if any(emoji in line for emoji in ["🟨", "🟩", "🟦", "🟪"])])
-        completed_lines = 0
-        for line in lines[1:]:
-            if len(set(line)) == 1 and line.strip() != "":
-                completed_lines += 1
+    lines = message.content.strip().split("\n")
+    guesses_taken = len([line for line in lines if any(emoji in line for emoji in ["🟨", "🟩", "🟦", "🟪"])])
+    completed_lines = 0
+    for line in lines[1:]:
+        if len(set(line)) == 1 and line.strip() != "":
+            completed_lines += 1
 
-        # calculate score and bonuses (true/false if they got the bonus)
-        score = f"{guesses_taken}/7" if completed_lines == 4 else "X/7"
-        
-        # get bonuses
-        got_rainbow_first = len(set(lines[2])) == 4
-        got_purple_first = lines[2].count("🟪") == 4
-        got_lost = completed_lines < 4
+    # calculate score and bonuses (true/false if they got the bonus)
+    score = f"{guesses_taken}/7" if completed_lines == 4 else "X/7"
+    
+    # get bonuses
+    got_rainbow_first = len(set(lines[2])) == 4
+    got_purple_first = lines[2].count("🟪") == 4
+    got_lost = completed_lines < 4
 
-        # make list of bonuses
-        bonuses = []
-        if got_rainbow_first:
-            bonuses.append('rainbow_first')
-        if got_purple_first:
-            bonuses.append('purple_first')
-        if got_lost:
-            bonuses.append('lost')
-        
-        # get game detail
-        game_detail = lines[1].strip()
+    # make list of bonuses
+    bonuses = []
+    if got_rainbow_first:
+        bonuses.append('rainbow_first')
+    if got_purple_first:
+        bonuses.append('purple_first')
+    if got_lost:
+        bonuses.append('lost')
+    
+    # get game detail
+    game_detail = lines[1].strip()
 
-        # return dictionary of all info
-        score_info = {
-            'game_score': score,
-            'game_detail': game_detail,
-            'game_bonuses': bonuses
-        }
-        return score_info
+    # return dictionary of all info
+    score_info = {
+        'game_score': score,
+        'game_detail': game_detail,
+        'game_bonuses': bonuses
+    }
+    return score_info
 
 def process_crosswordle(message):
 

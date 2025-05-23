@@ -99,8 +99,16 @@ async def send_df_to_sql(df, table_name, if_exists='append'):
                     placeholders = ', '.join(['%s'] * len(columns))
                     query = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
                     
-                    # Convert DataFrame to list of tuples
-                    data_tuples = [tuple(x) for x in df.values]
+                    # Convert DataFrame to list of tuples, handling lists by converting to strings
+                    data_tuples = []
+                    for row in df.values:
+                        processed_row = []
+                        for value in row:
+                            if isinstance(value, list):
+                                processed_row.append(', '.join(str(x) for x in value))
+                            else:
+                                processed_row.append(value)
+                        data_tuples.append(tuple(processed_row))
                     
                     # Execute the insert
                     await cur.executemany(query, data_tuples)
