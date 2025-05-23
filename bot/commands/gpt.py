@@ -258,15 +258,32 @@ class GPT:
             
             filtered_messages[msg_id] = msg
         
-        # Second pass: limit total messages if needed
-        if len(filtered_messages) > 100:  # Arbitrary limit, adjust as needed
-            # Sort by timestamp and keep most recent
-            sorted_msgs = sorted(
-                filtered_messages.values(),
-                key=lambda x: datetime.strptime(x['create_ts'], '%Y-%m-%d %H:%M:%S'),
-                reverse=True
-            )
-            filtered_messages = {str(msg['id']): msg for msg in sorted_msgs[:100]}
+        # Second pass: sort by timestamp
+        sorted_msgs = sorted(
+            filtered_messages.values(),
+            key=lambda x: datetime.strptime(x['create_ts'], '%Y-%m-%d %H:%M:%S'),
+            reverse=True
+        )
+        
+        # Create new dictionary with original message IDs, keeping as many messages as possible within token limit
+        filtered_messages = {}
+        current_tokens = 0
+        max_tokens = 6000  # Leave room for system prompt and response
+        
+        for msg in sorted_msgs:
+            # Estimate tokens for this message (author + content)
+            msg_tokens = self._count_tokens(f"{msg['author_nick']}: {msg['content']}")
+            
+            # If adding this message would exceed token limit, stop
+            if current_tokens + msg_tokens > max_tokens:
+                break
+                
+            # Find the original message ID and add to filtered messages
+            for msg_id, original_msg in messages.items():
+                if original_msg['create_ts'] == msg['create_ts'] and original_msg['content'] == msg['content']:
+                    filtered_messages[msg_id] = msg
+                    current_tokens += msg_tokens
+                    break
             
         return filtered_messages
 
@@ -410,11 +427,13 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
             # Add the user's prompt
             messages.append({"role": "user", "content": prompt})
             
-            # Trim messages if they exceed token limit
-            messages = self._trim_messages_to_token_limit(messages)
-            
             # Count input tokens
             input_tokens = sum(self._count_tokens(msg["content"]) for msg in messages)
+            
+            # If we're still over the limit, use the trim function as a fallback
+            if input_tokens > 7000:
+                messages = self._trim_messages_to_token_limit(messages)
+                input_tokens = sum(self._count_tokens(msg["content"]) for msg in messages)
             
             response = await client.chat.completions.create(
                 model="gpt-4",  # Using GPT-4 for better responses
