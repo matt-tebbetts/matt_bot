@@ -1,10 +1,10 @@
 import json
 import os
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from bot.functions.admin import direct_path_finder
 from bot.functions.save_scores import is_game_score, process_game_score
 
-async def collect_recent_messages(channel) -> tuple[int, int]:
+async def collect_recent_messages(channel) -> Tuple[int, int]:
     """Collect recent messages from a channel and save any new ones to messages.json.
     Returns tuple of (new_messages_count, game_scores_count)"""
     try:
