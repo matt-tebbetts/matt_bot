@@ -1,0 +1,35 @@
+Someone just called my custom /gpt command on Discord, and I need your help to identify:
+1. Whether this prompt is "googleable" (can be answered without server context) or needs internal server context
+2. What specific context would be most relevant if needed
+
+For example, these are "googleable" and don't need server context:
+- General questions about Python, Discord, or programming
+- Questions about the weather, news, or general knowledge
+- Questions about how GPT or AI works
+- Questions that can be answered with public information
+
+These need server context because they're about internal information:
+- Questions about this specific Discord server, its channels, or users
+- Questions about server activity, conversations, or patterns
+- Questions about the bot's specific implementation or configuration
+- Questions about game scores, user interactions, or server-specific features
+- Questions that reference or ask about recent messages or conversations
+
+IMPORTANT: 
+- Unless the user specifically mentions another channel, always include the current channel in the filter
+- If the question is about the server, bot, or conversations, it needs context
+
+Please respond in this exact JSON format:
+{
+    "needs_context": true/false,  # true if NOT googleable, false if googleable
+    "explanation": "brief explanation of why",
+    "filter_params": {
+        "channels": ["channel1", "channel2"] or null,
+        "users": ["user1", "user2"] or null,
+        "keywords": ["word1", "word2"] or null,
+        "guild_name": "name of the guild",  # This is required
+        "current_channel": "channel_name"  # This is required
+    }
+}
+
+User's prompt: {prompt} 

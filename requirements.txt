@@ -1,6 +1,7 @@
 # Discord Bot
 discord.py
 python-dotenv
+tiktoken
 
 # Database
 aiomysql

@@ -56,15 +56,32 @@ def df_to_image(df,
     title_height = font.getbbox('A')[1]
     draw.text(((img_width - title_width) // 2, padding), img_title, font=font, fill=title_color)
 
-    # Draw subtitle
-    subtitle_width = draw.textlength(img_subtitle, font)
-    draw.text(((img_width - subtitle_width) // 2, padding + title_height + row_height), 
-            img_subtitle, 
-            font=font, 
-            fill=subtitle_color)
+    # Draw subtitle with word wrapping
+    max_subtitle_width = img_width - 2 * padding  # Leave some padding on both sides
+    words = img_subtitle.split()
+    lines = []
+    current_line = []
+    
+    for word in words:
+        test_line = ' '.join(current_line + [word])
+        if draw.textlength(test_line, font) <= max_subtitle_width:
+            current_line.append(word)
+        else:
+            if current_line:
+                lines.append(' '.join(current_line))
+            current_line = [word]
+    if current_line:
+        lines.append(' '.join(current_line))
+    
+    # Draw each line of the subtitle
+    subtitle_y = padding + title_height + row_height
+    for line in lines:
+        line_width = draw.textlength(line, font)
+        draw.text(((img_width - line_width) // 2, subtitle_y), line, font=font, fill=subtitle_color)
+        subtitle_y += font.getbbox('A')[3]  # Move down by line height
 
     # Draw header
-    x, y = 0, row_height * 2
+    x, y = 0, subtitle_y + padding  # Adjust y position based on wrapped subtitle
     for col, width in zip(df.columns, col_widths):
         draw.rectangle([x, y, x + width, y + row_height], fill=header_bg_color)
         text_x = x + padding  # Left-align by default

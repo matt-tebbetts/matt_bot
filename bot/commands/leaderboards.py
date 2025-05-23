@@ -141,7 +141,14 @@ class Leaderboards(commands.Cog):
 
             # Create and return the image
             try:
-                img_path = df_to_image(df, "files/images/leaderboard.png", f"{game} Leaderboard")
+                # Get game detail from the first row if available
+                game_detail = df['game_detail'].iloc[0] if 'game_detail' in df.columns and not df.empty else None
+                img_path = df_to_image(
+                    df, 
+                    "files/images/leaderboard.png", 
+                    f"{game} Leaderboard",
+                    img_subtitle=game_detail if game_detail else "Leaderboard"
+                )
                 if not os.path.exists(img_path):
                     raise FileNotFoundError(f"Image file was not created at {img_path}")
                 return img_path

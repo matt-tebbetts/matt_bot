@@ -7,12 +7,57 @@ from bot.functions.admin import direct_path_finder
 import openai
 from typing import Optional, Dict, List, Tuple
 import pytz
+import tiktoken
 
 class GPT:
     def __init__(self, client, tree):
         self.client = client
         self.tree = tree
         self.load_command()
+        
+        # Load prompts
+        self.analysis_prompt_template = self._load_prompt('analysis_prompt.txt')
+        self.system_prompt_template = self._load_prompt('system_prompt.txt')
+        
+        # Initialize tokenizer
+        self.encoding = tiktoken.encoding_for_model("gpt-4")
+        
+        # Load model costs
+        self.model_costs = self._load_model_costs()
+        
+    def _load_model_costs(self) -> Dict:
+        """Load model costs from gpt_models.json."""
+        try:
+            cost_file = direct_path_finder('files', 'gpt_models.json')
+            with open(cost_file, 'r', encoding='utf-8') as f:
+                return json.load(f)['models']
+        except Exception as e:
+            print(f"Error loading model costs: {str(e)}")
+            return {}
+        
+    def _count_tokens(self, text: str) -> int:
+        """Count the number of tokens in a text string."""
+        return len(self.encoding.encode(text))
+        
+    def _calculate_cost(self, model: str, input_tokens: int, output_tokens: int) -> float:
+        """Calculate the cost of a GPT request."""
+        if model not in self.model_costs:
+            return 0.0
+            
+        costs = self.model_costs[model]
+        input_cost = (input_tokens / 1000) * costs['input_cost']
+        output_cost = (output_tokens / 1000) * costs['output_cost']
+        return input_cost + output_cost
+        
+    def _load_prompt(self, filename: str) -> str:
+        """Load a prompt template from file."""
+        prompt_path = direct_path_finder('files', 'gpt', filename)
+        try:
+            with open(prompt_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except Exception as e:
+            print(f"Error loading prompt {filename}: {str(e)}")
+            return ""
         
     def load_command(self):
         async def gpt_command(interaction: discord.Interaction, prompt: str):
@@ -21,7 +66,11 @@ class GPT:
                 await interaction.response.defer()
                 
                 # First, analyze if this prompt needs message context
-                needs_context, analysis, filter_params = await self.analyze_prompt(prompt)
+                needs_context, analysis, filter_params = await self.analyze_prompt(
+                    prompt=prompt,
+                    guild_name=interaction.guild.name,
+                    current_channel=interaction.channel.name
+                )
                 
                 # Get the final response
                 if needs_context:
@@ -32,7 +81,7 @@ class GPT:
                         messages = json.load(f)
                     
                     # Get response with context
-                    response = await self.get_gpt_response(
+                    response, input_tokens, output_tokens = await self.get_gpt_response(
                         prompt=prompt,
                         system_prompt="You are a helpful assistant that analyzes Discord conversations. Use the provided message history to answer the user's question about the conversation.",
                         messages_data=messages,
@@ -41,11 +90,15 @@ class GPT:
                     message_count = len(messages)
                 else:
                     # Get regular response
-                    response = await self.get_gpt_response(
+                    response, input_tokens, output_tokens = await self.get_gpt_response(
                         prompt=prompt,
                         filter_params=filter_params  # Pass filter_params even without context
                     )
                     message_count = 0
+                
+                # Calculate total tokens and cost
+                total_tokens = input_tokens + output_tokens
+                cost = self._calculate_cost("gpt-4", input_tokens, output_tokens)
                 
                 # Log the analysis and response
                 self.log_prompt_analysis(
@@ -55,13 +108,19 @@ class GPT:
                     analysis=analysis,
                     final_response=response,
                     message_count=message_count,
-                    filter_params=filter_params
+                    filter_params=filter_params,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    total_tokens=total_tokens,
+                    cost=cost
                 )
                 
                 # Get user's display name
                 user_display = interaction.user.display_name
                 
-                await interaction.followup.send(f"**{user_display}:** {prompt}\n\n**ChatGPT:** {response}")
+                # Add token count and cost to response
+                token_info = f"\n\n[Tokens: {input_tokens} in, {output_tokens} out, {total_tokens} total | Cost: ${cost:.4f}]"
+                await interaction.followup.send(f"**{user_display}:** {prompt}\n\n**ChatGPT:** {response}{token_info}")
                 
             except Exception as e:
                 await interaction.followup.send(f"Error: {str(e)}", ephemeral=True)
@@ -74,52 +133,23 @@ class GPT:
         )
         self.tree.add_command(app_command)
     
-    async def analyze_prompt(self, prompt: str) -> Tuple[bool, str, Dict]:
+    async def analyze_prompt(self, prompt: str, guild_name: str, current_channel: str) -> Tuple[bool, str, Dict]:
         """Analyze if the prompt needs message context and what filtering to apply.
         Returns (needs_context, analysis, filter_params)"""
         try:
             client = openai.AsyncOpenAI()
             
-            analysis_prompt = """Someone just called my custom /gpt command on Discord, and I need your help to identify:
-1. Whether this prompt needs Discord message context
-2. What specific context filtering would be most relevant
-
-For example:
-- If they ask "what did John say about the movie yesterday?", we need messages from yesterday mentioning John and movies
-- If they ask "summarize the recent discussion about games", we need recent messages about games
-- If they ask "what's the most active channel?", we need message counts per channel
-- If they ask "what was discussed last Tuesday?", we need messages from that specific date
-- If they ask about something in "this channel", we need messages from the current channel
-- If they ask about specific users or content, we need messages mentioning those users or containing that content
-- If they ask about games or scores, we need messages related to those games
-
-Please respond in this exact JSON format:
-{
-    "needs_context": true/false,
-    "explanation": "brief explanation of why",
-    "filter_params": {
-        "channels": ["channel1", "channel2"] or null,
-        "users": ["user1", "user2"] or null,
-        "date_range": {
-            "type": "relative" or "specific",
-            "value": "last_hour/last_day/last_week/all" or "2024-05-23",
-            "end_date": "2024-05-24" or null  # Only for specific ranges
-        },
-        "keywords": ["word1", "word2"] or null,
-        "guild_name": "name of the guild"  # This is required
-    }
-}
-
-User's prompt: """ + prompt
+            # Format the analysis prompt with the user's prompt
+            analysis_prompt = self.analysis_prompt_template.format(prompt=prompt)
 
             response = await client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4",  # Using GPT-4 for better analysis
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant that analyzes prompts to determine if they need Discord message context and what filtering to apply."},
                     {"role": "user", "content": analysis_prompt}
                 ],
-                max_tokens=300,  # Shorter response needed as this just returns a structured analysis JSON
-                temperature=0.3  # Lower temperature for more consistent, structured responses
+                max_tokens=300,
+                temperature=0.3
             )
             
             analysis_result = json.loads(response.choices[0].message.content)
@@ -127,14 +157,23 @@ User's prompt: """ + prompt
             analysis = analysis_result["explanation"]
             filter_params = analysis_result["filter_params"]
             
-            # Ensure guild_name is set
-            if not filter_params.get('guild_name'):
-                raise ValueError("GPT analysis must include guild_name in filter_params")
+            # Ensure required fields are set
+            filter_params['guild_name'] = guild_name
+            filter_params['current_channel'] = current_channel
+            
+            # If no channels specified, default to current channel
+            if not filter_params.get('channels'):
+                filter_params['channels'] = [current_channel]
             
             return needs_context, analysis, filter_params
             
         except Exception as e:
-            return False, f"Error in analysis: {str(e)}", {}
+            # If analysis fails, return a safe default with required fields
+            return False, f"Error in analysis: {str(e)}", {
+                'guild_name': guild_name,
+                'current_channel': current_channel,
+                'channels': [current_channel]
+            }
     
     def filter_messages(self, messages: Dict, filter_params: Dict) -> Dict:
         """Filter messages based on the provided parameters."""
@@ -143,10 +182,20 @@ User's prompt: """ + prompt
 
         filtered_messages = {}
         current_time = datetime.now(pytz.timezone('US/Eastern'))
+        cutoff_time = current_time - timedelta(days=7)  # Only include last 7 days
         
         for msg_id, msg in messages.items():
             # Skip if message doesn't have required fields
             if not all(k in msg for k in ['create_ts', 'channel_nm', 'author_nm', 'content']):
+                continue
+                
+            # Apply date filter (last 7 days)
+            try:
+                msg_time = datetime.strptime(msg['create_ts'], '%Y-%m-%d %H:%M:%S')
+                msg_time = pytz.timezone('US/Eastern').localize(msg_time)
+                if msg_time < cutoff_time:
+                    continue
+            except Exception:
                 continue
                 
             # Apply channel filter
@@ -156,37 +205,6 @@ User's prompt: """ + prompt
             # Apply user filter
             if filter_params.get('users') and msg['author_nm'] not in filter_params['users']:
                 continue
-                
-            # Apply date range filter
-            if filter_params.get('date_range'):
-                try:
-                    msg_time = datetime.strptime(msg['create_ts'], '%Y-%m-%d %H:%M:%S')
-                    msg_time = pytz.timezone('US/Eastern').localize(msg_time)
-                    
-                    date_range = filter_params['date_range']
-                    
-                    if date_range['type'] == 'relative':
-                        time_diff = current_time - msg_time
-                        if date_range['value'] == 'last_hour' and time_diff.total_seconds() > 3600:
-                            continue
-                        elif date_range['value'] == 'last_day' and time_diff.total_seconds() > 86400:
-                            continue
-                        elif date_range['value'] == 'last_week' and time_diff.total_seconds() > 604800:
-                            continue
-                    elif date_range['type'] == 'specific':
-                        try:
-                            msg_date = msg_time.date()
-                            start_date = datetime.strptime(date_range['value'], '%Y-%m-%d').date()
-                            if date_range.get('end_date'):
-                                end_date = datetime.strptime(date_range['end_date'], '%Y-%m-%d').date()
-                                if not (start_date <= msg_date <= end_date):
-                                    continue
-                            elif msg_date != start_date:
-                                continue
-                        except ValueError:
-                            continue
-                except Exception:
-                    continue
             
             # Apply keyword filter
             if filter_params.get('keywords'):
@@ -198,7 +216,7 @@ User's prompt: """ + prompt
             
         return filtered_messages
 
-    def log_prompt_analysis(self, interaction: discord.Interaction, prompt: str, needs_context: bool, analysis: str, final_response: str = None, message_count: int = 0, filter_params: Dict = None):
+    def log_prompt_analysis(self, interaction: discord.Interaction, prompt: str, needs_context: bool, analysis: str, final_response: str = None, message_count: int = 0, filter_params: Dict = None, input_tokens: int = 0, output_tokens: int = 0, total_tokens: int = 0, cost: float = 0.0):
         """Log the prompt analysis to a JSON file."""
         try:
             # Get guild-specific path
@@ -239,8 +257,12 @@ User's prompt: """ + prompt
                 "final_response": final_response,
                 "context_info": {
                     "message_count": message_count,
-                    "model_used": "gpt-3.5-turbo",
-                    "has_messages": needs_context
+                    "model_used": "gpt-4",
+                    "has_messages": needs_context,
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens,
+                    "total_tokens": total_tokens,
+                    "cost": cost
                 },
                 "interaction_id": str(interaction.id),
                 "filter_params": filter_params
@@ -256,8 +278,9 @@ User's prompt: """ + prompt
             print(f"[ERROR] Error logging prompt analysis: {str(e)}")
             print(f"[ERROR] Full error details: {str(e.__class__.__name__)}: {str(e)}")
     
-    async def get_gpt_response(self, prompt: str, system_prompt: str = None, messages_data: Dict = None, filter_params: Dict = None) -> str:
-        """Get a response from OpenAI's GPT model."""
+    async def get_gpt_response(self, prompt: str, system_prompt: str = None, messages_data: Dict = None, filter_params: Dict = None) -> Tuple[str, int, int]:
+        """Get a response from OpenAI's GPT model.
+        Returns (response, input_tokens, output_tokens)"""
         try:
             client = openai.AsyncOpenAI()
             
@@ -272,32 +295,22 @@ User's prompt: """ + prompt
                 with open(config_path, 'r', encoding='utf-8') as f:
                     guild_config = json.load(f)
             
-            # Prepare base system prompt with guild context
-            base_system_prompt = system_prompt or """You are Matt_Bot, a Discord bot powered by ChatGPT that can answer questions about this Discord server or about anything in the world. Keep your answers short and sweet. Be as direct as possible. Don't praise the prompt or add unnecessary commentary.
-
-As a Discord bot, you have direct access to server metadata through config.json which contains information about channels and users. You can also access message history through messages.json when needed. The process works in two steps:
-1. First, your prompt is analyzed to determine if it needs message context and what filters to apply
-2. Then, you receive the relevant context (server info, message history if needed) to provide an informed response
-
-When users ask about the server, channels, or users, you MUST use the config data provided in your context. Do not say you don't have access to this information - you do! The config data is provided in your system prompt.
-
-For example, if someone asks about channels or users, you should list them from the config data provided in your context. Do not say you can't access this information or that you need message history to answer these questions.
-
-Remember that you are a Discord bot - you can reference your own capabilities and access to server data when relevant, but keep responses concise and focused on what the user asked."""
-            
-            # Always add guild context
+            # Prepare guild info
+            guild_info = ""
             if guild_config:
-                context = f"""\n\nSERVER INFORMATION:
-Server Name: {guild_config['guild_name']}
-
-Available Channels:
-{', '.join([ch['name'] for ch in guild_config['channels']])}
-
-Known Users:
-{', '.join([f"{u['display_name']} ({u['name']})" for u in guild_config['users']])}
-
-This information is from your config.json file. You MUST use this information when asked about the server, channels, or users."""
-                base_system_prompt += context
+                guild_info = f"""Name: {guild_config['guild_name']}
+Channels: {', '.join([ch['name'] for ch in guild_config['channels']])}
+Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
+            
+            # Get current channel
+            current_channel = filter_params.get('current_channel', 'unknown')
+            
+            # Format the system prompt
+            base_system_prompt = self.system_prompt_template.format(
+                guild_info=guild_info,
+                current_channel=current_channel,
+                custom_prompt=system_prompt if system_prompt else ""
+            )
             
             # Prepare messages for the API call
             messages = [
@@ -312,35 +325,36 @@ This information is from your config.json file. You MUST use this information wh
                 # Format messages efficiently
                 formatted_messages = []
                 for msg in filtered_messages.values():
-                    # Only include essential fields
                     formatted_msg = {
                         "author": msg['author_nm'],
                         "channel": msg['channel_nm'],
-                        "time": msg['create_ts'],
                         "content": msg['content']
                     }
                     formatted_messages.append(formatted_msg)
                 
-                # Sort by timestamp
-                formatted_messages.sort(key=lambda x: x['time'])
-                
                 # Convert to a more compact format
                 message_text = "\n".join([
-                    f"[{msg['time']}] {msg['author']} in #{msg['channel']}: {msg['content']}"
+                    f"#{msg['channel']} - {msg['author']}: {msg['content']}"
                     for msg in formatted_messages
                 ])
                 
                 # Add message history to system prompt
-                messages[0]["content"] += f"\n\nHere are the relevant messages to analyze:\n{message_text}"
+                messages[0]["content"] += f"\n\nRecent messages:\n{message_text}"
+            
+            # Count input tokens
+            input_tokens = sum(self._count_tokens(msg["content"]) for msg in messages)
             
             response = await client.chat.completions.create(
-                model="gpt-3.5-turbo",  # Using GPT-3.5 Turbo for cost efficiency
+                model="gpt-4",  # Using GPT-4 for better responses
                 messages=messages,
-                max_tokens=500,  # Reduced to ~375-500 words to stay well within Discord's 2000 character limit
+                max_tokens=500,
                 temperature=0.7
             )
             
-            return response.choices[0].message.content
+            # Get output tokens
+            output_tokens = self._count_tokens(response.choices[0].message.content)
+            
+            return response.choices[0].message.content, input_tokens, output_tokens
             
         except Exception as e:
             raise Exception(f"Failed to get response from GPT: {str(e)}")
