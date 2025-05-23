@@ -75,7 +75,6 @@ class GPT:
         """Analyze if the prompt needs message context and what filtering to apply.
         Returns (needs_context, analysis, filter_params)"""
         try:
-            print(f"\n[DEBUG] Starting prompt analysis for: {prompt}")
             client = openai.AsyncOpenAI()
             
             analysis_prompt = """Someone just called my custom /gpt command on Discord, and I need your help to identify:
@@ -106,7 +105,6 @@ Please respond in this exact JSON format:
 
 User's prompt: """ + prompt
 
-            print("[DEBUG] Sending analysis request to GPT")
             response = await client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
@@ -122,14 +120,9 @@ User's prompt: """ + prompt
             analysis = analysis_result["explanation"]
             filter_params = analysis_result["filter_params"]
             
-            print(f"[DEBUG] Analysis result: {analysis}")
-            print(f"[DEBUG] Needs context: {needs_context}")
-            print(f"[DEBUG] Filter params: {filter_params}")
-            
             return needs_context, analysis, filter_params
             
         except Exception as e:
-            print(f"[ERROR] Error analyzing prompt: {str(e)}")
             return False, f"Error in analysis: {str(e)}", {}
     
     def filter_messages(self, messages: Dict, filter_params: Dict) -> Dict:
@@ -139,8 +132,6 @@ User's prompt: """ + prompt
 
         filtered_messages = {}
         current_time = datetime.now(pytz.timezone('US/Eastern'))
-        
-        print(f"[DEBUG] Filter params received: {filter_params}")
         
         for msg_id, msg in messages.items():
             # Skip if message doesn't have required fields
@@ -162,7 +153,6 @@ User's prompt: """ + prompt
                     msg_time = pytz.timezone('US/Eastern').localize(msg_time)
                     
                     date_range = filter_params['date_range']
-                    print(f"[DEBUG] Processing date range: {date_range}")
                     
                     if date_range['type'] == 'relative':
                         time_diff = current_time - msg_time
@@ -182,14 +172,9 @@ User's prompt: """ + prompt
                                     continue
                             elif msg_date != start_date:
                                 continue
-                        except ValueError as e:
-                            print(f"[ERROR] Invalid date format in filter_params: {date_range}")
-                            print(f"[ERROR] Expected format: YYYY-MM-DD")
-                            print(f"[ERROR] Got: {date_range.get('value')} and {date_range.get('end_date')}")
+                        except ValueError:
                             continue
-                except Exception as e:
-                    print(f"[ERROR] Error processing date filter: {str(e)}")
-                    print(f"[ERROR] Message timestamp: {msg.get('create_ts')}")
+                except Exception:
                     continue
             
             # Apply keyword filter
@@ -225,7 +210,8 @@ User's prompt: """ + prompt
                 "user": {
                     "name": interaction.user.name,
                     "id": str(interaction.user.id),
-                    "nickname": interaction.user.nick if hasattr(interaction.user, 'nick') else None
+                    "nickname": interaction.user.nick if hasattr(interaction.user, 'nick') else None,
+                    "display_name": interaction.user.display_name
                 },
                 "guild": {
                     "name": interaction.guild.name,
@@ -233,9 +219,9 @@ User's prompt: """ + prompt
                 },
                 "channel": {
                     "name": interaction.channel.name,
-                    "id": str(interaction.channel.id),
-                    "type": str(interaction.channel.type)
+                    "id": str(interaction.channel.id)
                 },
+                "message_id": str(interaction.message.id) if interaction.message else None,
                 "prompt": prompt,
                 "needs_context": needs_context,
                 "analysis": analysis,
@@ -262,10 +248,6 @@ User's prompt: """ + prompt
     async def get_gpt_response(self, prompt: str, system_prompt: str = None, messages_data: Dict = None, filter_params: Dict = None) -> str:
         """Get a response from OpenAI's GPT model."""
         try:
-            print("\n[DEBUG] Getting GPT response")
-            print(f"[DEBUG] Prompt: {prompt}")
-            print(f"[DEBUG] Has messages data: {messages_data is not None}")
-            
             client = openai.AsyncOpenAI()
             
             # Prepare messages for the API call
@@ -276,9 +258,7 @@ User's prompt: """ + prompt
             
             # If we have message data, filter and format efficiently
             if messages_data:
-                print("[DEBUG] Filtering message data")
                 filtered_messages = self.filter_messages(messages_data, filter_params)
-                print(f"[DEBUG] Filtered to {len(filtered_messages)} messages")
                 
                 # Format messages efficiently
                 formatted_messages = []
@@ -304,7 +284,6 @@ User's prompt: """ + prompt
                 # Add to system prompt
                 messages[0]["content"] += f"\n\nHere are the relevant messages to analyze:\n{message_text}"
             
-            print("[DEBUG] Sending request to GPT")
             response = await client.chat.completions.create(
                 model="gpt-3.5-turbo",  # Using GPT-3.5 Turbo for cost efficiency
                 messages=messages,
@@ -312,11 +291,9 @@ User's prompt: """ + prompt
                 temperature=0.7
             )
             
-            print("[DEBUG] Got response from GPT")
             return response.choices[0].message.content
             
         except Exception as e:
-            print(f"[ERROR] Error getting GPT response: {str(e)}")
             raise Exception(f"Failed to get response from GPT: {str(e)}")
 
 async def setup(client, tree):
