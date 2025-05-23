@@ -276,7 +276,7 @@ User's prompt: """ + prompt
             
             # Prepare messages for the API call
             messages = [
-                {"role": "system", "content": system_prompt or "You are a helpful assistant that can answer questions."},
+                {"role": "system", "content": system_prompt or "You are a helpful assistant that can answer questions. Keep your answers short and sweet. Be as direct as possible. Don't praise the prompt or add unnecessary commentary."},
                 {"role": "user", "content": prompt}
             ]
             
