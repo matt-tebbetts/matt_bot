@@ -41,7 +41,10 @@ class GPT:
                     message_count = len(messages)
                 else:
                     # Get regular response
-                    response = await self.get_gpt_response(prompt)
+                    response = await self.get_gpt_response(
+                        prompt=prompt,
+                        filter_params=filter_params  # Pass filter_params even without context
+                    )
                     message_count = 0
                 
                 # Log the analysis and response
@@ -103,7 +106,7 @@ Please respond in this exact JSON format:
             "end_date": "2024-05-24" or null  # Only for specific ranges
         },
         "keywords": ["word1", "word2"] or null,
-        "guild_name": "name of the guild"
+        "guild_name": "name of the guild"  # This is required
     }
 }
 
@@ -123,6 +126,10 @@ User's prompt: """ + prompt
             needs_context = analysis_result["needs_context"]
             analysis = analysis_result["explanation"]
             filter_params = analysis_result["filter_params"]
+            
+            # Ensure guild_name is set
+            if not filter_params.get('guild_name'):
+                raise ValueError("GPT analysis must include guild_name in filter_params")
             
             return needs_context, analysis, filter_params
             
@@ -255,7 +262,10 @@ User's prompt: """ + prompt
             client = openai.AsyncOpenAI()
             
             # Get guild config for context
-            guild_name = filter_params.get('guild_name', 'unknown')
+            guild_name = filter_params.get('guild_name') if filter_params else None
+            if not guild_name:
+                raise ValueError("Guild name is required for GPT responses")
+                
             config_path = direct_path_finder('files', 'guilds', guild_name, 'config.json')
             guild_config = {}
             if os.path.exists(config_path):
