@@ -47,7 +47,7 @@ async def setup_events(client, tree):
 
         # Initialize message history
         try:
-            await initialize_message_history(client)
+            await initialize_message_history(client, lookback_days=7)  # Only look back 7 days during testing
         except Exception as e:
             print(f"✗ Error initializing message history: {e}")
 
@@ -107,6 +107,11 @@ async def setup_events(client, tree):
 
         # save game scores
         try:
+            is_score, game_name, game_info = is_game_score(message.content)
+            print(f"Message from {message.author.name}: {'✓' if is_score else '✗'} Game score detection")
+            if is_score:
+                print(f"  Detected game: {game_name}")
+            
             score_result = await process_game_score(message)
             if score_result:
                 columns_order = [

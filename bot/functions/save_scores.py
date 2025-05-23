@@ -20,8 +20,13 @@ def is_game_score(message_content: str) -> Tuple[bool, str, dict]:
 
     # check if message matches any game prefix
     for game_name, game_info in games_data.items():
-        if "prefix" in game_info and message_content.startswith(game_info["prefix"]):
-            return True, game_info["game_name"].lower(), game_info
+        if "prefix" in game_info:
+            prefix = game_info["prefix"]
+            if message_content.startswith(prefix):
+                print(f"  Matched prefix '{prefix}' for game {game_name}")
+                return True, game_info["game_name"].lower(), game_info
+            else:
+                print(f"  Checking prefix '{prefix}' - no match")
 
     return False, None, None
 

@@ -30,7 +30,7 @@ def save_metadata(guild_name: str, metadata: Dict):
     with open(metadata_path, 'w', encoding='utf-8') as f:
         json.dump(metadata, f, indent=2)
 
-async def collect_recent_messages(channel, oldest_ts: str = None) -> Tuple[int, int]:
+async def collect_recent_messages(channel, oldest_ts: str = None, lookback_days: int = 7) -> Tuple[int, int]:
     """Collect recent messages from a channel and save any new ones to messages.json.
     Returns tuple of (new_messages_count, game_scores_count)"""
     try:
@@ -56,8 +56,8 @@ async def collect_recent_messages(channel, oldest_ts: str = None) -> Tuple[int, 
             after = datetime.strptime(oldest_ts, '%Y-%m-%d %H:%M:%S')
             after = pytz.timezone('US/Eastern').localize(after)
         else:
-            # Default to 24 hours ago if no timestamp provided
-            after = datetime.now(pytz.timezone('US/Eastern')) - timedelta(days=1)
+            # Default to lookback_days ago if no timestamp provided
+            after = datetime.now(pytz.timezone('US/Eastern')) - timedelta(days=lookback_days)
         
         async for message in channel.history(after=after, limit=None):
             # Skip if message already exists
@@ -70,6 +70,7 @@ async def collect_recent_messages(channel, oldest_ts: str = None) -> Tuple[int, 
                 "content": message.content,
                 "create_ts": message.created_at.replace(tzinfo=pytz.utc).astimezone(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d %H:%M:%S"),
                 "edit_ts": message.edited_at.replace(tzinfo=pytz.utc).astimezone(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d %H:%M:%S") if message.edited_at else None,
+                "bot_added_ts": datetime.now(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d %H:%M:%S"),
                 "length": len(message.content),
                 "author_id": message.author.id,
                 "author_nm": message.author.name,
@@ -78,11 +79,12 @@ async def collect_recent_messages(channel, oldest_ts: str = None) -> Tuple[int, 
                 "channel_nm": message.channel.name,
                 "has_attachments": bool(message.attachments),
                 "has_links": bool(message.embeds),
-                "has_mentions": bool(message.mentions)
+                "has_mentions": bool(message.mentions),
+                "is_game_score": is_game_score(message.content)[0]
             }
             
             # Check for game scores
-            if is_game_score(message.content):
+            if is_game_score(message.content)[0]:
                 game_score_count += 1
         
         # Update messages file
@@ -96,8 +98,13 @@ async def collect_recent_messages(channel, oldest_ts: str = None) -> Tuple[int, 
         print(f"[ERROR] Error collecting messages from {channel.name}: {str(e)}")
         return 0, 0
 
-async def initialize_message_history(client) -> None:
-    """Initialize message history collection for all channels the bot can see."""
+async def initialize_message_history(client, lookback_days: int = 7) -> None:
+    """Initialize message history collection for all channels the bot can see.
+    
+    Args:
+        client: The Discord client instance
+        lookback_days: Number of days to look back for messages (default: 7)
+    """
     try:
         total_messages = 0
         total_scores = 0
@@ -110,7 +117,7 @@ async def initialize_message_history(client) -> None:
             if metadata["last_initialized"]:
                 last_init = datetime.strptime(metadata["last_initialized"], '%Y-%m-%d %H:%M:%S')
                 if datetime.now() - last_init < timedelta(hours=4):
-                    print(f"Skipping message history initialization for {guild.name} - last run was {metadata['last_initialized']}")
+                    print(f"✓ Skipped message history initialization for {guild.name} - last run was {metadata['last_initialized']}")
                     continue
             
             guild_messages = 0
@@ -122,7 +129,7 @@ async def initialize_message_history(client) -> None:
                 if not channel.permissions_for(guild.me).read_messages:
                     continue
                     
-                messages, scores = await collect_recent_messages(channel, oldest_ts)
+                messages, scores = await collect_recent_messages(channel, oldest_ts, lookback_days)
                 guild_messages += messages
                 guild_scores += scores
             
@@ -147,7 +154,9 @@ async def initialize_message_history(client) -> None:
             total_scores += guild_scores
         
         if total_messages > 0:
-            print(f"✓ Saved {total_messages} historical messages including {total_scores} game scores")
+            print(f"✓ Saved {total_messages} historical messages")
+            if total_scores > 0:
+                print(f"✓ Saved {total_scores} game scores to SQL")
         
     except Exception as e:
         print(f"[ERROR] Error initializing message history: {str(e)}")
