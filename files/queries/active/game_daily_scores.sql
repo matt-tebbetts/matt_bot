@@ -1,10 +1,8 @@
 SELECT
     game_rank,
-    points,
     player_name,
     game_score,
-    game_date,
-    game_name,
+    points,
     game_detail
 FROM game_view
 WHERE game_date = %s
