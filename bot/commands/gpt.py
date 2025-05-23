@@ -97,8 +97,8 @@ Please respond in this exact JSON format:
         "users": ["user1", "user2"] or null,
         "date_range": {
             "type": "relative" or "specific",
-            "value": "last_hour/last_day/last_week/all" or "YYYY-MM-DD",
-            "end_date": "YYYY-MM-DD" or null  # Only for specific ranges
+            "value": "last_hour/last_day/last_week/all" or "2024-05-23",
+            "end_date": "2024-05-24" or null  # Only for specific ranges
         },
         "keywords": ["word1", "word2"] or null
     }
@@ -140,6 +140,8 @@ User's prompt: """ + prompt
         filtered_messages = {}
         current_time = datetime.now(pytz.timezone('US/Eastern'))
         
+        print(f"[DEBUG] Filter params received: {filter_params}")
+        
         for msg_id, msg in messages.items():
             # Skip if message doesn't have required fields
             if not all(k in msg for k in ['create_ts', 'channel_nm', 'author_nm', 'content']):
@@ -155,27 +157,40 @@ User's prompt: """ + prompt
                 
             # Apply date range filter
             if filter_params.get('date_range'):
-                msg_time = datetime.strptime(msg['create_ts'], '%Y-%m-%d %H:%M:%S')
-                msg_time = pytz.timezone('US/Eastern').localize(msg_time)
-                
-                date_range = filter_params['date_range']
-                if date_range['type'] == 'relative':
-                    time_diff = current_time - msg_time
-                    if date_range['value'] == 'last_hour' and time_diff.total_seconds() > 3600:
-                        continue
-                    elif date_range['value'] == 'last_day' and time_diff.total_seconds() > 86400:
-                        continue
-                    elif date_range['value'] == 'last_week' and time_diff.total_seconds() > 604800:
-                        continue
-                elif date_range['type'] == 'specific':
-                    msg_date = msg_time.date()
-                    start_date = datetime.strptime(date_range['value'], '%Y-%m-%d').date()
-                    if date_range.get('end_date'):
-                        end_date = datetime.strptime(date_range['end_date'], '%Y-%m-%d').date()
-                        if not (start_date <= msg_date <= end_date):
+                try:
+                    msg_time = datetime.strptime(msg['create_ts'], '%Y-%m-%d %H:%M:%S')
+                    msg_time = pytz.timezone('US/Eastern').localize(msg_time)
+                    
+                    date_range = filter_params['date_range']
+                    print(f"[DEBUG] Processing date range: {date_range}")
+                    
+                    if date_range['type'] == 'relative':
+                        time_diff = current_time - msg_time
+                        if date_range['value'] == 'last_hour' and time_diff.total_seconds() > 3600:
                             continue
-                    elif msg_date != start_date:
-                        continue
+                        elif date_range['value'] == 'last_day' and time_diff.total_seconds() > 86400:
+                            continue
+                        elif date_range['value'] == 'last_week' and time_diff.total_seconds() > 604800:
+                            continue
+                    elif date_range['type'] == 'specific':
+                        try:
+                            msg_date = msg_time.date()
+                            start_date = datetime.strptime(date_range['value'], '%Y-%m-%d').date()
+                            if date_range.get('end_date'):
+                                end_date = datetime.strptime(date_range['end_date'], '%Y-%m-%d').date()
+                                if not (start_date <= msg_date <= end_date):
+                                    continue
+                            elif msg_date != start_date:
+                                continue
+                        except ValueError as e:
+                            print(f"[ERROR] Invalid date format in filter_params: {date_range}")
+                            print(f"[ERROR] Expected format: YYYY-MM-DD")
+                            print(f"[ERROR] Got: {date_range.get('value')} and {date_range.get('end_date')}")
+                            continue
+                except Exception as e:
+                    print(f"[ERROR] Error processing date filter: {str(e)}")
+                    print(f"[ERROR] Message timestamp: {msg.get('create_ts')}")
+                    continue
             
             # Apply keyword filter
             if filter_params.get('keywords'):
