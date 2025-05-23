@@ -1,5 +1,6 @@
 ├── bot
 │   ├── commands
+│   │   ├── gpt.py
 │   │   └── leaderboards.py
 │   ├── connections
 │   │   ├── config.py
@@ -7,6 +8,7 @@
 │   │   └── tasks.py
 │   ├── functions
 │   │   ├── admin.py
+│   │   ├── df_to_image.py
 │   │   ├── mini_warning.py
 │   │   ├── save_messages.py
 │   │   ├── save_scores.py
@@ -25,19 +27,38 @@
 │   │   │   ├── leaders.json
 │   │   │   └── messages.json
 │   │   ├── Nerd City
-│   │   │   └── leaders.json
+│   │   │   ├── config.json
+│   │   │   ├── leaders.json
+│   │   │   └── messages.json
 │   │   └── Tebbetts Server
 │   │       ├── config.json
 │   │       ├── leaders.json
 │   │       └── messages.json
+│   ├── images
+│   │   ├── boxoffice_leaderboard.png
+│   │   ├── leaderboard.png
+│   │   └── mini_leaderboard.png
 │   ├── queries
-│   │   ├── add_historical_game_scores.sql
-│   │   ├── game_view_new.sql
-│   │   ├── game_view_quick.sql
-│   │   ├── leaderboard_basic.sql
-│   │   ├── leaderboard_dynamic.sql
-│   │   ├── leaderboard_monthly.sql
-│   │   └── test_query.sql
+│   │   ├── active
+│   │   │   ├── game_aggregate_stats.sql
+│   │   │   └── game_daily_scores.sql
+│   │   └── inactive
+│   │       ├── add_historical_game_scores.sql
+│   │       ├── all_games.sql
+│   │       ├── check_tables.sql
+│   │       ├── check_views.sql
+│   │       ├── game_view_new.sql
+│   │       ├── game_view_quick.sql
+│   │       ├── leaderboard_agg_this_month.sql
+│   │       ├── leaderboard_basic.sql
+│   │       ├── leaderboard_dynamic.sql
+│   │       ├── leaderboard_monthly.sql
+│   │       ├── leaderboard_this_month.sql
+│   │       ├── leaderboard_today.sql
+│   │       ├── my_scores_today.sql
+│   │       ├── test_query.sql
+│   │       ├── winners_this_month.sql
+│   │       └── winners_today.sql
 │   ├── examples.txt
 │   ├── games.json
 │   ├── sms_carriers.json
@@ -51,4 +72,5 @@
 │   │   └── notification.service
 │   ├── mini_scraper.py
 │   └── tree.py
-└── bot.py
+├── bot.py
+└── test_db.py

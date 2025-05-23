@@ -1,6 +1,0 @@
-[Unit]
-Description=Service Failure Notification
-
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/sendmail matttebbetts@gmail.com < /root/projects/matt_bot/systemd/email_alert.txt
