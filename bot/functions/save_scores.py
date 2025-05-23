@@ -7,42 +7,22 @@ import pytz
 from bot.functions import send_df_to_sql
 from typing import Tuple
 from bot.functions.admin import direct_path_finder
+from bot.functions.save_messages import is_game_score
 
-def is_game_score(message_content: str) -> Tuple[bool, str, dict]:
-    """
-    Check if a message contains a game score by checking against game prefixes.
-    Returns a tuple of (is_score, game_name, game_info) if it matches, or (False, None, None) if not.
-    """
-    # Load games configuration
-    games_file_path = direct_path_finder('files', 'games.json')
-    with open(games_file_path, 'r', encoding='utf-8') as file:
-        games_data = json.load(file)
-
-    # check if message matches any game prefix
-    for game_name, game_info in games_data.items():
-        if "prefix" in game_info:
-            prefix = game_info["prefix"]
-            if message_content.startswith(prefix):
-                print(f"  Matched prefix '{prefix}' for game {game_name}")
-                return True, game_info["game_name"].lower(), game_info
-            else:
-                print(f"  Checking prefix '{prefix}' - no match")
-
-    return False, None, None
-
-async def process_game_score(message):
+async def process_game_score(message, game_name=None, game_info=None):
     """Process and save a game score if the message contains one."""
-    # check if it's a game score
-    is_score, game_name, game_info = is_game_score(message.content)
-    if not is_score:
-        return None
+    # If game info wasn't provided, check if it's a game score
+    if game_name is None or game_info is None:
+        is_score, game_name, game_info = is_game_score(message.content)
+        if not is_score:
+            return None
             
     # send for processing
     try:
         score_info = get_score_info(message.content, game_name, game_info)
     except Exception as e:
         return None
-        
+
     # get basic info
     basic_info = {
         'added_ts': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -94,39 +74,16 @@ def get_score_info(message, game_name, game_info):
 
     # Check if the game has a specific processor
     if game_name in game_processors:
-        return game_processors[game_name](message)
-
-    # Default processing based on scoring type
-    scoring_type = game_info["scoring_type"]
-    if scoring_type == "guesses":
-        pattern = re.compile(r'(\d{1,2}|\?|X)/\d{1,2}')
-    elif scoring_type == "points":
-        pattern = re.compile(r'(\d{1,3}(?:,\d{3})*)(?=/)')
-    elif scoring_type == "timed":
-        pattern = re.compile(r'\d{1,2}:\d{2}')
-    else:
-        pattern = None
-
-    # get score
-    score = None
-    if pattern:
-        match = pattern.search(message)
-        if match:
-            score = match.group(0)
-
-    # set game detail to first line
-    game_detail = message.split('\n')[0]
-
-    score_info = {
-        'game_score': score,
-        'game_detail': game_detail,
-        'game_bonuses': None
-    }
-    return score_info
+        try:
+            return game_processors[game_name](message)
+        except Exception as e:
+            raise
 
 def process_connections(message):
     # analyze line squares
-    lines = message.content.strip().split("\n")
+    lines = message.strip().split("\n")
+    
+    # Count guesses and completed lines
     guesses_taken = len([line for line in lines if any(emoji in line for emoji in ["🟨", "🟩", "🟦", "🟪"])])
     completed_lines = 0
     for line in lines[1:]:

@@ -2,7 +2,7 @@ import json
 import os
 from typing import Dict, List, Tuple
 from bot.functions.admin import direct_path_finder
-from bot.functions.save_scores import is_game_score, process_game_score
+from bot.functions.save_messages import is_game_score
 from datetime import datetime, timedelta
 import pytz
 
@@ -117,7 +117,7 @@ async def initialize_message_history(client, lookback_days: int = 7) -> None:
             if metadata["last_initialized"]:
                 last_init = datetime.strptime(metadata["last_initialized"], '%Y-%m-%d %H:%M:%S')
                 if datetime.now() - last_init < timedelta(hours=4):
-                    print(f"✓ Skipped message history initialization for {guild.name} - last run was {metadata['last_initialized']}")
+                    print(f"✓ Skipped message history initialization for {guild.name}")
                     continue
             
             guild_messages = 0

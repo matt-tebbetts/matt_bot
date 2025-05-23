@@ -91,52 +91,51 @@ async def setup_events(client, tree):
         if message.author == client.user:
             return
 
+        # Check if it's a game score first
+        try:
+            is_score, game_name, game_info = is_game_score(message.content)
+        except Exception as e:
+            print(f"events.py: error checking game score: {e}")
+            is_score, game_name, game_info = False, None, None
+
         # log message
         try:
             channel_name = f"#{message.channel.name}" if isinstance(message.channel, discord.TextChannel) else "DM"
-            message_preview = message.content[:32] + "..." if len(message.content) > 32 else message.content
-            print(f"User {message.author.name} posted in {channel_name}: {message_preview}")
+            first_line = message.content.split('\n')[0]
+            message_preview = first_line[:16] + "..." if len(first_line) > 16 else first_line
+            game_info_text = f" [{game_name}]" if is_score else ""
+            print(f"User {message.author.name} posted in {channel_name}: {message_preview}{game_info_text}")
         except Exception as e:
             print(f"events.py: error logging message: {e}")
 
-        # save message
+        # save message (with game score flag)
         try:
             save_message_detail(message)
         except Exception as e:
             print(f"events.py: error saving message detail: {e}")
 
-        # save game scores
+        # process game score if it is one
+        if not is_score:
+            return
+
         try:
-            is_score, game_name, game_info = is_game_score(message.content)
-            print(f"Message from {message.author.name}: {'✓' if is_score else '✗'} Game score detection")
-            if is_score:
-                print(f"  Detected game: {game_name}")
+            score_result = await process_game_score(message, game_name, game_info)
+            if not score_result:
+                return
+
+            # Load games configuration
+            with open('files/games.json', 'r', encoding='utf-8') as f:
+                games_config = json.load(f)
+            game_config = games_config.get(score_result['game_name'], {})
+
+            # Add reactions
+            await message.add_reaction(game_config.get('emoji', '✅'))
             
-            score_result = await process_game_score(message)
-            if score_result:
-                columns_order = [
-                    'added_ts', 'user_name', 'game_name', 'game_score',
-                    'game_date', 'game_detail', 'game_bonuses', 'source_desc'
-                ]
-                
-                # Load games configuration
-                with open('files/games.json', 'r', encoding='utf-8') as f:
-                    games_config = json.load(f)
-                game_config = games_config.get(score_result['game_name'], {})
-
-                # React with confirmation emoji
-                confirmation_emoji = game_config.get('emoji', '✅')  # Default to green checkmark
-                await message.add_reaction(confirmation_emoji)
-
-                # check for bonuses
-                game_bonuses = score_result.get('game_bonuses')
-                if game_bonuses:
-                    bonus_emojis = game_config.get('bonus_emojis', {})
-                    bonuses_list = game_bonuses.split(', ')
-                    for bonus in bonuses_list:
-                        if bonus in bonus_emojis:
-                            await message.add_reaction(bonus_emojis[bonus])
-                return 
+            # Add bonus reactions if any
+            if game_bonuses := score_result.get('game_bonuses'):
+                for bonus in game_bonuses.split(', '):
+                    if emoji := game_config.get('bonus_emojis', {}).get(bonus):
+                        await message.add_reaction(emoji)
             
         except Exception as e:
             print(f"events.py: Error processing game score: {str(e)}")

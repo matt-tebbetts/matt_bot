@@ -3,11 +3,16 @@ import json
 import os
 import pytz
 import discord
+from typing import Tuple, Dict, Any, List
 from bot.functions.admin import direct_path_finder
 
-# save message to file
-def save_message_detail(message):
+def save_message_detail(message: discord.Message) -> None:
+    """
+    Save message details to a JSON file.
     
+    Args:
+        message: A discord.Message object containing the message to save
+    """
     if not isinstance(message, discord.Message):
         raise TypeError(f"Expected discord.Message object, got {type(message)}")
     
@@ -25,7 +30,7 @@ def save_message_detail(message):
         msg_edt = message.edited_at.replace(tzinfo=pytz.utc).astimezone(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d %H:%M:%S")
 
     # Structure data
-    message_data = {
+    message_data: Dict[str, Any] = {
         "id": message.id,
         "content": message.content,
         "create_ts": msg_crt,
@@ -48,6 +53,7 @@ def save_message_detail(message):
     file_path = direct_path_finder('files', 'guilds', message.guild.name, 'messages.json')
 
     # read existing messages (if any)
+    messages: Dict[str, Dict[str, Any]] = {}
     if os.path.exists(file_path):
         with open(file_path, 'r') as file:
             content = file.read()
@@ -56,19 +62,40 @@ def save_message_detail(message):
                     messages = json.loads(content)
                 except json.JSONDecodeError as e:
                     print(f"JSON decode error: {e}")
-                    # Handle the error - maybe backup the file and create a new empty dictionary
                     messages = {}
-            else:
-                messages = {}
     else:
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        messages = {}
 
     # add new message to existing messages
-    messages[message.id] = message_data  # This will overwrite if the ID already exists
+    messages[str(message.id)] = message_data  # Convert ID to string for JSON compatibility
 
     # write updated messages back to the file
     with open(file_path, 'w') as file:
         json.dump(messages, file, indent=4)
 
-    return
+def is_game_score(message_content: str) -> Tuple[bool, str, Dict[str, Any]]:
+    """
+    Check if a message contains a game score by checking against game prefixes.
+    
+    Args:
+        message_content: The content of the message to check
+        
+    Returns:
+        A tuple containing:
+        - bool: Whether the message is a game score
+        - str: The game name if it is a score, None otherwise
+        - dict: The game info if it is a score, None otherwise
+    """
+    # Load games configuration
+    games_file_path = direct_path_finder('files', 'games.json')
+    with open(games_file_path, 'r', encoding='utf-8') as file:
+        games_data: Dict[str, Dict[str, Any]] = json.load(file)
+
+    # check if message matches any game prefix
+    for game_name, game_info in games_data.items():
+        if "prefix" in game_info:
+            prefix = game_info["prefix"]
+            if message_content.startswith(prefix):
+                return True, game_info["game_name"].lower(), game_info
+
+    return False, None, None
