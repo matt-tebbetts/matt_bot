@@ -9,7 +9,7 @@ from bot.connections.config import BOT_NAME, SYSTEM_NAME
 
 # local imports
 from bot.functions import save_message_detail
-from bot.functions import process_game_score
+from bot.functions import process_game_score, is_game_score
 from bot.connections.tasks import setup_tasks
 from bot.connections.config import save_all_guild_configs
 from bot.functions.message_history import initialize_message_history
