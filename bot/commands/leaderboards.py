@@ -143,7 +143,7 @@ class Leaderboards(commands.Cog):
                 df = pd.DataFrame(result)
                 print(f"Query executed successfully, got {len(df)} rows")
                 print(f"DataFrame columns: {df.columns.tolist()}")
-                print(f"DataFrame head:\n{df.head()}")
+                print(f"DataFrame size: {df.shape}")
             except Exception as e:
                 print(f"Error executing query: {str(e)}")
                 return f"Error executing query: {str(e)}"

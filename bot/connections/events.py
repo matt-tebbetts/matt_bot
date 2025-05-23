@@ -33,33 +33,27 @@ async def setup_events(client, tree):
     async def on_ready():
         print("\n=== Bot Startup Sequence ===")
         print()
-        print(f"✓ Running *{BOT_NAME}* on platform: {SYSTEM_NAME}")
-        print()
+        print(f"✓ Running *{BOT_NAME}* on {SYSTEM_NAME}")
 
         # print guild connections
-        print("✓ Connected to guilds:")
         for guild in client.guilds:
-            print(f"  • {guild.name} (ID: {guild.id})")
+            print(f"✓ Connected to discord server: {guild.name}")
         
         # Save guild configs
-        print("\nSaving guild configurations...")
         await save_all_guild_configs(client)
         print("✓ Guild configs saved successfully")
 
         # load cogs
-        print("\nLoading command modules...")
         try:
             await load_cogs(client, tree)
-            print("✓ Command modules loaded")
         except Exception as e:
             print(f"✗ Error loading command modules: {e}")
 
         # sync commands
-        print("\nSyncing commands with Discord...")
         try:
             await tree.sync(guild=None)  # Ensure global sync
             commands = [cmd.name for cmd in await tree.fetch_commands()]
-            print(f"✓ Synced {len(commands)} commands:")
+            print(f"✓ Synced {len(commands)} commands")
             for cmd in sorted(commands):
                 print(f"  • /{cmd}")
         except Exception as e:
