@@ -3,6 +3,7 @@ import json
 import os
 import pytz
 import discord
+from bot.functions.admin import direct_path_finder
 
 # save message to file
 def save_message_detail(message):
@@ -44,7 +45,7 @@ def save_message_detail(message):
     }
 
     # set file path
-    file_path = f"files/guilds/{message.guild.name}/messages.json"
+    file_path = direct_path_finder('files', 'guilds', message.guild.name, 'messages.json')
 
     # read existing messages (if any)
     if os.path.exists(file_path):

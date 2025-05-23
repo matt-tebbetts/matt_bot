@@ -1,6 +1,7 @@
 import discord
 from bot.functions import execute_query
 from bot.functions.admin import read_json, write_json
+from bot.functions.admin import direct_path_finder
 
 # find users who haven't completed the mini
 async def find_users_to_warn():
@@ -44,7 +45,7 @@ async def check_mini_leaders():
             continue
 
         # get list of previous leaders
-        leader_filepath = f"files/guilds/{guild_name}/leaders.json"
+        leader_filepath = direct_path_finder('files', 'guilds', guild_name, 'leaders.json')
         previous_leaders = read_json(leader_filepath)
 
         # check if new leaders are different

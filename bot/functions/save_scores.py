@@ -6,14 +6,15 @@ from datetime import datetime
 import pytz
 from bot.functions import send_df_to_sql
 from typing import Tuple
+from bot.functions.admin import direct_path_finder
 
 def is_game_score(message_content: str) -> Tuple[bool, str, dict]:
     """
     Check if a message contains a game score by checking against game prefixes.
     Returns a tuple of (is_score, game_name, game_info) if it matches, or (False, None, None) if not.
     """
-    # load games.json
-    games_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'files', 'games.json'))
+    # Load games configuration
+    games_file_path = direct_path_finder('files', 'games.json')
     with open(games_file_path, 'r', encoding='utf-8') as file:
         games_data = json.load(file)
 

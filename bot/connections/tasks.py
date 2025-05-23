@@ -9,6 +9,7 @@ from bot.functions import check_mini_leaders
 from bot.functions import write_json
 from bot.commands import Leaderboards
 from bot.functions.admin import get_default_channel_id
+from bot.functions.admin import direct_path_finder
 
 # task 1 - check for users who haven't completed the mini
 @tasks.loop(hours=1)
@@ -92,7 +93,7 @@ async def reset_mini_leaders(client: discord.Client):
         
         if now.hour == mini_reset_hour and now.minute <= 1:  # reset window
             for guild in client.guilds:
-                leader_filepath = f"files/guilds/{guild.name}/leaders.json"
+                leader_filepath = direct_path_finder('files', 'guilds', guild.name, 'leaders.json')
                 write_json(leader_filepath, [])  # makes it an empty list
 
     except Exception as e:

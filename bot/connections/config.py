@@ -3,6 +3,7 @@ import json
 import discord
 import platform
 from dotenv import load_dotenv
+from bot.functions.admin import direct_path_finder
 
 # Load environment variables
 load_dotenv()
@@ -64,9 +65,7 @@ async def save_guild_config(guild: discord.Guild):
             guild_info["users"].append(user_info)
 
     # Save to config.json
-    guild_dir = os.path.join("files", "guilds", guild.name)
-    os.makedirs(guild_dir, exist_ok=True)
-    config_path = os.path.join(guild_dir, "config.json")
+    config_path = direct_path_finder('files', 'guilds', guild.name, 'config.json')
     with open(config_path, "w", encoding="utf-8") as f:
         json.dump(guild_info, f, indent=4)
 

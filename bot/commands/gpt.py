@@ -279,19 +279,24 @@ As a Discord bot, you have direct access to server metadata through config.json 
 1. First, your prompt is analyzed to determine if it needs message context and what filters to apply
 2. Then, you receive the relevant context (server info, message history if needed) to provide an informed response
 
-When users ask about the server, channels, or users, you can reference the config data you have access to. When they ask about conversations or message history, you'll have access to the relevant filtered messages.
+When users ask about the server, channels, or users, you MUST use the config data provided in your context. Do not say you don't have access to this information - you do! The config data is provided in your system prompt.
+
+For example, if someone asks about channels or users, you should list them from the config data provided in your context. Do not say you can't access this information or that you need message history to answer these questions.
 
 Remember that you are a Discord bot - you can reference your own capabilities and access to server data when relevant, but keep responses concise and focused on what the user asked."""
             
             # Always add guild context
             if guild_config:
-                context = f"\n\nContext: You are in the Discord server '{guild_config['guild_name']}'. "
-                if 'channels' in guild_config:
-                    channel_names = [ch['name'] for ch in guild_config['channels']]
-                    context += f"Available channels: {', '.join(channel_names)}. "
-                if 'users' in guild_config:
-                    user_names = [f"{u['display_name']} ({u['name']})" for u in guild_config['users']]
-                    context += f"Known users: {', '.join(user_names)}."
+                context = f"""\n\nSERVER INFORMATION:
+Server Name: {guild_config['guild_name']}
+
+Available Channels:
+{', '.join([ch['name'] for ch in guild_config['channels']])}
+
+Known Users:
+{', '.join([f"{u['display_name']} ({u['name']})" for u in guild_config['users']])}
+
+This information is from your config.json file. You MUST use this information when asked about the server, channels, or users."""
                 base_system_prompt += context
             
             # Prepare messages for the API call

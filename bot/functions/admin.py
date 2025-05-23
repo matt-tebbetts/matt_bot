@@ -27,7 +27,7 @@ def write_json(filepath, data):
 
 # get default channel id
 def get_default_channel_id(guild_name):
-    config_path = f"files/guilds/{guild_name}/config.json"
+    config_path = direct_path_finder('files', 'guilds', guild_name, 'config.json')
     try:
         config = read_json(config_path)
         channel_id = config.get("default_channel_id")
@@ -45,7 +45,7 @@ def get_default_channel_id(guild_name):
 
 async def update_guild_config(guild: discord.Guild):
     """Update the guild's config.json with current channel and user information."""
-    config_path = f"files/guilds/{guild.name}/config.json"
+    config_path = direct_path_finder('files', 'guilds', guild.name, 'config.json')
     
     # Load existing config or create new
     config = read_json(config_path, {})
@@ -75,7 +75,7 @@ async def update_guild_config(guild: discord.Guild):
     
     # Update games (if not already present)
     if "games" not in config:
-        games_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'files', 'games.json'))
+        games_file = direct_path_finder('files', 'games.json')
         if os.path.exists(games_file):
             with open(games_file, 'r', encoding='utf-8') as f:
                 games_data = json.load(f)
@@ -87,7 +87,7 @@ async def update_guild_config(guild: discord.Guild):
 
 async def save_guild_config(guild: discord.Guild):
     """Save guild configuration including channel and user information."""
-    config_path = f"files/guilds/{guild.name}/config.json"
+    config_path = direct_path_finder('files', 'guilds', guild.name, 'config.json')
     
     # Load existing config or create new
     config = read_json(config_path, {})
@@ -115,7 +115,7 @@ async def save_guild_config(guild: discord.Guild):
     
     # Update games (if not already present)
     if "games" not in config:
-        games_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'files', 'games.json'))
+        games_file = direct_path_finder('files', 'games.json')
         if os.path.exists(games_file):
             with open(games_file, 'r', encoding='utf-8') as f:
                 games_data = json.load(f)
