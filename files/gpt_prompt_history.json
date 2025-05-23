@@ -148,5 +148,44 @@
         "channels"
       ]
     }
+  },
+  {
+    "timestamp": "2025-05-23 13:57:17",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": null
+    },
+    "guild": {
+      "name": "Test Server",
+      "id": "1096943693463814167"
+    },
+    "channel": {
+      "name": "game-scores",
+      "id": "1096943694281711690",
+      "type": "text"
+    },
+    "prompt": "who is the best",
+    "needs_context": true,
+    "analysis": "The prompt 'who is the best' is very general and lacks specific context. To provide a relevant response, we need more information or context from the Discord messages.",
+    "final_response": "Based on the provided message history, there is no specific context or information to determine who the \"best\" might be in this conversation. Could you please provide more details or specify which group or individual you are referring to in order to give a more accurate answer?",
+    "context_info": {
+      "message_count": 123,
+      "model_used": "gpt-3.5-turbo",
+      "has_messages": true
+    },
+    "interaction_id": "1375533047633674240",
+    "filter_params": {
+      "channels": null,
+      "users": null,
+      "date_range": {
+        "type": "all",
+        "value": "all",
+        "end_date": null
+      },
+      "keywords": [
+        "best"
+      ]
+    }
   }
 ]

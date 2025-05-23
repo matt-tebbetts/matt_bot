@@ -5,8 +5,9 @@ import pandas as pd
 from datetime import datetime
 import pytz
 from bot.functions import send_df_to_sql
+from typing import Tuple
 
-def is_game_score(message_content: str) -> tuple[bool, str, dict]:
+def is_game_score(message_content: str) -> Tuple[bool, str, dict]:
     """
     Check if a message contains a game score by checking against game prefixes.
     Returns a tuple of (is_score, game_name, game_info) if it matches, or (False, None, None) if not.
