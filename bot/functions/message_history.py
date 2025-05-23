@@ -37,7 +37,7 @@ async def collect_recent_messages(channel) -> Tuple[int, int]:
             new_messages[str(message.id)] = {
                 "content": message.content,
                 "author_nm": message.author.name,
-                "author_nick": message.author.nick or message.author.name,
+                "author_nick": message.author.display_name,
                 "channel_nm": channel.name,
                 "create_ts": message.created_at.strftime('%Y-%m-%d %H:%M:%S')
             }
