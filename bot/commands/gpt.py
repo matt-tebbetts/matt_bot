@@ -118,8 +118,8 @@ User's prompt: """ + prompt
                     {"role": "system", "content": "You are a helpful assistant that analyzes prompts to determine if they need Discord message context and what filtering to apply."},
                     {"role": "user", "content": analysis_prompt}
                 ],
-                max_tokens=300,
-                temperature=0.3
+                max_tokens=300,  # Shorter response needed as this just returns a structured analysis JSON
+                temperature=0.3  # Lower temperature for more consistent, structured responses
             )
             
             analysis_result = json.loads(response.choices[0].message.content)
@@ -331,7 +331,7 @@ Remember that you are a Discord bot - you can reference your own capabilities an
             response = await client.chat.completions.create(
                 model="gpt-3.5-turbo",  # Using GPT-3.5 Turbo for cost efficiency
                 messages=messages,
-                max_tokens=1000,
+                max_tokens=500,  # Reduced to ~375-500 words to stay well within Discord's 2000 character limit
                 temperature=0.7
             )
             
