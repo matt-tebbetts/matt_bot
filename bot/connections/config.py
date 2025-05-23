@@ -27,34 +27,41 @@ FONT_PATH = FONT_PATHS.get(platform.system(), FONT_PATHS['Linux'])
 
 async def save_guild_config(guild: discord.Guild):
     guild_info = {
-        "guild_id": guild.id,
+        "guild_id": str(guild.id),
         "guild_name": guild.name,
         "channels": [],
-        "members": [],
+        "users": [],
         "default_channel_id": None
     }
 
     # Gather channel information
     for channel in guild.text_channels:
         channel_info = {
-            "channel_id": channel.id,
-            "channel_name": channel.name,
-            "is_default_channel": False
+            "id": str(channel.id),
+            "name": channel.name,
+            "category": channel.category.name if channel.category else None,
+            "position": channel.position
         }
         guild_info["channels"].append(channel_info)
 
         # Set default channel based on criteria
         if channel.name in ["game-scores", "crossword-corner"]:
-            guild_info["default_channel_id"] = channel.id
-            channel_info["is_default_channel"] = True
+            guild_info["default_channel_id"] = str(channel.id)
 
-    # Gather member information
+    # Gather user information
     for member in guild.members:
-        member_info = {
-            "user_id": member.id,
-            "user_name": member.name
-        }
-        guild_info["members"].append(member_info)
+        if not member.bot:
+            user_info = {
+                "id": str(member.id),
+                "name": member.name,
+                "display_name": member.display_name,
+                "nickname": member.nick if member.nick else None,
+                "joined_at": member.joined_at.strftime('%Y-%m-%d %H:%M:%S') if member.joined_at else None,
+                "roles": [{"id": str(role.id), "name": role.name} for role in member.roles if role.name != "@everyone"],
+                "is_owner": member.id == guild.owner_id,
+                "is_admin": member.guild_permissions.administrator
+            }
+            guild_info["users"].append(user_info)
 
     # Save to config.json
     guild_dir = os.path.join("files", "guilds", guild.name)

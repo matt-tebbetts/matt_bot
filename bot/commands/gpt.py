@@ -86,6 +86,9 @@ For example:
 - If they ask "summarize the recent discussion about games", we need recent messages about games
 - If they ask "what's the most active channel?", we need message counts per channel
 - If they ask "what was discussed last Tuesday?", we need messages from that specific date
+- If they ask about something in "this channel", we need messages from the current channel
+- If they ask about specific users or content, we need messages mentioning those users or containing that content
+- If they ask about games or scores, we need messages related to those games
 
 Please respond in this exact JSON format:
 {
@@ -99,7 +102,8 @@ Please respond in this exact JSON format:
             "value": "last_hour/last_day/last_week/all" or "2024-05-23",
             "end_date": "2024-05-24" or null  # Only for specific ranges
         },
-        "keywords": ["word1", "word2"] or null
+        "keywords": ["word1", "word2"] or null,
+        "guild_name": "name of the guild"
     }
 }
 
@@ -250,9 +254,31 @@ User's prompt: """ + prompt
         try:
             client = openai.AsyncOpenAI()
             
+            # Get guild config for context
+            guild_name = filter_params.get('guild_name', 'unknown')
+            config_path = direct_path_finder('files', 'guilds', guild_name, 'config.json')
+            guild_config = {}
+            if os.path.exists(config_path):
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    guild_config = json.load(f)
+            
+            # Prepare base system prompt with guild context
+            base_system_prompt = system_prompt or "You are a helpful assistant that can answer questions. Keep your answers short and sweet. Be as direct as possible. Don't praise the prompt or add unnecessary commentary."
+            
+            # Add guild context in a concise format
+            if guild_config:
+                context = f"\n\nContext: You are in the Discord server '{guild_config['guild_name']}'. "
+                if 'channels' in guild_config:
+                    channel_names = [ch['name'] for ch in guild_config['channels']]
+                    context += f"Available channels: {', '.join(channel_names)}. "
+                if 'users' in guild_config:
+                    user_names = [f"{u['display_name']} ({u['name']})" for u in guild_config['users']]
+                    context += f"Known users: {', '.join(user_names)}."
+                base_system_prompt += context
+            
             # Prepare messages for the API call
             messages = [
-                {"role": "system", "content": system_prompt or "You are a helpful assistant that can answer questions. Keep your answers short and sweet. Be as direct as possible. Don't praise the prompt or add unnecessary commentary."},
+                {"role": "system", "content": base_system_prompt},
                 {"role": "user", "content": prompt}
             ]
             
@@ -281,7 +307,7 @@ User's prompt: """ + prompt
                     for msg in formatted_messages
                 ])
                 
-                # Add to system prompt
+                # Add message history to system prompt
                 messages[0]["content"] += f"\n\nHere are the relevant messages to analyze:\n{message_text}"
             
             response = await client.chat.completions.create(
