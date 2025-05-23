@@ -205,20 +205,18 @@ User's prompt: """ + prompt
     def log_prompt_analysis(self, interaction: discord.Interaction, prompt: str, needs_context: bool, analysis: str, final_response: str = None, message_count: int = 0, filter_params: Dict = None):
         """Log the prompt analysis to a JSON file."""
         try:
-            print("\n[DEBUG] Starting prompt analysis logging")
-            log_file = direct_path_finder('files', 'gpt_prompt_history.json')
-            print(f"[DEBUG] Log file path: {log_file}")
+            # Get guild-specific path
+            guild_name = interaction.guild.name
+            log_file = direct_path_finder('files', 'guilds', guild_name, 'gpt_history.json')
             
             # Create directory if it doesn't exist
             os.makedirs(os.path.dirname(log_file), exist_ok=True)
             
             # Load existing logs or create new
             if os.path.exists(log_file):
-                print("[DEBUG] Loading existing log file")
                 with open(log_file, 'r', encoding='utf-8') as f:
                     logs = json.load(f)
             else:
-                print("[DEBUG] Creating new log file")
                 logs = []
             
             # Add new log entry
@@ -252,14 +250,10 @@ User's prompt: """ + prompt
             }
             
             logs.append(new_entry)
-            print(f"[DEBUG] Added log entry to gpt_prompt_history.json")
             
             # Save updated logs
-            print("[DEBUG] Saving updated logs")
             with open(log_file, 'w', encoding='utf-8') as f:
                 json.dump(logs, f, indent=2)
-            
-            print("[DEBUG] Logging completed successfully")
                 
         except Exception as e:
             print(f"[ERROR] Error logging prompt analysis: {str(e)}")
