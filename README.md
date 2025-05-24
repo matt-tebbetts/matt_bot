@@ -154,4 +154,7 @@ Example:
 
 ---
 
-**Last Updated**: After fixing the "no access to messages" issue by updating system prompts and keyword detection. 
+**Last Updated**: After multiple iterations fixing the "no access to messages" issue:
+- Updated system prompts to be more forceful and explicit
+- Added clear headers to message data to mark it as "REAL MESSAGES"  
+- Used directive language like "YOU HAVE BEEN PROVIDED" and "DO NOT say you lack access" 

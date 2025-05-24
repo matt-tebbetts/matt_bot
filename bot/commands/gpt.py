@@ -104,45 +104,36 @@ class GPT:
             try:
                 await interaction.response.defer()
                 
-                # First, analyze if this prompt needs message context
-                needs_context, analysis, filter_params = await self.analyze_prompt(
-                    prompt=prompt,
-                    guild_name=interaction.guild.name,
-                    current_channel=interaction.channel.name
-                )
+                # Always load messages and provide context
+                guild_name = interaction.guild.name
+                messages_file = direct_path_finder('files', 'guilds', guild_name, 'messages.json')
+                with open(messages_file, 'r', encoding='utf-8') as f:
+                    messages = json.load(f)
                 
-                # Get the final response
-                if needs_context:
-                    # Load messages if needed
-                    guild_name = interaction.guild.name
-                    messages_file = direct_path_finder('files', 'guilds', guild_name, 'messages.json')
-                    with open(messages_file, 'r', encoding='utf-8') as f:
-                        messages = json.load(f)
-                    
-                    # Get response with context
-                    response, input_tokens, output_tokens, message_count, channels_used = await self.get_gpt_response(
-                        prompt=prompt,
-                        system_prompt="You are a helpful assistant that analyzes Discord conversations. Use the provided message history to answer the user's question about the conversation.",
-                        messages_data=messages,
-                        filter_params=filter_params
-                    )
-                else:
-                    # Get regular response
-                    response, input_tokens, output_tokens, message_count, channels_used = await self.get_gpt_response(
-                        prompt=prompt,
-                        filter_params=filter_params  # Pass filter_params even without context
-                    )
+                # Simple filter params
+                filter_params = {
+                    'guild_name': guild_name,
+                    'current_channel': interaction.channel.name,
+                    'channels': [interaction.channel.name]
+                }
+                
+                # Get response with context
+                response, input_tokens, output_tokens, message_count, channels_used = await self.get_gpt_response(
+                    prompt=prompt,
+                    messages_data=messages,
+                    filter_params=filter_params
+                )
                 
                 # Calculate total tokens and cost
                 total_tokens = input_tokens + output_tokens
                 cost = self._calculate_cost("gpt-4", input_tokens, output_tokens)
                 
-                # Log the analysis and response
+                # Log the response
                 self.log_prompt_analysis(
                     interaction=interaction,
                     prompt=prompt,
-                    needs_context=needs_context,
-                    analysis=analysis,
+                    needs_context=True,  # Always true now
+                    analysis="Always providing conversation context",
                     final_response=response,
                     message_count=message_count,
                     filter_params=filter_params,
@@ -454,8 +445,8 @@ class GPT:
                     "Example of a good summary: 'In #things-we-watch, Matt and Sarah debated whether Dune was overrated, with Matt praising the visuals and Sarah saying it was too slow. In #crossword-corner, users shared Octordle scores and debugged the /gpt command, with acowinthecrowd expressing frustration about privacy and Matt reassuring them about data deletion.'"
                 )
 
-            # Use a clear, explicit system prompt about Discord context
-            minimal_system_prompt = "You are analyzing real Discord messages from a server. The messages below are actual conversations between Discord users. When asked about users, conversations, or what people said, refer directly to these messages. Never say you don't have access to messages or conversations - you are looking at the actual Discord chat history. Answer questions about users' personalities, what they discussed, and their interactions based on these real messages."
+            # Use a clear, confident system prompt about conversation context  
+            minimal_system_prompt = "You are a conversation analyzer. You have access to real conversation logs below. The messages are formatted as '[channel] timestamp username: message' where the channel name helps gauge conversation continuity. Analyze these conversations to answer questions about users, discussions, and interactions. Base your responses on the actual conversation content provided."
 
             # Prepare messages for the API call
             messages = [
@@ -476,13 +467,21 @@ class GPT:
                     key=lambda x: datetime.strptime(x['create_ts'], '%Y-%m-%d %H:%M:%S')
                 )
                 # Format messages as a real chat log, one per line
-                formatted_messages = []
+                formatted_messages = [
+                    "=== CONVERSATION LOGS ===",
+                    f"Total messages: {len(sorted_messages)}",
+                    f"Channels: {', '.join(channels_used)}",
+                    "Format: [channel] timestamp username: message",
+                    "=== START OF CONVERSATIONS ===",
+                    ""
+                ]
                 for msg in sorted_messages:
                     if msg['content'].strip():
                         content = msg['content']
                         # Include timestamp in the format: [channel] timestamp author: content
                         formatted_msg = f"[{msg['channel_nm']}] {msg['create_ts']} {msg['author_nick']}: {content}"
                         formatted_messages.append(formatted_msg)
+                formatted_messages.append("\n=== END OF CONVERSATIONS ===")
                 message_text = "\n".join(formatted_messages)
                 messages.append({"role": "user", "content": message_text})
 
