@@ -19,6 +19,7 @@ def load_metadata(guild_name: str) -> Dict:
     return {
         "last_initialized": None,
         "oldest_message_ts": None,
+        "latest_message_ts": None,
         "message_count": 0,
         "game_score_count": 0
     }
@@ -30,7 +31,7 @@ def save_metadata(guild_name: str, metadata: Dict):
     with open(metadata_path, 'w', encoding='utf-8') as f:
         json.dump(metadata, f, indent=2)
 
-async def collect_recent_messages(channel, oldest_ts: str = None, lookback_days: int = 7) -> Tuple[int, int]:
+async def collect_recent_messages(channel, latest_ts: str = None, lookback_days: int = 7) -> Tuple[int, int]:
     """Collect recent messages from a channel and save any new ones to messages.json.
     Returns tuple of (new_messages_count, game_scores_count)"""
     try:
@@ -51,13 +52,16 @@ async def collect_recent_messages(channel, oldest_ts: str = None, lookback_days:
         new_messages = {}
         game_score_count = 0
         
-        # If we have an oldest timestamp, only fetch messages after that
-        if oldest_ts:
-            after = datetime.strptime(oldest_ts, '%Y-%m-%d %H:%M:%S')
+        # If we have a latest timestamp, only fetch messages after that
+        # Otherwise, fall back to lookback_days
+        if latest_ts:
+            after = datetime.strptime(latest_ts, '%Y-%m-%d %H:%M:%S')
             after = pytz.timezone('US/Eastern').localize(after)
+            print(f"[DEBUG] Fetching messages in {channel.name} after latest known: {latest_ts}")
         else:
-            # Default to lookback_days ago if no timestamp provided
+            # Default to lookback_days ago if no latest timestamp provided
             after = datetime.now(pytz.timezone('US/Eastern')) - timedelta(days=lookback_days)
+            print(f"[DEBUG] Fetching messages in {channel.name} from last {lookback_days} days")
         
         print(f"[DEBUG] About to start iterating messages for channel: {channel.name}")
         msg_count = 0
@@ -129,14 +133,14 @@ async def initialize_message_history(client, lookback_days: int = 7) -> None:
             
             guild_messages = 0
             guild_scores = 0
-            oldest_ts = metadata.get("oldest_message_ts")
+            latest_ts = metadata.get("latest_message_ts")
             
             for channel in guild.text_channels:
                 # Skip channels the bot can't read
                 if not channel.permissions_for(guild.me).read_messages:
                     continue
                     
-                messages, scores = await collect_recent_messages(channel, oldest_ts, lookback_days)
+                messages, scores = await collect_recent_messages(channel, latest_ts, lookback_days)
                 guild_messages += messages
                 guild_scores += scores
             
@@ -145,15 +149,15 @@ async def initialize_message_history(client, lookback_days: int = 7) -> None:
             metadata["message_count"] = guild_messages
             metadata["game_score_count"] = guild_scores
             
-            # If we collected new messages, update the oldest timestamp
-            if guild_messages > 0:
-                messages_file = direct_path_finder('files', 'guilds', guild.name, 'messages.json')
-                if os.path.exists(messages_file):
-                    with open(messages_file, 'r', encoding='utf-8') as f:
-                        messages = json.load(f)
-                        if messages:
-                            oldest_ts = min(msg["create_ts"] for msg in messages.values())
-                            metadata["oldest_message_ts"] = oldest_ts
+            # Update both oldest and latest timestamps based on the messages we have
+            messages_file = direct_path_finder('files', 'guilds', guild.name, 'messages.json')
+            if os.path.exists(messages_file):
+                with open(messages_file, 'r', encoding='utf-8') as f:
+                    messages = json.load(f)
+                    if messages:
+                        timestamps = [msg["create_ts"] for msg in messages.values()]
+                        metadata["oldest_message_ts"] = min(timestamps)
+                        metadata["latest_message_ts"] = max(timestamps)
             
             save_metadata(guild.name, metadata)
             
