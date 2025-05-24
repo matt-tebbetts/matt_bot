@@ -1,7 +1,9 @@
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
 from bot.connections.config import FONT_PATH
+from bot.functions.admin import direct_path_finder
 import platform
+import os
 # returns the image filepath
 def df_to_image(df, 
                                  img_filepath='files/images/leaderboard.png', 
@@ -11,6 +13,16 @@ def df_to_image(df,
                                  right_aligned_columns=['Rank', 'Time', 'Score','Points', 'Wins',
                                                         'Top 3', 'Top 5', 'Played', 'Games', 
                                                         'Scores Added', 'Avg', '1st', '2nd', '3rd', '4th', '5th']):
+
+    # Ensure the image filepath uses the proper absolute path
+    if not os.path.isabs(img_filepath):
+        # Convert relative path to absolute using direct_path_finder
+        # Split the relative path into components
+        path_parts = img_filepath.split('/')
+        img_filepath = direct_path_finder(*path_parts)
+    
+    # Ensure the directory exists
+    os.makedirs(os.path.dirname(img_filepath), exist_ok=True)
 
     # Set colors
     header_bg_color = '#4a4e53'
