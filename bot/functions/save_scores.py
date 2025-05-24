@@ -166,19 +166,36 @@ def process_boxoffice(message):
 
 def process_travle(message):
     lines = message.split('\n')
-    game_detail = lines[0] if lines else None
+    full_line = lines[0] if lines else None
     score = None
-    if game_detail:
-        parts = game_detail.split()
-        if len(parts) >= 3:
-            score = parts[2]  # Assuming the score is the third part
+    game_detail = None
+    
+    if full_line:
+        # Extract just the game identifier (e.g., "#travle #892")
+        game_match = re.search(r'#travle #\d+', full_line)
+        if game_match:
+            game_detail = game_match.group(0)
+        
+        # Check for loss pattern "(X away)"
+        away_match = re.search(r'\((\d+) away\)', full_line)
+        if away_match:
+            # It's a loss - use X to indicate failure (like other games)
+            score = "X"
+        else:
+            # Regular win/attempt - extract score like "+2" or "+0"
+            score_match = re.search(r'\+(\d+)', full_line)
+            if score_match:
+                score = f"+{score_match.group(1)}"
 
     # Check for bonuses
     bonuses = []
-    if "Perfect" in game_detail:
+    if "Perfect" in full_line:
         bonuses.append("perfect")
-    if "hint" in game_detail:
+    if "hint" in full_line:
         bonuses.append("hint")
+    # Check for loss: either "(X away)" pattern or red squares in message
+    if "(away)" in full_line or "🟥" in message:
+        bonuses.append("lost")
 
     # Convert bonuses list to a comma-separated string
     bonuses_str = ', '.join(bonuses) if bonuses else None

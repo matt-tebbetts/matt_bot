@@ -43,7 +43,7 @@
         "scoring_type": "guesses",
         "emoji": "📈",
         "bonus_emojis": {
-            "perfect": "🔥",
+            "perfect": "🎉",
             "impressive": "👩‍🏫",
             "lost": "❌"
         }
@@ -65,8 +65,9 @@
         "scoring_type": "guesses",
         "emoji": "🌍",
         "bonus_emojis": {
-            "perfect": "🎉",
-            "hint": "👎"
+            "perfect": "🎯",
+            "hint": "👎",
+            "lost": "❌"
         }
     },
     "connections": {
