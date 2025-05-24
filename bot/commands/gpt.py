@@ -445,8 +445,8 @@ class GPT:
                     "Example of a good summary: 'In #things-we-watch, Matt and Sarah debated whether Dune was overrated, with Matt praising the visuals and Sarah saying it was too slow. In #crossword-corner, users shared Octordle scores and debugged the /gpt command, with acowinthecrowd expressing frustration about privacy and Matt reassuring them about data deletion.'"
                 )
 
-            # Use a clear, confident system prompt about conversation context  
-            minimal_system_prompt = "You are a conversation analyzer. You have access to real conversation logs below. The messages are formatted as '[channel] timestamp username: message' where the channel name helps gauge conversation continuity. Analyze these conversations to answer questions about users, discussions, and interactions. Base your responses on the actual conversation content provided."
+            # Use a clear, explicit system prompt that prevents fabrication
+            minimal_system_prompt = "You are analyzing real conversation logs. ONLY summarize and discuss what is actually written in the messages provided below. Do not create example messages or fabricate conversations. Do not show fake message examples. Only describe what actually happened based on the real messages you can see. If asked to summarize, describe the actual topics and interactions from the provided messages."
 
             # Prepare messages for the API call
             messages = [
@@ -468,11 +468,11 @@ class GPT:
                 )
                 # Format messages as a real chat log, one per line
                 formatted_messages = [
-                    "=== CONVERSATION LOGS ===",
+                    "=== REAL CONVERSATION LOGS - DO NOT FABRICATE ===",
                     f"Total messages: {len(sorted_messages)}",
                     f"Channels: {', '.join(channels_used)}",
-                    "Format: [channel] timestamp username: message",
-                    "=== START OF CONVERSATIONS ===",
+                    "These are the ACTUAL messages. Summarize only what you see below.",
+                    "=== ACTUAL MESSAGES START HERE ===",
                     ""
                 ]
                 for msg in sorted_messages:
@@ -481,7 +481,7 @@ class GPT:
                         # Include timestamp in the format: [channel] timestamp author: content
                         formatted_msg = f"[{msg['channel_nm']}] {msg['create_ts']} {msg['author_nick']}: {content}"
                         formatted_messages.append(formatted_msg)
-                formatted_messages.append("\n=== END OF CONVERSATIONS ===")
+                formatted_messages.append("\n=== END OF ACTUAL MESSAGES ===")
                 message_text = "\n".join(formatted_messages)
                 messages.append({"role": "user", "content": message_text})
 
