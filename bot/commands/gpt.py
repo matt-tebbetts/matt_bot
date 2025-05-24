@@ -50,7 +50,9 @@ class GPT:
         costs = self.model_costs[model]
         input_cost = (input_tokens / 1000) * costs['input_cost']
         output_cost = (output_tokens / 1000) * costs['output_cost']
-        return input_cost + output_cost
+        total_cost = input_cost + output_cost
+        # Round up to nearest penny
+        return round(total_cost + 0.005, 2)
         
     def _trim_messages_to_token_limit(self, messages: List[Dict], max_tokens: int = 7000) -> List[Dict]:
         """Trim messages to fit within token limit, keeping the most recent ones."""
@@ -154,8 +156,24 @@ class GPT:
                 # Get user's display name
                 user_display = interaction.user.display_name
                 
-                # Add token count and cost to response
-                token_info = f"\n\n[Tokens: {input_tokens} in, {output_tokens} out, {total_tokens} total | Cost: ${cost:.4f}]"
+                # Load daily totals from history file
+                history_file = direct_path_finder('files', 'gpt', 'gpt_history.json')
+                daily_tokens = 0
+                daily_cost = 0.0
+                if os.path.exists(history_file):
+                    with open(history_file, 'r', encoding='utf-8') as f:
+                        logs = json.load(f)
+                        current_date = datetime.now().strftime('%Y-%m-%d')
+                        for log in logs:
+                            if log.get('timestamp', '').startswith(current_date):
+                                daily_tokens += log.get('context_info', {}).get('total_tokens', 0)
+                                daily_cost += log.get('context_info', {}).get('cost', 0.0)
+                
+                # Round up daily cost to nearest penny
+                daily_cost = round(daily_cost + 0.005, 2)
+                
+                # Add token count, cost, and daily totals to response
+                token_info = f"\n\n[Tokens: {input_tokens} in, {output_tokens} out, {total_tokens} total | Cost: ${cost:.2f} | Today: {daily_tokens} tokens, ${daily_cost:.2f}]"
                 await interaction.followup.send(f"**{user_display}:** {prompt}\n\n**ChatGPT:** {response}{token_info}")
                 
             except Exception as e:
@@ -225,6 +243,23 @@ class GPT:
                 # Default to current channel if no channels suggested
                 filter_params['channels'] = [current_channel]
                 filter_params['current_channel'] = current_channel
+            
+            # Check if the prompt mentions a specific channel
+            channel_mentions = re.findall(r'[#]?(\w+(?:-\w+)*)', prompt.lower())
+            if channel_mentions:
+                # Look for exact matches in available channels
+                for mention in channel_mentions:
+                    # Try exact match first
+                    if mention in available_channels:
+                        filter_params['channels'] = [mention]
+                        filter_params['current_channel'] = mention
+                        break
+                    # Try case-insensitive match
+                    for channel in available_channels:
+                        if channel.lower() == mention:
+                            filter_params['channels'] = [channel]
+                            filter_params['current_channel'] = channel
+                            break
             
             return needs_context, analysis, filter_params
             
@@ -305,9 +340,8 @@ class GPT:
     def log_prompt_analysis(self, interaction: discord.Interaction, prompt: str, needs_context: bool, analysis: str, final_response: str = None, message_count: int = 0, filter_params: Dict = None, input_tokens: int = 0, output_tokens: int = 0, total_tokens: int = 0, cost: float = 0.0):
         """Log the prompt analysis to a JSON file."""
         try:
-            # Get guild-specific path
-            guild_name = interaction.guild.name
-            log_file = direct_path_finder('files', 'guilds', guild_name, 'gpt_history.json')
+            # Use central history file
+            log_file = direct_path_finder('files', 'gpt', 'gpt_history.json')
             
             # Create directory if it doesn't exist
             os.makedirs(os.path.dirname(log_file), exist_ok=True)
@@ -318,6 +352,21 @@ class GPT:
                     logs = json.load(f)
             else:
                 logs = []
+            
+            # Get current date for daily totals
+            current_date = datetime.now().strftime('%Y-%m-%d')
+            
+            # Calculate daily totals
+            daily_tokens = 0
+            daily_cost = 0.0
+            for log in logs:
+                if log.get('timestamp', '').startswith(current_date):
+                    daily_tokens += log.get('context_info', {}).get('total_tokens', 0)
+                    daily_cost += log.get('context_info', {}).get('cost', 0.0)
+            
+            # Add new totals
+            daily_tokens += total_tokens
+            daily_cost += cost
             
             # Add new log entry
             new_entry = {
@@ -348,7 +397,9 @@ class GPT:
                     "input_tokens": input_tokens,
                     "output_tokens": output_tokens,
                     "total_tokens": total_tokens,
-                    "cost": cost
+                    "cost": cost,
+                    "daily_tokens": daily_tokens,
+                    "daily_cost": daily_cost
                 },
                 "interaction_id": str(interaction.id),
                 "filter_params": filter_params
@@ -391,11 +442,12 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
             # Get current channel
             current_channel = filter_params.get('current_channel', 'unknown')
             
-            # Check if this is a conversation summary request
-            is_summary_request = any(keyword in prompt.lower() for keyword in ['summarize', 'summary', 'what happened', 'what was said'])
+            # Check if this is a conversation-related request
+            conversation_keywords = ['summarize', 'summary', 'what happened', 'what was said', 'discuss', 'talk about', 'conversation']
+            is_conversation_request = any(keyword in prompt.lower() for keyword in conversation_keywords)
             
             # Use appropriate system prompt
-            if is_summary_request and messages_data:
+            if is_conversation_request and messages_data:
                 custom_system_prompt = self.summary_prompt_template
             else:
                 custom_system_prompt = system_prompt if system_prompt else ""
@@ -412,7 +464,7 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
                 {"role": "system", "content": base_system_prompt}
             ]
             
-            # If we have message data, filter and format efficiently
+            # Always include message history if available
             if messages_data:
                 filtered_messages = self.filter_messages(messages_data, filter_params)
                 
@@ -458,7 +510,7 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
             response = await client.chat.completions.create(
                 model="gpt-4",  # Using GPT-4 for better responses
                 messages=messages,
-                max_tokens=1000 if is_summary_request else 500,  # Allow longer responses for summaries
+                max_tokens=1000 if is_conversation_request else 500,  # Allow longer responses for summaries
                 temperature=0.7
             )
             
