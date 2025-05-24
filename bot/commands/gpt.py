@@ -452,9 +452,11 @@ class GPT:
             
             # Process messages first to get channels_used
             if messages_data:
+                print(f"[DEBUG] Raw messages_data length: {len(messages_data)}")
                 filtered_messages = self.filter_messages(messages_data, filter_params)
                 message_count = len(filtered_messages)
                 channels_used = {msg['channel_nm'] for msg in filtered_messages.values()}
+                print(f"[DEBUG] After filtering: {message_count} messages, channels: {list(channels_used)}")
 
             # Use the loaded system prompt template
             guild_info = f"Guild: {guild_name}"
@@ -469,7 +471,9 @@ class GPT:
             messages = [
                 {"role": "system", "content": system_prompt}
             ]
+            print(f"[DEBUG] Checking if should add messages: messages_data={messages_data is not None}, filtered_count={len(filtered_messages) if filtered_messages else 0}")
             if messages_data and len(filtered_messages) > 0:
+                print(f"[DEBUG] Adding messages to API call...")
                 # Sort messages by timestamp
                 sorted_messages = sorted(
                     filtered_messages.values(),
@@ -485,11 +489,17 @@ class GPT:
                     ""
                 ]
                 for msg in sorted_messages:
-                    if msg['content'].strip():
-                        content = msg['content']
+                    content = msg['content'].strip()
+                    if content:
                         # Include timestamp in the format: [channel] timestamp author: content
                         formatted_msg = f"[{msg['channel_nm']}] {msg['create_ts']} {msg['author_nick']}: {content}"
                         formatted_messages.append(formatted_msg)
+                    else:
+                        # Debug: Track empty messages
+                        print(f"[DEBUG] Skipping empty message from {msg['author_nick']} in {msg['channel_nm']}")
+                
+                print(f"[DEBUG] Total sorted messages: {len(sorted_messages)}")
+                print(f"[DEBUG] Messages with content: {len(formatted_messages) - 6}")  # Subtract header lines
                 formatted_messages.append("\n=== END OF ACTUAL MESSAGES ===")
                 message_text = "\n".join(formatted_messages)
                 messages.append({"role": "user", "content": message_text})
@@ -499,9 +509,15 @@ class GPT:
                 print(f"[DEBUG] First few formatted messages: {formatted_messages[:10]}")
                 if len(formatted_messages) < 10:
                     print(f"[DEBUG] All formatted messages: {formatted_messages}")
+            else:
+                print(f"[DEBUG] NO MESSAGES ADDED TO API CALL - this is the problem!")
 
             # Add the user's prompt as the final user message
             messages.append({"role": "user", "content": prompt})
+            
+            print(f"[DEBUG] Final API messages structure:")
+            for i, msg in enumerate(messages):
+                print(f"[DEBUG] Message {i} ({msg['role']}): {len(msg['content'])} characters")
 
             # Save the full prompt to a file for debugging
             prompt_dir = direct_path_finder('files', 'gpt', 'prompts')
