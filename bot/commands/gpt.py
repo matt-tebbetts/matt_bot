@@ -99,7 +99,7 @@ class GPT:
             print(f"/gpt called by {interaction.user.name} in {interaction.guild.name}")
             
             # Temporary disable - return early with message
-            await interaction.response.send_message("Sorry, this command is temporarily disabled because I'm a stupid, idiotic robot who can't do basic text analysis. 🔧", ephemeral=True)
+            await interaction.response.send_message("Sorry, this command is temporarily disabled because I'm a stupid, idiotic robot who can't do basic text analysis. 🔧", ephemeral=False)
             return
             
             try:
