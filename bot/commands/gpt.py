@@ -276,7 +276,7 @@ class GPT:
             
         except Exception as e:
             # For conversation-related queries, default to using context
-            conversation_keywords = ['summarize', 'conversation', 'messages', 'chat', 'discussion', 'talk', 'what happened', 'what was said']
+            conversation_keywords = ['summarize', 'conversation', 'messages', 'chat', 'discussion', 'talk', 'what happened', 'what was said', 'personality', 'user', 'says', 'describe', 'about', 'people']
             prompt_lower = prompt.lower()
             
             # Check if the prompt is about conversations
@@ -440,7 +440,7 @@ class GPT:
             prompt = re.sub(r'<#(\d+)>', replace_channel_id, prompt)
 
             # Check if this is a conversation-related request
-            conversation_keywords = ['summarize', 'summary', 'what happened', 'what was said', 'discuss', 'talk about', 'conversation']
+            conversation_keywords = ['summarize', 'summary', 'what happened', 'what was said', 'discuss', 'talk about', 'conversation', 'personality', 'user', 'says', 'describe', 'about', 'people']
             is_conversation_request = any(keyword in prompt.lower() for keyword in conversation_keywords)
             
             # If summarization, always request a much shorter, more specific summary
@@ -454,8 +454,8 @@ class GPT:
                     "Example of a good summary: 'In #things-we-watch, Matt and Sarah debated whether Dune was overrated, with Matt praising the visuals and Sarah saying it was too slow. In #crossword-corner, users shared Octordle scores and debugged the /gpt command, with acowinthecrowd expressing frustration about privacy and Matt reassuring them about data deletion.'"
                 )
 
-            # Use a single, minimal system prompt
-            minimal_system_prompt = "Summarize the following Discord messages. Only use what is actually in the messages. Do not say you lack access; you are seeing the real messages."
+            # Use a clear, explicit system prompt about Discord context
+            minimal_system_prompt = "You are analyzing real Discord messages from a server. The messages below are actual conversations between Discord users. When asked about users, conversations, or what people said, refer directly to these messages. Never say you don't have access to messages or conversations - you are looking at the actual Discord chat history. Answer questions about users' personalities, what they discussed, and their interactions based on these real messages."
 
             # Prepare messages for the API call
             messages = [

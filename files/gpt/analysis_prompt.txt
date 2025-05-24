@@ -31,7 +31,8 @@ Always consider the context and topic of the query, not just explicit channel me
 
 IMPORTANT: 
 - Unless the user specifically mentions another channel, always include the current channel in the filter
-- If the question is about the server, bot, or conversations, it needs context
+- If the question is about the server, bot, conversations, users' personalities, what people said, or describing someone, it needs context
+- Questions about specific Discord users always need context to analyze their messages
 
 Please respond in this exact JSON format:
 {
