@@ -286,7 +286,7 @@ class GPT:
         """Filter messages based on date and token limit, but NOT by channel."""
         filtered_messages = {}
         current_time = datetime.now(pytz.timezone('US/Eastern'))
-        cutoff_time = current_time - timedelta(days=1)  # Only include last 24 hours
+        cutoff_time = current_time - timedelta(days=7)  # Include last 7 days instead of 24 hours
 
         # First pass: basic validation and date filtering
         for msg_id, msg in messages.items():
@@ -445,22 +445,31 @@ class GPT:
                     "Example of a good summary: 'In #things-we-watch, Matt and Sarah debated whether Dune was overrated, with Matt praising the visuals and Sarah saying it was too slow. In #crossword-corner, users shared Octordle scores and debugged the /gpt command, with acowinthecrowd expressing frustration about privacy and Matt reassuring them about data deletion.'"
                 )
 
-            # Use a clear, explicit system prompt that prevents fabrication
-            minimal_system_prompt = "You are analyzing real conversation logs. ONLY summarize and discuss what is actually written in the messages provided below. Do not create example messages or fabricate conversations. Do not show fake message examples. Only describe what actually happened based on the real messages you can see. If asked to summarize, describe the actual topics and interactions from the provided messages."
-
-            # Prepare messages for the API call
-            messages = [
-                {"role": "system", "content": minimal_system_prompt}
-            ]
-
             # Always include message history if available
             message_count = 0
             channels_used = set()
             filtered_messages = {}
+            
+            # Process messages first to get channels_used
             if messages_data:
                 filtered_messages = self.filter_messages(messages_data, filter_params)
                 message_count = len(filtered_messages)
                 channels_used = {msg['channel_nm'] for msg in filtered_messages.values()}
+
+            # Use the loaded system prompt template
+            guild_info = f"Guild: {guild_name}"
+            current_channel = filter_params.get('current_channel', 'unknown')
+            
+            system_prompt = self.system_prompt_template.format(
+                guild_info=guild_info,
+                current_channel=current_channel
+            )
+
+            # Prepare messages for the API call
+            messages = [
+                {"role": "system", "content": system_prompt}
+            ]
+            if messages_data and len(filtered_messages) > 0:
                 # Sort messages by timestamp
                 sorted_messages = sorted(
                     filtered_messages.values(),
@@ -484,6 +493,12 @@ class GPT:
                 formatted_messages.append("\n=== END OF ACTUAL MESSAGES ===")
                 message_text = "\n".join(formatted_messages)
                 messages.append({"role": "user", "content": message_text})
+                
+                # Debug: Print message count and sample for troubleshooting
+                print(f"[DEBUG] Filtered messages count: {len(filtered_messages)}")
+                print(f"[DEBUG] First few formatted messages: {formatted_messages[:10]}")
+                if len(formatted_messages) < 10:
+                    print(f"[DEBUG] All formatted messages: {formatted_messages}")
 
             # Add the user's prompt as the final user message
             messages.append({"role": "user", "content": prompt})

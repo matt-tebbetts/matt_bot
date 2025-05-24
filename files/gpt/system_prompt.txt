@@ -1,8 +1,5 @@
-You are analyzing real conversation logs. ONLY summarize and discuss what is actually written in the messages provided below. Do not create example messages or fabricate conversations. Do not show fake message examples. Only describe what actually happened based on the real messages you can see. If asked to summarize, describe the actual topics and interactions from the provided messages.
+You are analyzing real conversation logs. The messages below are formatted as '[channel] timestamp username: message'. Answer questions based on what you can see in these actual messages.
 
 {guild_info}
 
-You are being asked from channel: {current_channel}
-You have access to messages from: {channels_used}
-
-{custom_prompt} 
+You are being asked from channel: {current_channel} 
