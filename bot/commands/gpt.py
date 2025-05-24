@@ -293,7 +293,7 @@ class GPT:
 
         filtered_messages = {}
         current_time = datetime.now(pytz.timezone('US/Eastern'))
-        cutoff_time = current_time - timedelta(days=7)  # Only include last 7 days
+        cutoff_time = current_time - timedelta(days=1)  # Only include last 24 hours
         
         # First pass: basic validation and date filtering
         for msg_id, msg in messages.items():
@@ -301,7 +301,7 @@ class GPT:
             if not all(k in msg for k in ['create_ts', 'channel_nm', 'author_nm', 'content', 'author_nick']):
                 continue
                 
-            # Apply date filter (last 7 days)
+            # Apply date filter (last 24 hours)
             try:
                 msg_time = datetime.strptime(msg['create_ts'], '%Y-%m-%d %H:%M:%S')
                 msg_time = pytz.timezone('US/Eastern').localize(msg_time)
@@ -316,13 +316,21 @@ class GPT:
         sorted_msgs = sorted(
             filtered_messages.values(),
             key=lambda x: datetime.strptime(x['create_ts'], '%Y-%m-%d %H:%M:%S'),
-            reverse=True
+            reverse=True  # Most recent first
         )
         
         # Keep as many messages as possible within token limit
         filtered_messages = {}
         current_tokens = 0
         max_tokens = 6000  # Leave room for system prompt and response
+        
+        # Count tokens for the full message history (for logging)
+        full_history_tokens = 0
+        for msg in sorted_msgs:
+            msg_tokens = self._count_tokens(f"{msg['author_nick']}: {msg['content']}")
+            full_history_tokens += msg_tokens
+        
+        print(f"Full message history would use {full_history_tokens} tokens")
         
         for msg in sorted_msgs:
             # Estimate tokens for this message (author + content)
@@ -341,6 +349,7 @@ class GPT:
                     current_tokens += msg_tokens
                     break
             
+        print(f"Filtered to {len(filtered_messages)} messages using {current_tokens} tokens")
         return filtered_messages
 
     def log_prompt_analysis(self, interaction: discord.Interaction, prompt: str, needs_context: bool, analysis: str, final_response: str = None, message_count: int = 0, filter_params: Dict = None, input_tokens: int = 0, output_tokens: int = 0, total_tokens: int = 0, cost: float = 0.0):
