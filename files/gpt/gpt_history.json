@@ -1,0 +1,412 @@
+[
+  {
+    "timestamp": "2025-05-23 20:45:58",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "bot-test",
+      "id": "813831098312294490"
+    },
+    "message_id": null,
+    "prompt": "what's the capital of France?",
+    "needs_context": false,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "I'm sorry, but as a conversation summarizing bot, I don't provide trivia or factual information. My function is to summarize recent conversations from the last 24 hours of message history.",
+    "context_info": {
+      "message_count": 0,
+      "model_used": "gpt-4",
+      "has_messages": false,
+      "input_tokens": 628,
+      "output_tokens": 38,
+      "total_tokens": 666,
+      "cost": 0.03,
+      "daily_tokens": 666,
+      "daily_cost": 0.03
+    },
+    "interaction_id": "1375635894454845501",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "bot-test",
+      "channels": [
+        "bot-test"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 20:46:06",
+    "user": {
+      "name": "acowinthecrowd",
+      "id": "163849350827606016",
+      "nickname": null,
+      "display_name": "acowinthecrowd"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "things-we-watch",
+      "id": "672944925008199680"
+    },
+    "message_id": null,
+    "prompt": "could you let Bergs know that no one on this channel cares about his obsession with *cinema*",
+    "needs_context": false,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "I'm sorry, but as a bot designed to summarize conversations, I can't deliver personal messages. I suggest you mention this directly to Bergs in a respectful manner.",
+    "context_info": {
+      "message_count": 0,
+      "model_used": "gpt-4",
+      "has_messages": false,
+      "input_tokens": 645,
+      "output_tokens": 34,
+      "total_tokens": 679,
+      "cost": 0.03,
+      "daily_tokens": 1345,
+      "daily_cost": 0.06
+    },
+    "interaction_id": "1375635932312764467",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "things-we-watch",
+      "channels": [
+        "things-we-watch"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 20:46:26",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "bot-test",
+      "id": "813831098312294490"
+    },
+    "message_id": null,
+    "prompt": "summarize the recent conversations about movies or on any channel such as things-we-watch",
+    "needs_context": true,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "I'm sorry for the inconvenience, but I cannot provide a summary as I don't have access to the actual message history. I can only summarize based on the provided context or information.\n\nReferenced 166 messages from 8 channels: Rooty Tooty, bot-test, crossword-corner, family, food, home-improvement, news, things-we-watch",
+    "context_info": {
+      "message_count": 1844,
+      "model_used": "gpt-4",
+      "has_messages": true,
+      "input_tokens": 791,
+      "output_tokens": 37,
+      "total_tokens": 828,
+      "cost": 0.03,
+      "daily_tokens": 2173,
+      "daily_cost": 0.09
+    },
+    "interaction_id": "1375636016311828581",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "bot-test",
+      "channels": [
+        "bot-test"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 20:54:42",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "bot-test",
+      "id": "813831098312294490"
+    },
+    "message_id": null,
+    "prompt": "what's the capital of france",
+    "needs_context": false,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "The capital of France is Paris.",
+    "context_info": {
+      "message_count": 0,
+      "model_used": "gpt-4",
+      "has_messages": false,
+      "input_tokens": 829,
+      "output_tokens": 7,
+      "total_tokens": 836,
+      "cost": 0.03,
+      "daily_tokens": 3009,
+      "daily_cost": 0.12
+    },
+    "interaction_id": "1375638098754539672",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "bot-test",
+      "channels": [
+        "bot-test"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 20:54:57",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "bot-test",
+      "id": "813831098312294490"
+    },
+    "message_id": null,
+    "prompt": "summarize the recent discussions about movies or anything on things-we-watch",
+    "needs_context": true,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "I'm sorry, but I can't provide a summary as I don't have access to recent conversations or any specific channel's history, including \"things-we-watch\". I can only provide information based on the data I've been given.\n\nReferenced 47 messages from 1 channels: bot-test",
+    "context_info": {
+      "message_count": 1852,
+      "model_used": "gpt-4",
+      "has_messages": true,
+      "input_tokens": 3974,
+      "output_tokens": 47,
+      "total_tokens": 4021,
+      "cost": 0.13,
+      "daily_tokens": 7030,
+      "daily_cost": 0.25
+    },
+    "interaction_id": "1375638156183077015",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "bot-test",
+      "channels": [
+        "bot-test"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 20:58:53",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "bot-test",
+      "id": "813831098312294490"
+    },
+    "message_id": null,
+    "prompt": "summarize the recent discussions about movies or anything on things-we-watch",
+    "needs_context": true,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "I'm sorry, but I don't have access to any recent messages.\n\nReferenced 168 messages from 8 channels: Rooty Tooty, bot-test, crossword-corner, family, food, home-improvement, news, things-we-watch",
+    "context_info": {
+      "message_count": 1852,
+      "model_used": "gpt-4",
+      "has_messages": true,
+      "input_tokens": 1015,
+      "output_tokens": 15,
+      "total_tokens": 1030,
+      "cost": 0.04,
+      "daily_tokens": 8060,
+      "daily_cost": 0.29
+    },
+    "interaction_id": "1375639152392929310",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "bot-test",
+      "channels": [
+        "bot-test"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 21:02:51",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "bot-test",
+      "id": "813831098312294490"
+    },
+    "message_id": null,
+    "prompt": "summarize the recent discussions about movies or anything on <#672944925008199680>",
+    "needs_context": true,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "I'm sorry, but I currently only have access to message history from the following channels: Rooty Tooty, bot-test, crossword-corner, family, food, home-improvement, news, things-we-watch. I'm unable to provide a summary for channel #672944925008199680 as it's not within my accessible channels.\n\nReferenced 168 messages from 8 channels: Rooty Tooty, bot-test, crossword-corner, family, food, home-improvement, news, things-we-watch",
+    "context_info": {
+      "message_count": 1852,
+      "model_used": "gpt-4",
+      "has_messages": true,
+      "input_tokens": 1035,
+      "output_tokens": 70,
+      "total_tokens": 1105,
+      "cost": 0.04,
+      "daily_tokens": 9165,
+      "daily_cost": 0.32999999999999996
+    },
+    "interaction_id": "1375640135189926028",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "bot-test",
+      "channels": [
+        "bot-test"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 21:06:22",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "bot-test",
+      "id": "813831098312294490"
+    },
+    "message_id": null,
+    "prompt": "summarize the recent discussions about movies or anything on \u2060things-we-watch",
+    "needs_context": true,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "I'm sorry, but I currently don't have access to any recent message history in the #things-we-watch channel to provide a summary.\n\nReferenced 168 messages from 8 channels: Rooty Tooty, bot-test, crossword-corner, family, food, home-improvement, news, things-we-watch",
+    "context_info": {
+      "message_count": 1852,
+      "model_used": "gpt-4",
+      "has_messages": true,
+      "input_tokens": 1063,
+      "output_tokens": 28,
+      "total_tokens": 1091,
+      "cost": 0.04,
+      "daily_tokens": 10256,
+      "daily_cost": 0.36999999999999994
+    },
+    "interaction_id": "1375641030413648065",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "bot-test",
+      "channels": [
+        "bot-test"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 21:06:36",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "bot-test",
+      "id": "813831098312294490"
+    },
+    "message_id": null,
+    "prompt": "summarize the recent conversations on this discord server",
+    "needs_context": true,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "I'm sorry, but I need specific message history in order to summarize the recent conversations on this Discord server. Currently, I don't have access to any recent message history.\n\nReferenced 168 messages from 8 channels: Rooty Tooty, bot-test, crossword-corner, family, food, home-improvement, news, things-we-watch",
+    "context_info": {
+      "message_count": 1852,
+      "model_used": "gpt-4",
+      "has_messages": true,
+      "input_tokens": 1057,
+      "output_tokens": 35,
+      "total_tokens": 1092,
+      "cost": 0.04,
+      "daily_tokens": 11348,
+      "daily_cost": 0.4099999999999999
+    },
+    "interaction_id": "1375641088966131732",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "bot-test",
+      "channels": [
+        "bot-test"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 21:11:15",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "bot-test",
+      "id": "813831098312294490"
+    },
+    "message_id": null,
+    "prompt": "summarize the recent conversations on this discord server",
+    "needs_context": true,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "Apologies, but I'm unable to proceed without the actual conversation or message history from the various channels in the \"Nerd City\" Discord server. I can only summarize the conversations that are provided to me. Please provide the message history for a more accurate summary.\n\nReferenced 168 messages from 8 channels: Rooty Tooty, bot-test, crossword-corner, family, food, home-improvement, news, things-we-watch",
+    "context_info": {
+      "message_count": 1852,
+      "model_used": "gpt-4",
+      "has_messages": true,
+      "input_tokens": 1057,
+      "output_tokens": 53,
+      "total_tokens": 1110,
+      "cost": 0.04,
+      "daily_tokens": 12458,
+      "daily_cost": 0.4499999999999999
+    },
+    "interaction_id": "1375642254978449498",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "bot-test",
+      "channels": [
+        "bot-test"
+      ]
+    }
+  }
+]

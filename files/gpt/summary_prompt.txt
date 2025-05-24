@@ -11,4 +11,5 @@ Remember to:
 - Don't make assumptions or add information not present in the messages
 - If the conversation is empty or very short, say so
 - If there are errors or technical issues mentioned, include them
+- If nothing is directly on-topic, summarize the most relevant or active discussions instead
 - Format the summary in a clear, readable way 

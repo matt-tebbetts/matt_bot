@@ -9,6 +9,7 @@ from typing import Optional, Dict, List, Tuple
 import pytz
 import tiktoken
 import re
+import time
 
 class GPT:
     def __init__(self, client, tree):
@@ -287,21 +288,15 @@ class GPT:
             }
     
     def filter_messages(self, messages: Dict, filter_params: Dict) -> Dict:
-        """Filter messages based on the provided parameters."""
-        if not filter_params:
-            return messages
-
+        """Filter messages based on date and token limit, but NOT by channel."""
         filtered_messages = {}
         current_time = datetime.now(pytz.timezone('US/Eastern'))
         cutoff_time = current_time - timedelta(days=1)  # Only include last 24 hours
-        
+
         # First pass: basic validation and date filtering
         for msg_id, msg in messages.items():
-            # Skip if message doesn't have required fields
             if not all(k in msg for k in ['create_ts', 'channel_nm', 'author_nm', 'content', 'author_nick']):
                 continue
-                
-            # Apply date filter (last 24 hours)
             try:
                 msg_time = datetime.strptime(msg['create_ts'], '%Y-%m-%d %H:%M:%S')
                 msg_time = pytz.timezone('US/Eastern').localize(msg_time)
@@ -309,38 +304,24 @@ class GPT:
                     continue
             except Exception:
                 continue
-            
             filtered_messages[msg_id] = msg
-        
+
         # Sort by timestamp (most recent first)
         sorted_msgs = sorted(
             filtered_messages.values(),
             key=lambda x: datetime.strptime(x['create_ts'], '%Y-%m-%d %H:%M:%S'),
-            reverse=True  # Most recent first
+            reverse=True
         )
-        
+
         # Keep as many messages as possible within token limit
         filtered_messages = {}
         current_tokens = 0
         max_tokens = 6000  # Leave room for system prompt and response
-        
-        # Count tokens for the full message history (for logging)
-        full_history_tokens = 0
+
         for msg in sorted_msgs:
             msg_tokens = self._count_tokens(f"{msg['author_nick']}: {msg['content']}")
-            full_history_tokens += msg_tokens
-        
-        print(f"Full message history would use {full_history_tokens} tokens")
-        
-        for msg in sorted_msgs:
-            # Estimate tokens for this message (author + content)
-            msg_tokens = self._count_tokens(f"{msg['author_nick']}: {msg['content']}")
-            
-            # If adding this message would exceed token limit, stop
             if current_tokens + msg_tokens > max_tokens:
                 break
-                
-            # Find the original message ID and add to filtered messages
             for msg_id, original_msg in messages.items():
                 if (original_msg['create_ts'] == msg['create_ts'] and 
                     original_msg['content'] == msg['content'] and 
@@ -348,8 +329,7 @@ class GPT:
                     filtered_messages[msg_id] = msg
                     current_tokens += msg_tokens
                     break
-            
-        print(f"Filtered to {len(filtered_messages)} messages using {current_tokens} tokens")
+
         return filtered_messages
 
     def log_prompt_analysis(self, interaction: discord.Interaction, prompt: str, needs_context: bool, analysis: str, final_response: str = None, message_count: int = 0, filter_params: Dict = None, input_tokens: int = 0, output_tokens: int = 0, total_tokens: int = 0, cost: float = 0.0):
@@ -454,6 +434,14 @@ class GPT:
 Channels: {', '.join([ch['name'] for ch in guild_config['channels']])}
 Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
             
+            # Preprocess the prompt to replace channel IDs with names
+            import re
+            channel_id_to_name = {str(ch['id']): ch['name'] for ch in guild_config.get('channels', []) if 'id' in ch and 'name' in ch}
+            def replace_channel_id(match):
+                channel_id = match.group(1)
+                return f"#{channel_id_to_name.get(channel_id, channel_id)}"
+            prompt = re.sub(r'<#(\d+)>', replace_channel_id, prompt)
+            
             # Get current channel
             current_channel = filter_params.get('current_channel', 'unknown')
             
@@ -467,11 +455,21 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
             else:
                 custom_system_prompt = system_prompt if system_prompt else ""
             
-            # Format the system prompt
+            # --- FIX: Compute channels_used before formatting system prompt ---
+            channels_used = set()
+            filtered_messages = {}
+            if messages_data:
+                filtered_messages = self.filter_messages(messages_data, filter_params)
+                channels_used = {msg['channel_nm'] for msg in filtered_messages.values()}
+            channel_list = ", ".join(sorted(channels_used)) if channels_used else "none"
+            # ---------------------------------------------------------------
+            
+            # Format the system prompt, always passing channels_used
             base_system_prompt = self.system_prompt_template.format(
                 guild_info=guild_info,
                 current_channel=current_channel,
-                custom_prompt=custom_system_prompt
+                custom_prompt=custom_system_prompt,
+                channels_used=channel_list
             )
             
             # Prepare messages for the API call
@@ -479,9 +477,12 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
                 {"role": "system", "content": base_system_prompt}
             ]
             
+            # Initialize tracking variables
+            message_count = 0
+            
             # Always include message history if available
             if messages_data:
-                filtered_messages = self.filter_messages(messages_data, filter_params)
+                message_count = len(filtered_messages)
                 
                 # Sort messages by timestamp
                 sorted_messages = sorted(
@@ -489,23 +490,17 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
                     key=lambda x: datetime.strptime(x['create_ts'], '%Y-%m-%d %H:%M:%S')
                 )
                 
-                # Format messages efficiently
+                # Format messages efficiently, with extra spacing for clarity
                 formatted_messages = []
                 for msg in sorted_messages:
                     if msg['content'].strip():  # Only include non-empty messages
-                        # Format: [Channel] Author: Content
-                        # Replace channel mentions with their names
+                        # Format: [channel] author: message, with extra spacing
                         content = msg['content']
                         if msg.get('has_mentions'):
-                            # If the message has mentions, add a note about channel references
                             content += " [Note: This message contains channel references]"
                         formatted_msg = f"[{msg['channel_nm']}] {msg['author_nick']}: {content}"
                         formatted_messages.append(formatted_msg)
-                
-                # Convert to a more compact format
-                message_text = "\n".join(formatted_messages)
-                
-                # Add message history as a separate message
+                message_text = "\n\n".join(formatted_messages)  # Double newline for clarity
                 messages.append({
                     "role": "system",
                     "content": f"Here is the message history to analyze:\n\n{message_text}"
@@ -513,7 +508,16 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
             
             # Add the user's prompt
             messages.append({"role": "user", "content": prompt})
-            
+
+            # Save the full prompt to a file for debugging
+            prompt_dir = direct_path_finder('files', 'gpt', 'prompts')
+            os.makedirs(prompt_dir, exist_ok=True)
+            prompt_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            prompt_path = os.path.join(prompt_dir, f"prompt_{prompt_timestamp}.txt")
+            with open(prompt_path, 'w', encoding='utf-8') as f:
+                for m in messages:
+                    f.write(f"[{m['role']}]:\n{m['content']}\n\n{'='*40}\n\n")
+
             # Count input tokens
             input_tokens = sum(self._count_tokens(msg["content"]) for msg in messages)
             
@@ -523,7 +527,7 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
                 input_tokens = sum(self._count_tokens(msg["content"]) for msg in messages)
             
             response = await client.chat.completions.create(
-                model="gpt-4",  # Using GPT-4 for better responses
+                model="gpt-3.5-turbo",  # Switched to GPT-3.5 Turbo for testing
                 messages=messages,
                 max_tokens=1000 if is_conversation_request else 500,  # Allow longer responses for summaries
                 temperature=0.7
@@ -532,10 +536,20 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
             # Get output tokens
             output_tokens = self._count_tokens(response.choices[0].message.content)
             
-            return response.choices[0].message.content, input_tokens, output_tokens
+            # Add message and channel count to response
+            response_text = response.choices[0].message.content
+            if message_count > 0:
+                response_text += f"\n\nReferenced {message_count} messages from {len(channels_used)} channels: {channel_list}"
+            
+            return response_text, input_tokens, output_tokens
             
         except Exception as e:
+            print(f"[ERROR] Failed to get response from GPT: {str(e)}")
+            print(f"[ERROR] Full error details: {str(e.__class__.__name__)}: {str(e)}")
+            import traceback
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
             raise Exception(f"Failed to get response from GPT: {str(e)}")
 
 async def setup(client, tree):
+    gpt = GPT(client, tree)
     gpt = GPT(client, tree)

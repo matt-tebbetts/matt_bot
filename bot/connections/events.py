@@ -34,56 +34,61 @@ async def setup_events(client, tree):
     @client.event
     async def on_ready():
         print("\n=== Bot Startup Sequence ===")
-        print()
-        print(f"✓ Running *{BOT_NAME}* on {SYSTEM_NAME}")
-
-        # print guild connections
+        print(f"Logged in as {client.user.name} (ID: {client.user.id})")
+        print(f"Connected to {len(client.guilds)} servers:")
         for guild in client.guilds:
-            print(f"✓ Connected to {guild.name}")
+            print(f"- {guild.name} (ID: {guild.id})")
         
-        # Save guild configs
+        print("\n[DEBUG] Starting to save guild configs...")
         await save_all_guild_configs(client)
-        print("✓ Saved guild configs")
-
-        # Initialize message history
+        print("[DEBUG] Finished saving guild configs")
+        
+        print("\n[DEBUG] Starting to initialize message history...")
         try:
             await initialize_message_history(client, lookback_days=7)  # Only look back 7 days during testing
+            print("[DEBUG] Successfully initialized message history")
         except Exception as e:
-            print(f"✗ Error initializing message history: {e}")
-
-        # load cogs
+            print(f"[DEBUG] Error initializing message history: {e}")
+        
+        print("\n[DEBUG] Starting to load cogs...")
         try:
             await load_cogs(client, tree)
+            print("[DEBUG] Successfully loaded all cogs")
         except Exception as e:
-            print(f"✗ Error loading command modules: {e}")
-
-        # sync commands
+            print(f"[DEBUG] Error loading cogs: {e}")
+        print("[DEBUG] Finished loading cogs")
+        
+        print("\n[DEBUG] Starting to sync commands...")
         try:
             # Sync globally
             await tree.sync(guild=None)
+            print("[DEBUG] Successfully synced commands globally")
             
             # Also sync to each guild
             for guild in client.guilds:
                 await tree.sync(guild=guild)
-                print(f"✓ Synced commands to {guild.name}")
-
+                print(f"[DEBUG] Synced commands to {guild.name}")
         except Exception as e:
-            print(f"✗ Error syncing commands: {e}")
-
-        # Establish SQL connection
+            print(f"[DEBUG] Error syncing commands: {e}")
+        print("[DEBUG] Finished syncing commands")
+        
+        print("\n[DEBUG] Starting to connect to database...")
         try:
             await get_pool()
+            print("[DEBUG] Successfully connected to database")
         except Exception as e:
-            print(f"✗ Error connecting to database: {e}")
-
-        # start background tasks
+            print(f"[DEBUG] Error connecting to database: {e}")
+        print("[DEBUG] Finished database connection")
+        
+        print("\n[DEBUG] Starting background tasks...")
         try:
             setup_tasks(client, tree)
-            print(f"✓ Started background tasks")
+            print("[DEBUG] Successfully started background tasks")
         except Exception as e:
-            print(f"✗ Error starting background tasks: {e}")
-
-        print("\n=== Bot is ready! ===\n")
+            print(f"[DEBUG] Error starting background tasks: {e}")
+        print("[DEBUG] Finished starting background tasks")
+        
+        print("\n=== Bot is ready! ===")
 
     # on message
     @client.event
@@ -100,7 +105,13 @@ async def setup_events(client, tree):
 
         # log message
         try:
-            channel_name = f"#{message.channel.name}" if isinstance(message.channel, discord.TextChannel) else "DM"
+            if isinstance(message.channel, discord.Thread):
+                channel_name = f"#{message.channel.parent.name} > {message.channel.name}"
+            elif isinstance(message.channel, discord.TextChannel):
+                channel_name = f"#{message.channel.name}"
+            else:
+                channel_name = "DM"
+            
             first_line = message.content.split('\n')[0]
             message_preview = first_line[:16] + "..." if len(first_line) > 16 else first_line
             game_info_text = f" [{game_name}]" if is_score else ""
