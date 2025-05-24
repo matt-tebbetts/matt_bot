@@ -173,7 +173,7 @@ class GPT:
                 daily_cost = round(daily_cost + 0.005, 2)
                 
                 # Add token count, cost, and daily totals to response
-                token_info = f"\n\n[Tokens: {input_tokens} in, {output_tokens} out, {total_tokens} total | Cost: ${cost:.2f} | Today: {daily_tokens} tokens, ${daily_cost:.2f}]"
+                token_info = f"\n\n[Tokens: {input_tokens} in, {output_tokens} out, {total_tokens} total | Cost: ${cost:.2f}]\n[Today: {daily_tokens} tokens, ${daily_cost:.2f}]"
                 await interaction.followup.send(f"**{user_display}:** {prompt}\n\n**ChatGPT:** {response}{token_info}")
                 
             except Exception as e:
