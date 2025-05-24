@@ -408,5 +408,415 @@
         "bot-test"
       ]
     }
+  },
+  {
+    "timestamp": "2025-05-23 21:16:43",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "bot-test",
+      "id": "813831098312294490"
+    },
+    "message_id": null,
+    "prompt": "Matt: summarize the recent conversations",
+    "needs_context": true,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "I am currently unable to access the recent conversations for summarization. If you provide me with access to the channels or messages you'd like summarized, I'd be happy to assist.\n\nReferenced 168 messages from 8 channels: Rooty Tooty, bot-test, crossword-corner, family, food, home-improvement, news, things-we-watch",
+    "context_info": {
+      "message_count": 1852,
+      "model_used": "gpt-4",
+      "has_messages": true,
+      "input_tokens": 620,
+      "output_tokens": 36,
+      "total_tokens": 656,
+      "cost": 0.03,
+      "daily_tokens": 13114,
+      "daily_cost": 0.47999999999999987
+    },
+    "interaction_id": "1375643640193486848",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "bot-test",
+      "channels": [
+        "bot-test"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 21:19:28",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "bot-test",
+      "id": "813831098312294490"
+    },
+    "message_id": null,
+    "prompt": "summarize the recent discord chats, did anyone say anything interesting?",
+    "needs_context": true,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "In the recent Discord chats, users discussed a variety of topics including crossword puzzles, family, food, home improvement, news, and things they watch. Some users shared their thoughts and experiences, but there were no specific standout or particularly interesting messages highlighted in the provided content.\n\nReferenced 169 messages from 8 channels: Rooty Tooty, bot-test, crossword-corner, family, food, home-improvement, news, things-we-watch",
+    "context_info": {
+      "message_count": 1853,
+      "model_used": "gpt-4",
+      "has_messages": true,
+      "input_tokens": 523,
+      "output_tokens": 54,
+      "total_tokens": 577,
+      "cost": 0.02,
+      "daily_tokens": 13691,
+      "daily_cost": 0.4999999999999999
+    },
+    "interaction_id": "1375644330051506227",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "bot-test",
+      "channels": [
+        "bot-test"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 21:20:01",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "bot-test",
+      "id": "813831098312294490"
+    },
+    "message_id": null,
+    "prompt": "summarize the recent conversations and give details about the topics discussed!!!!",
+    "needs_context": true,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "1. **Rooty Tooty**: \n   - Users discussed various topics, including food, health, finance, gratitude, home improvement, and self-improvement.\n\n2. **bot-test**: \n   - Users were active in discussing different topics.\n\n3. **crossword-corner**: \n   - Conversation focused on solving crossword puzzles.\n\n4. **family**: \n   - Users talked about family-related matters and shared experiences.\n\n5. **food**: \n   - Discussions were centered around food-related topics.\n\n6. **home-improvement**: \n   - Users shared tips and advice on home improvement projects.\n\n7. **news**: \n   - The news channel was active with discussions on current events.\n\n8. **things-we-watch**: \n   - Users shared recommendations and opinions on various shows and movies.\n\nReferenced 170 messages from 8 channels: Rooty Tooty, bot-test, crossword-corner, family, food, home-improvement, news, things-we-watch",
+    "context_info": {
+      "message_count": 1854,
+      "model_used": "gpt-4",
+      "has_messages": true,
+      "input_tokens": 523,
+      "output_tokens": 164,
+      "total_tokens": 687,
+      "cost": 0.03,
+      "daily_tokens": 14378,
+      "daily_cost": 0.5299999999999999
+    },
+    "interaction_id": "1375644466815172709",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "bot-test",
+      "channels": [
+        "bot-test"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 21:23:54",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "bot-test",
+      "id": "813831098312294490"
+    },
+    "message_id": null,
+    "prompt": "summarize the conversations",
+    "needs_context": true,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "I'm sorry, but you have not provided any specific Discord messages for me to summarize. If you provide the messages from the channels you mentioned, I will be able to give you a summary of the main discussions, topics, and notable interactions.\n\nReferenced 173 messages from 8 channels: Rooty Tooty, bot-test, crossword-corner, family, food, home-improvement, news, things-we-watch",
+    "context_info": {
+      "message_count": 1857,
+      "model_used": "gpt-4",
+      "has_messages": true,
+      "input_tokens": 533,
+      "output_tokens": 49,
+      "total_tokens": 582,
+      "cost": 0.02,
+      "daily_tokens": 14960,
+      "daily_cost": 0.5499999999999999
+    },
+    "interaction_id": "1375645444297981953",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "bot-test",
+      "channels": [
+        "bot-test"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 21:26:35",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "bot-test",
+      "id": "813831098312294490"
+    },
+    "message_id": null,
+    "prompt": "summarize this",
+    "needs_context": true,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "The Discord messages cover a variety of topics across different channels:\n\n1. **[news]** A link to an article about a stabbing at Hamburg Central Station in Germany is shared.\n2. **[crossword-corner]** Users discuss game scores and missing mini-games.\n3. **[bot-test]** There are issues with a bot not recognizing commands and channels, and a user is told to ignore a particular channel.\n4. **[crossword-corner]** Users mention Brice doing well in games, and there are issues with a disabled chatbot command.\n5. **[news]** A user comments on the need for guns in the EU due to knife attacks.\n6. **[crossword-corner]** Technical issues with a bot are discussed, including problems with a slash command.\n7. **[things-we-watch]** Users debate whether someone watched specific content.\n8. **[crossword-corner]** Scores from games like Octordle are shared.\n9. **[home-improvement]** \"MOSS ART\" is mentioned.\n10. **[bot-test]** Multiple failed attempts with the bot are described, including issues with accessing channel information and summarizing conversations.\n11. **[food]** Discussions on the usefulness of a Creuset (Dutch oven) take place.\n12. **[crossword-corner]** Conversations about bot functionality and message logging are brought up.\n13. **[family]** A user talks about an iPad helping with something, hashtagged \"screenparenting.\"\n14. **[things-we-watch]** The conversation includes a user being frustrated with the bot's performance and a mention of a bot that can embed links to movie information.\n15. **[bot-test]** A user expresses frustration with the bot's performance and there is a mention of a thread on video games named \"rooty tooty.\"\n\nOverall, the messages depict a mix of social interaction, game discussions, technical bot-related issues, and casual banter among the users.\n\nReferenced 173 messages from 8 channels: things-we-watch, Rooty Tooty, food, family, bot-test, news, home-improvement, crossword-corner",
+    "context_info": {
+      "message_count": 1857,
+      "model_used": "gpt-4",
+      "has_messages": true,
+      "input_tokens": 6824,
+      "output_tokens": 395,
+      "total_tokens": 7219,
+      "cost": 0.23,
+      "daily_tokens": 22179,
+      "daily_cost": 0.7799999999999999
+    },
+    "interaction_id": "1375646078149333054",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "bot-test",
+      "channels": [
+        "bot-test"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 21:30:26",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "bot-test",
+      "id": "813831098312294490"
+    },
+    "message_id": null,
+    "prompt": "summarize the conversations here",
+    "needs_context": true,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "In the Discord messages provided, the users are engaging in various discussions across different channels:\n\n1. **[news]**: The user Bergs shares a link to an article about a stabbing at Hamburg Central Station in Germany.\n\n2. **[crossword-corner]**: The users discuss daily mini-games such as Octordle, with croasus sharing their scores. There is also a conversation about technical issues related to a bot command (/gpt) not being visible or functional for a user, despite being available and working for others. Matt is trying to troubleshoot and push updates for the bot. acowinthecrowd expresses concern about privacy and the logging of messages, while Matt reassures that anyone can request their data to be deleted.\n\n3. **[bot-test]**: Matt_Bot, a bot being tested by Matt, shares various responses based on prompts given by Matt. There are discussions about the bot's functions, some error messages, and attempts to get the bot to summarize conversations and list Discord channels and users.\n\n4. **[things-we-watch]**: The users debate whether one of them watched certain content during a specific period. They discuss various movies and a film bot that can link to Letterboxd. Some users express frustration with the bot's performance.\n\n5. **[food]**: Discussion about the usefulness of a good Dutch oven, with acowinthecrowd commenting on the frequency someone uses theirs.\n\n6. **[home-improvement]**: Bergs mentions \"MOSS ART.\"\n\n7. **[family]**: acowinthecrowd comments on the effectiveness of an iPad in parenting, using the hashtag #screenparenting.\n\nThroughout the messages, there is a mix of game-related content, technical discussions about the server bot, casual banter, and miscellaneous topics. There is also a recurring theme of troubleshooting and testing the server's bot, including its ability to summarize conversations.\n\nReferenced 173 messages from 8 channels: food, things-we-watch, Rooty Tooty, home-improvement, family, crossword-corner, news, bot-test",
+    "context_info": {
+      "message_count": 1857,
+      "model_used": "gpt-4",
+      "has_messages": true,
+      "input_tokens": 6826,
+      "output_tokens": 390,
+      "total_tokens": 7216,
+      "cost": 0.23,
+      "daily_tokens": 29395,
+      "daily_cost": 1.01
+    },
+    "interaction_id": "1375647054902071437",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "bot-test",
+      "channels": [
+        "bot-test"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 21:43:58",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "bot-test",
+      "id": "813831098312294490"
+    },
+    "message_id": null,
+    "prompt": "what is everyone talking about",
+    "needs_context": true,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "In the Discord messages, users are discussing various topics across different channels:\n\n- In the \"bot-test\" channel, Matt is primarily interacting with the Matt_Bot, testing its functions and attempting to summarize conversations. The bot is providing summaries and responding to requests, but also apologizes when it cannot access or summarize certain Discord conversations or channels.\n- In \"crossword-corner,\" the conversation includes sharing game results, discussing strategies, troubleshooting bot issues, and discussing Discord functionalities such as message logging and privacy. There's also banter, including a playful exchange of lyrics.\n- In \"things-we-watch,\" users are discussing movies, including new releases, classic movies, horror films, and movie recommendations. They mention specific movies and discuss a film bot that links to Letterboxd. There is also banter and requests for technical fixes related to the Matt_Bot.\n- In \"Rooty Tooty,\" a user expresses gratitude to another named Nick.\n- In \"family,\" there is a brief mention of parenting in relation to screen time.\n- Overall, there is a mix of discussions about movies, games, technical issues with bots, and light-hearted banter among the users.\n\nReferenced 67 messages from 5 channels: Rooty Tooty, family, crossword-corner, things-we-watch, bot-test",
+    "context_info": {
+      "message_count": 67,
+      "model_used": "gpt-4",
+      "has_messages": true,
+      "input_tokens": 3344,
+      "output_tokens": 236,
+      "total_tokens": 3580,
+      "cost": 0.12,
+      "daily_tokens": 32975,
+      "daily_cost": 1.13
+    },
+    "interaction_id": "1375650476443566202",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "bot-test",
+      "channels": [
+        "bot-test"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 21:50:54",
+    "user": {
+      "name": "acowinthecrowd",
+      "id": "163849350827606016",
+      "nickname": null,
+      "display_name": "acowinthecrowd"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "crossword-corner",
+      "id": "806881904073900042"
+    },
+    "message_id": null,
+    "prompt": "why didn't <@95332114093838336> continue the call me maybe song",
+    "needs_context": false,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "<@95332114093838336> did not continue the lyrics to the song \"Call Me Maybe.\"",
+    "context_info": {
+      "message_count": 0,
+      "model_used": "gpt-4",
+      "has_messages": false,
+      "input_tokens": 49,
+      "output_tokens": 22,
+      "total_tokens": 71,
+      "cost": 0.01,
+      "daily_tokens": 33046,
+      "daily_cost": 1.14
+    },
+    "interaction_id": "1375652243076026511",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "crossword-corner",
+      "channels": [
+        "crossword-corner"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 21:52:43",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "crossword-corner",
+      "id": "806881904073900042"
+    },
+    "message_id": null,
+    "prompt": "summarize the recent drama",
+    "needs_context": true,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "In the Discord saga of #crossword-corner, Matt_Bot faced an existential crisis with error code 400, and Matt rallied the troops to troubleshoot bot glitches costing a mere twelve cents\u2014capitalism in action! Meanwhile, discussions about the Fairly Odd Parents mingled with game score sharing in #crossword-corner, where TuckleTheKnuckle, Andy, and others clashed in a leaderboard battle. Over in #things-we-watch, movie buffs dissected 'Skibidi Toilet' and debated the potential of a 'Bad Lieutenant Tokyo' adaptation, while Bergs pinged Matt about a film bot that links directly to Letterboxd, potentially revolutionizing their movie discussion experience.\n\nReferenced 75 messages from 6 channels: bot-development, bot-test, Rooty Tooty, family, things-we-watch, crossword-corner",
+    "context_info": {
+      "message_count": 75,
+      "model_used": "gpt-4",
+      "has_messages": true,
+      "input_tokens": 3475,
+      "output_tokens": 138,
+      "total_tokens": 3613,
+      "cost": 0.12,
+      "daily_tokens": 36659,
+      "daily_cost": 1.2599999999999998
+    },
+    "interaction_id": "1375652687407742998",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "crossword-corner",
+      "channels": [
+        "crossword-corner"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-05-23 21:55:56",
+    "user": {
+      "name": "svendiamond",
+      "id": "340940380927295491",
+      "nickname": "Matt",
+      "display_name": "Matt"
+    },
+    "guild": {
+      "name": "Nerd City",
+      "id": "672233217985871908"
+    },
+    "channel": {
+      "name": "crossword-corner",
+      "id": "806881904073900042"
+    },
+    "message_id": null,
+    "prompt": "analyze the messages from Rooty Rooty",
+    "needs_context": true,
+    "analysis": "Defaulting to context for conversation query",
+    "final_response": "The messages from the \"Rooty Tooty\" channel are not fully visible in the provided text. The only mention of \"Rooty Tooty\" is in a message from croasus asking \"rooty tooty?\" and Matt's response indicating that it's a thread on video games for someone named Root. There is no further context or content to analyze from this specific channel based on the provided messages.\n\nReferenced 77 messages from 6 channels: bot-development, bot-test, Rooty Tooty, family, things-we-watch, crossword-corner",
+    "context_info": {
+      "message_count": 77,
+      "model_used": "gpt-4",
+      "has_messages": true,
+      "input_tokens": 3333,
+      "output_tokens": 85,
+      "total_tokens": 3418,
+      "cost": 0.11,
+      "daily_tokens": 40077,
+      "daily_cost": 1.3699999999999999
+    },
+    "interaction_id": "1375653503355060306",
+    "filter_params": {
+      "guild_name": "Nerd City",
+      "current_channel": "crossword-corner",
+      "channels": [
+        "crossword-corner"
+      ]
+    }
   }
 ]

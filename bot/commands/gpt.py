@@ -120,20 +120,18 @@ class GPT:
                         messages = json.load(f)
                     
                     # Get response with context
-                    response, input_tokens, output_tokens = await self.get_gpt_response(
+                    response, input_tokens, output_tokens, message_count, channels_used = await self.get_gpt_response(
                         prompt=prompt,
                         system_prompt="You are a helpful assistant that analyzes Discord conversations. Use the provided message history to answer the user's question about the conversation.",
                         messages_data=messages,
                         filter_params=filter_params
                     )
-                    message_count = len(messages)
                 else:
                     # Get regular response
-                    response, input_tokens, output_tokens = await self.get_gpt_response(
+                    response, input_tokens, output_tokens, message_count, channels_used = await self.get_gpt_response(
                         prompt=prompt,
                         filter_params=filter_params  # Pass filter_params even without context
                     )
-                    message_count = 0
                 
                 # Calculate total tokens and cost
                 total_tokens = input_tokens + output_tokens
@@ -175,7 +173,13 @@ class GPT:
                 
                 # Add token count, cost, and daily totals to response
                 token_info = f"\n\n[Tokens: {input_tokens} in, {output_tokens} out, {total_tokens} total | Cost: ${cost:.2f}]\n[Today: {daily_tokens} tokens, ${daily_cost:.2f}]"
-                await interaction.followup.send(f"**{user_display}:** {prompt}\n\n**ChatGPT:** {response}{token_info}")
+                full_response = f"**{user_display}:** {prompt}\n\n**ChatGPT:** {response}{token_info}"
+
+                # Discord message length limit
+                MAX_DISCORD_MESSAGE_LENGTH = 2000
+                if len(full_response) > MAX_DISCORD_MESSAGE_LENGTH:
+                    full_response = full_response[:MAX_DISCORD_MESSAGE_LENGTH - 20] + "\n...[truncated]"
+                await interaction.followup.send(full_response)
                 
             except Exception as e:
                 await interaction.followup.send(f"Error: {str(e)}", ephemeral=True)
@@ -313,10 +317,10 @@ class GPT:
             reverse=True
         )
 
-        # Keep as many messages as possible within token limit
+        # Keep as many messages as possible within token limit (increased to 5000)
         filtered_messages = {}
         current_tokens = 0
-        max_tokens = 6000  # Leave room for system prompt and response
+        max_tokens = 5000  # Increased from 3000
 
         for msg in sorted_msgs:
             msg_tokens = self._count_tokens(f"{msg['author_nick']}: {msg['content']}")
@@ -410,9 +414,9 @@ class GPT:
             print(f"[ERROR] Error logging prompt analysis: {str(e)}")
             print(f"[ERROR] Full error details: {str(e.__class__.__name__)}: {str(e)}")
     
-    async def get_gpt_response(self, prompt: str, system_prompt: str = None, messages_data: Dict = None, filter_params: Dict = None) -> Tuple[str, int, int]:
+    async def get_gpt_response(self, prompt: str, system_prompt: str = None, messages_data: Dict = None, filter_params: Dict = None) -> Tuple[str, int, int, int, set]:
         """Get a response from OpenAI's GPT model.
-        Returns (response, input_tokens, output_tokens)"""
+        Returns (response, input_tokens, output_tokens, message_count, channels_used)"""
         try:
             client = openai.AsyncOpenAI()
             
@@ -427,13 +431,6 @@ class GPT:
                 with open(config_path, 'r', encoding='utf-8') as f:
                     guild_config = json.load(f)
             
-            # Prepare guild info
-            guild_info = ""
-            if guild_config:
-                guild_info = f"""Name: {guild_config['guild_name']}
-Channels: {', '.join([ch['name'] for ch in guild_config['channels']])}
-Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
-            
             # Preprocess the prompt to replace channel IDs with names
             import re
             channel_id_to_name = {str(ch['id']): ch['name'] for ch in guild_config.get('channels', []) if 'id' in ch and 'name' in ch}
@@ -441,72 +438,54 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
                 channel_id = match.group(1)
                 return f"#{channel_id_to_name.get(channel_id, channel_id)}"
             prompt = re.sub(r'<#(\d+)>', replace_channel_id, prompt)
-            
-            # Get current channel
-            current_channel = filter_params.get('current_channel', 'unknown')
-            
+
             # Check if this is a conversation-related request
             conversation_keywords = ['summarize', 'summary', 'what happened', 'what was said', 'discuss', 'talk about', 'conversation']
             is_conversation_request = any(keyword in prompt.lower() for keyword in conversation_keywords)
             
-            # Use appropriate system prompt
-            if is_conversation_request and messages_data:
-                custom_system_prompt = self.summary_prompt_template
-            else:
-                custom_system_prompt = system_prompt if system_prompt else ""
-            
-            # --- FIX: Compute channels_used before formatting system prompt ---
+            # If summarization, always request a much shorter, more specific summary
+            if is_conversation_request:
+                prompt = (
+                    prompt.strip() +
+                    " Keep it to 2-3 sentences, but mention specific topics, movies, games, or issues discussed. "
+                    "Do not just say 'users are discussing movies' or 'users are talking about games.' Instead, name the actual movies, games, or issues and describe the nature of the discussion (e.g., disagreement, praise, recommendations, troubleshooting, etc.). "
+                    "Summarize it as if you're a 24/7 news reporter who needs to make fun and interesting headlines. "
+                    "Example of a bad summary: 'Users are discussing movies and games.'\n"
+                    "Example of a good summary: 'In #things-we-watch, Matt and Sarah debated whether Dune was overrated, with Matt praising the visuals and Sarah saying it was too slow. In #crossword-corner, users shared Octordle scores and debugged the /gpt command, with acowinthecrowd expressing frustration about privacy and Matt reassuring them about data deletion.'"
+                )
+
+            # Use a single, minimal system prompt
+            minimal_system_prompt = "Summarize the following Discord messages. Only use what is actually in the messages. Do not say you lack access; you are seeing the real messages."
+
+            # Prepare messages for the API call
+            messages = [
+                {"role": "system", "content": minimal_system_prompt}
+            ]
+
+            # Always include message history if available
+            message_count = 0
             channels_used = set()
             filtered_messages = {}
             if messages_data:
                 filtered_messages = self.filter_messages(messages_data, filter_params)
-                channels_used = {msg['channel_nm'] for msg in filtered_messages.values()}
-            channel_list = ", ".join(sorted(channels_used)) if channels_used else "none"
-            # ---------------------------------------------------------------
-            
-            # Format the system prompt, always passing channels_used
-            base_system_prompt = self.system_prompt_template.format(
-                guild_info=guild_info,
-                current_channel=current_channel,
-                custom_prompt=custom_system_prompt,
-                channels_used=channel_list
-            )
-            
-            # Prepare messages for the API call
-            messages = [
-                {"role": "system", "content": base_system_prompt}
-            ]
-            
-            # Initialize tracking variables
-            message_count = 0
-            
-            # Always include message history if available
-            if messages_data:
                 message_count = len(filtered_messages)
-                
+                channels_used = {msg['channel_nm'] for msg in filtered_messages.values()}
                 # Sort messages by timestamp
                 sorted_messages = sorted(
                     filtered_messages.values(),
                     key=lambda x: datetime.strptime(x['create_ts'], '%Y-%m-%d %H:%M:%S')
                 )
-                
-                # Format messages efficiently, with extra spacing for clarity
+                # Format messages as a real chat log, one per line
                 formatted_messages = []
                 for msg in sorted_messages:
-                    if msg['content'].strip():  # Only include non-empty messages
-                        # Format: [channel] author: message, with extra spacing
+                    if msg['content'].strip():
                         content = msg['content']
-                        if msg.get('has_mentions'):
-                            content += " [Note: This message contains channel references]"
                         formatted_msg = f"[{msg['channel_nm']}] {msg['author_nick']}: {content}"
                         formatted_messages.append(formatted_msg)
-                message_text = "\n\n".join(formatted_messages)  # Double newline for clarity
-                messages.append({
-                    "role": "system",
-                    "content": f"Here is the message history to analyze:\n\n{message_text}"
-                })
-            
-            # Add the user's prompt
+                message_text = "\n".join(formatted_messages)
+                messages.append({"role": "user", "content": message_text})
+
+            # Add the user's prompt as the final user message
             messages.append({"role": "user", "content": prompt})
 
             # Save the full prompt to a file for debugging
@@ -520,29 +499,43 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
 
             # Count input tokens
             input_tokens = sum(self._count_tokens(msg["content"]) for msg in messages)
-            
+
             # If we're still over the limit, use the trim function as a fallback
             if input_tokens > 7000:
                 messages = self._trim_messages_to_token_limit(messages)
                 input_tokens = sum(self._count_tokens(msg["content"]) for msg in messages)
-            
+
+            # Load daily totals from history file (moved up to ensure variables are defined)
+            history_file = direct_path_finder('files', 'gpt', 'gpt_history.json')
+            daily_tokens = 0
+            daily_cost = 0.0
+            if os.path.exists(history_file):
+                with open(history_file, 'r', encoding='utf-8') as f:
+                    logs = json.load(f)
+                    current_date = datetime.now().strftime('%Y-%m-%d')
+                    for log in logs:
+                        if log.get('timestamp', '').startswith(current_date):
+                            daily_tokens += log.get('context_info', {}).get('total_tokens', 0)
+                            daily_cost += log.get('context_info', {}).get('cost', 0.0)
+            daily_cost = round(daily_cost + 0.005, 2)
+
             response = await client.chat.completions.create(
-                model="gpt-3.5-turbo",  # Switched to GPT-3.5 Turbo for testing
+                model="gpt-4-1106-preview",  # Use the best available GPT-4 model for summarization
                 messages=messages,
-                max_tokens=1000 if is_conversation_request else 500,  # Allow longer responses for summaries
+                max_tokens=500,  # Lowered to encourage shorter output
                 temperature=0.7
             )
-            
+
             # Get output tokens
             output_tokens = self._count_tokens(response.choices[0].message.content)
-            
+
             # Add message and channel count to response
             response_text = response.choices[0].message.content
             if message_count > 0:
-                response_text += f"\n\nReferenced {message_count} messages from {len(channels_used)} channels: {channel_list}"
-            
-            return response_text, input_tokens, output_tokens
-            
+                response_text += f"\n\nReferenced {message_count} messages from {len(channels_used)} channels: {', '.join(channels_used)}"
+
+            return response_text, input_tokens, output_tokens, message_count, channels_used
+
         except Exception as e:
             print(f"[ERROR] Failed to get response from GPT: {str(e)}")
             print(f"[ERROR] Full error details: {str(e.__class__.__name__)}: {str(e)}")

@@ -1,0 +1,388 @@
+[system]:
+You are a Discord bot. Summarize the following messages. Only use what is actually in the messages. If nothing is directly on-topic, summarize the most interesting or active discussions you see.
+
+Name: Nerd City
+Channels: welcome, announcements, suggestion-box, get-togethers, rules, family, pets, food, health, finance, gratitude, home-improvement, marketplace, self-improvement, work-stuff, game-night, rogue-corner-🗡, video-games, crossword-corner, readables, things-we-watch, musix, art-and-poetry, news, sports, nonsense, politics-but-only-the-good-stuff, science-and-technology, cars, pedants-have-no-friends, administrative, bot-test, bot-development, community-updates, covid-19, philosophy, art-otherwise, zach-and-brice-and-andy, wow, philanthropy, podcasts, dungeons-dragons, iptv, marvel-champions, new-baby, the-football-of-your-fantasies, the-failing-rolling-stone-bullshit-list, the-rewatchables, war-zone
+Users: Tall Matt, andrew, corban, Robin, scratchysaurus, Jeremy M, NinnyMugginz, landon, acowinthecrowd, Big Jon, The Real Mayor, chad_yolo, Ruckmesilly7, Greeksalad, whitewolfe5, Mickey, ButtToucher, Real Greg, croasus, aris, Lanye’, Nick FUNleavey, Andy, Kcarts, Matt, Anthony M, BaronPumpky, Evan, CountryMac, TJ Tank, sarahsalley951, Nick, Bergs, TuckleTheKnuckle, Saresa, justyn7, Kyle, mbbananas, mossy_turtleneck, SouthernRoots17, jeskaeli, Maus, liberal chimp lady
+
+You are being asked from channel: bot-test
+You have access to messages from: Rooty Tooty, bot-test, crossword-corner, family, food, home-improvement, news, things-we-watch
+
+Below is a list of recent Discord messages from multiple channels. Please summarize the main discussions, topics, and any notable interactions. If nothing is directly on-topic, summarize the most interesting or active conversations you see. Only use the content of the messages provided. Do not say you lack access; you are seeing the real messages. 
+
+========================================
+
+[system]:
+Here is the message history to analyze:
+[news] Bergs: <@687701357360185568> https://www.thetimes.com/world/europe/article/hamburg-central-station-stabbing-germany-r0tbmv30x [Note: This message contains channel references]
+[crossword-corner] croasus: <@340940380927295491> which mini is missing for me? I don't think I have missed playing any [Note: This message contains channel references]
+[bot-test] Matt_Bot: **croasus:** ignore the rogue-corner channel from now on. it's lame and no one cares
+
+**ChatGPT:** It seems like the user wants to ignore the "rogue-corner" channel in the Discord server moving forward as they find it uninteresting and believe that nobody cares about it.
+[crossword-corner] acowinthecrowd: Brice did the best at all the games [Note: This message contains channel references]
+[crossword-corner] acowinthecrowd: /gpt summarize today's conversations in this channel -- who did the best at the games?
+[crossword-corner] acowinthecrowd: you disabled it
+[crossword-corner] acowinthecrowd: "and they try to make sure everyone has enough of what they need."???????????? [Note: This message contains channel references]
+[crossword-corner] acowinthecrowd: WOW
+[crossword-corner] acowinthecrowd: #fantasyland
+[news] acowinthecrowd: this is why the EU needs guns, knives don't run out of ammo
+[news] acowinthecrowd: it's just safer
+[crossword-corner] Matt: It should work... Try again [Note: This message contains channel references]
+[crossword-corner] Matt: You have to make sure to hit the popup
+[crossword-corner] Matt: The uh
+[crossword-corner] Matt: Slash command pop-up thing
+[crossword-corner] croasus: the prompt
+[crossword-corner] croasus: ?
+[crossword-corner] acowinthecrowd: there isn't one [Note: This message contains channel references]
+[crossword-corner] acowinthecrowd: this is where I'd put my /gpt
+[crossword-corner] acowinthecrowd: https://tenor.com/view/if-i-had-one-angry-yelling-fairly-odd-parents-mr-turner-gif-16322274
+[things-we-watch] sarahsalley951: The way you fought with me that I did though [Note: This message contains channel references]
+[things-we-watch] acowinthecrowd: still not convinced
+[things-we-watch] sarahsalley951: 3 seconds of the trailer I know I didn't. You did go through a phase where you watched all of bergs weird stuff
+[crossword-corner] Matt: Hmm ahhahaa
+[crossword-corner] Matt: Omg I gotta rewatch that
+[crossword-corner] Matt: Timmy's dad is the best
+[crossword-corner] Matt: And the fairy... What's his name? The dumb one, not Wanda... Uhhh
+[crossword-corner] Matt: It's show for me
+[crossword-corner] Matt: Close out discord app
+[crossword-corner] Matt: Open again
+[crossword-corner] Matt: Idk
+[crossword-corner] Matt_Bot: **Matt:** why doesn't Brice see the new /gpt slash command on discord even though it works and I see it right now and am using it
+
+**ChatGPT:** Based on the provided message snippet, it seems like Brice might not see the new /gpt slash command on Discord. However, since you can see and use the command, it indicates that the command is available and working as intended. 
+
+There could be a few reasons why Brice doesn't see the new /gpt slash command:
+1. **Permissions**: Brice might not have the necessary permissions to view or use the slash command. Make sure Brice has the appropriate roles or permissions to access new commands.
+   
+2. **Client or App Issues**: Sometimes, Discord clients or apps might not show updates immediately. Brice can try refreshing the Discord app or logging out and back in to see if the new command appears.
+   
+3. **Server-Specific Command**: The /gpt slash command might be specific to a certain server or channel. Ensure that Brice is in the correct server or channel where the command is available.
+
+Encourage Brice to check these points to troubleshoot why they might not be seeing the new /gpt slash command on Discord.
+[crossword-corner] Matt: just today's, since I have to enter them manually here: https://docs.google.com/spreadsheets/d/17RPoBYViuBng7tKPVBrZ9Rwt1QlrVFYRSMkJLnu9Za4/edit?gid=0#gid=0 [Note: This message contains channel references]
+[things-we-watch] acowinthecrowd: this was like, in COLLEGE
+[things-we-watch] acowinthecrowd: i think michael was even there
+[crossword-corner] acowinthecrowd: cosmo and wanda [Note: This message contains channel references]
+[crossword-corner] acowinthecrowd: "Permissions: Brice might not have the necessary permissions to view or use the slash command. Make sure Brice has the appropriate roles or permissions to access new commands."
+
+Bro I own this.
+[crossword-corner] acowinthecrowd: if anything i have too many permissions
+[things-we-watch] sarahsalley951: Ok probably
+[crossword-corner] Matt: did you restart the app yet or what [Note: This message contains channel references]
+[crossword-corner] acowinthecrowd: oh
+[crossword-corner] Matt_Bot: **acowinthecrowd:** summarize today's conversations in this channel -- who did the best at the games?
+
+**ChatGPT:** In today's conversations in the channel, the users discussed playing various games. UserA mentioned winning multiple rounds in a game, while UserB talked about their strategy in another game. UserC shared some funny moments from their gameplay, and UserD asked for tips on improving their skills. Overall, it seems like UserA did the best at the games by consistently winning multiple rounds.
+[crossword-corner] acowinthecrowd: Classic UserC
+[crossword-corner] Matt_Bot: **Andy:** please analyse who provides the best gifs in this channel
+
+**ChatGPT:** Based on the provided message history, it is evident that user A provides the best GIFs in the channel. User A frequently shares GIFs that receive positive reactions and contribute to the overall conversation.
+[crossword-corner] Andy: Great job User A
+[crossword-corner] Andy: Ffs Matt
+[crossword-corner] acowinthecrowd: Get it *together* User M
+[home-improvement] Bergs: MOSS ART
+[crossword-corner] Matt: hahahahahah
+[crossword-corner] Matt: k I'm adding more context for this stupid fucking bot
+[bot-test] Matt: hahaha
+[bot-test] Matt: hahahahahaha
+[bot-test] Matt_Bot: **Matt:** what channels are there?
+
+**ChatGPT:** Based on the provided messages, the channels mentioned in the conversation are:
+
+1. #announcements
+2. #bot-development
+3. #suggestion-box
+
+These are the channels where the different discussions and announcements have taken place in the Discord server.
+[bot-test] Matt_Bot: Error: Failed to get response from GPT: join() argument must be str, bytes, or os.PathLike object, not 'NoneType'
+[bot-test] Matt_Bot: **Matt:** how are you today
+
+**ChatGPT:** I'm here to help with your questions. What do you need assistance with?
+[bot-test] Matt_Bot: **Matt:** which discord servers and channels are you connected to
+
+**ChatGPT:** I'm an AI assistant and I don't have access to your personal Discord account or connections. To find out which servers and channels you are connected to, you would need to log in to your Discord account and navigate through the servers and channels listed on the left sidebar of the Discord app or website.
+[bot-test] Matt: I love this program (Cursor AI)
+[bot-test] Matt: alrighty let's try again
+[bot-test] Matt_Bot: **Matt:** who are you? what system are you running on? what external systems are you connected to? what do you know about Discord? list all discord servers and users you know about
+
+**ChatGPT:** I am Matt_Bot, a Discord bot powered by ChatGPT. I am running on a server system and I am connected to the Discord API for server data. I have information about this Discord server and its channels and users based on the data in config.json. I do not have access to information about all Discord servers and users, only the ones within the scope of this server.
+[bot-test] Matt_Bot: **Matt:** tell me all the discord channels and all the discord user names you know about in your reference file
+
+**ChatGPT:** I'm sorry, but I don't have access to any external files or databases. I can only analyze and provide information based on the messages you provide me with. If you share the relevant messages containing Discord channel names and user names, I can definitely help you with that information.
+[bot-test] Matt_Bot: **Matt:** tell me all the discord channels and discord users
+
+**ChatGPT:** I can provide you with the names of the Discord channels based on the messages available in the chat history:
+
+1. #marvel-champions
+2. #welcome
+3. #announcements
+4. #suggestion-box
+5. #bot-development
+6. #art-and-poetry
+7. #pedants-have-no-friends
+8. #news
+9. #politics-but-only-the-good-stuff
+10. #marketplace
+11. #crossword-corner
+
+As for Discord users, I can't provide a list of all users since the chat history doesn't contain comprehensive user information.
+[bot-test] Matt_Bot: **Matt:** what have we been discussing in this specific channel
+
+**ChatGPT:** In this specific channel, the conversation seems to be about planning a group outing to a theme park. Participants are discussing potential dates, transportation options, ticket prices, and coordinating schedules. It appears to be a fun and collaborative discussion to organize an enjoyable trip.
+[bot-test] Matt: LMAO WHAT
+[bot-test] Matt_Bot: **Matt:** in the <#813831098312294490> channel what have users been discussing over the past 30 days
+
+**ChatGPT:** To provide you with the information about the discussions in the <#813831098312294490> channel over the past 30 days, I would need access to the message history in that specific channel. Once you provide me with the message history, I can analyze it to see what users have been discussing in that channel recently.
+[bot-test] Matt: you stupid son of a bitch
+[bot-test] Matt: you have the access
+[bot-test] Matt: it should be included in every prompt
+[bot-test] Matt: https://github.com/matt-tebbetts/matt_bot/blob/main/bot/commands/gpt.py
+[bot-test] Matt: for reference if ya wanna see
+[bot-test] croasus: what in the world a theme park trip?? hahahaha
+[bot-test] Matt: lol
+[bot-test] Matt: no idea
+[bot-test] Matt: it keeps not looking at the messages even though I'm trying to add them to the prompt
+[food] acowinthecrowd: I like seeing how much use you get out of your creuset [Note: This message contains channel references]
+[crossword-corner] croasus: Daily Octordle #1215
+🕛6️⃣
+7️⃣5️⃣
+🔟9️⃣
+8️⃣4️⃣
+Score: 61
+[crossword-corner] croasus: Daily Rescue Octordle #1215
+7️⃣8️⃣
+9️⃣🕐
+5️⃣🔟
+6️⃣🕛
+Score: 8
+[food] Bergs: A good dutch oven (regardless of brand) is just so useful! [Note: This message contains channel references]
+[food] acowinthecrowd: That’s what they say [Note: This message contains channel references]
+[crossword-corner] Matt_Bot: **acowinthecrowd:** how did user M do in this channel?
+
+**ChatGPT:** User M was active in the channel, participating in the conversation by sending messages and reacting to other users' messages. They seemed engaged and contributed to the discussions happening in the channel.
+[crossword-corner] Matt: K I just pushed some updates. Let's see how it works now
+[crossword-corner] Matt_Bot: **Matt:** describe the recent activity on this channel
+
+**ChatGPT:** Based on the provided message history, the recent activity on this channel seems to be a discussion about choosing a movie to watch together. The conversation includes members suggesting different movies, sharing their preferences, and eventually deciding on watching "Inception." Additionally, there is a mention of organizing a movie night and setting a time for everyone to join in to watch the chosen movie together.
+[crossword-corner] Matt: https://tenor.com/view/right-yeah-right-yeah-oh-yeah-ohh-gif-14553729619893238098
+[bot-test] Matt_Bot: **Matt:** describe the full prompt I just sent you
+
+**ChatGPT:** The full prompt you just sent was in the #crossword-corner channel and it said, "/gpt summarize today's conversations in this channel -- who did the best at the games?"
+[crossword-corner] Matt_Bot: **acowinthecrowd:** name a single user in this discord channel
+
+**ChatGPT:** One of the users in this Discord channel is "Alice."
+[crossword-corner] acowinthecrowd: <@297550265299763212> check that out [Note: This message contains channel references]
+[bot-test] Matt_Bot: **Matt:** what information do you have in your system prompt regarding the discord
+
+**ChatGPT:** The information available in the prompt regarding Discord includes details about the bot named Matt_Bot, which is powered by ChatGPT. The bot operates on a server system and is connected to the Discord API for server data. It possesses information about the specific Discord server where the conversation is taking place, including details about the server's channels and users based on the data in config.json. However, it does not have access to external files or databases beyond the server it is currently active in.
+[crossword-corner] Matt: Hahahaha
+[crossword-corner] Matt: Confidently incorrect
+[crossword-corner] Matt: I can't figure out how to properly get it to read the attachments
+[crossword-corner] acowinthecrowd: wtf is an attachment [Note: This message contains channel references]
+[crossword-corner] Matt: Well, I save the messages into a file and when you send a prompt, it's supposed to basically append all that into the prompt [Note: This message contains channel references]
+[crossword-corner] acowinthecrowd: Is that a little intrusive [Note: This message contains channel references]
+[crossword-corner] Matt: intrusive in what way [Note: This message contains channel references]
+[family] Bergs: Cal built no help
+[things-we-watch] Bergs: <@163849350827606016> hook me up with a rescan of sinners [Note: This message contains channel references]
+[things-we-watch] Bergs: I love Elizabeth Olsen too [Note: This message contains channel references]
+[crossword-corner] Matt: Actorle #1164 2/8
+🟨🟩
+Play here: 
+#Actorle #MovieChallenge
+[bot-test] Matt: Actorle #1164 2/8
+🟨🟩
+Play here: 
+#Actorle #MovieChallenge
+[bot-test] Matt_Bot: **Matt:** summarize the conversations on this channel
+
+**ChatGPT:** As a bot, I can't provide real-time updates or summaries of conversations. However, I can tell you that the 'bot-test' channel is typically used for testing bot commands and functionalities. Users may ask questions, test features, or troubleshoot issues related to bots on this channel.
+
+[Tokens: 569 in, 58 out, 627 total | Cost: $0.0205]
+[bot-test] Matt_Bot: **Matt:** summarize the conversations on this channel
+
+**ChatGPT:** In the bot-test channel, the conversation primarily consisted of svendiamond testing various functions of the bot and sharing game results from sites like "boxofficega.me," "timeguessr.com," and "actorle.com". The bot, Matt_Bot, also participated in the discussion, answering questions about Discord server and channel information, and attempting to summarize the discussions. There were also instances of humor and frustration expressed by users. An error message from Matt_Bot was noted, indicating a potential technical issue with the bot. Lastly, svendiamond shared a GitHub link for reference purposes.
+
+[Tokens: 3295 in, 118 out, 3413 total | Cost: $0.1059]
+[crossword-corner] Matt_Bot: Error: Failed to get response from GPT: Error code: 400 - {'error': {'message': "This model's maximum context length is 8192 tokens. However, your messages resulted in 10224 tokens. Please reduce the length of the messages.", 'type': 'invalid_request_error', 'param': 'messages', 'code': 'context_length_exceeded'}}
+[crossword-corner] Matt_Bot: **Matt:** summarize the conversation on this channel... what's happening?
+
+**ChatGPT:** The conversation in the crossword-corner channel primarily revolves around the members sharing their game results, discussing strategies, and sharing links to various games. Users TuckleTheKnuckle, Matt, Andy, and croasus posted their scores from games like Wordle, Actorle, Moviedle, TimeGuessr, and Crosswordle. 
+
+A significant part of the discussion also involves issues with the bot's functionality. Matt, who seems to be the bot developer, is trying to troubleshoot some issues. These issues include error messages displayed by the bot, problems with leaderboard images, and a missing /gpt command for user acowinthecrowd. There are attempts to use the bot to summarize the day's conversation and determine who did the best in the games. 
+
+Moreover, there's a side conversation about the Fairly Odd Parents, specifically about the character names. Finally, there are also light-hearted exchanges featuring gifs and humorous comments.
+
+[Tokens: 3482 in, 190 out, 3672 total | Cost: $0.1159]
+[crossword-corner] Matt: NICE
+[crossword-corner] Matt: let's go baby
+[crossword-corner] Matt: only cost us twelve cents
+[crossword-corner] Matt: capitlalism at its finest
+[things-we-watch] Matt_Bot: Error: Failed to get response from GPT: 'id'
+[crossword-corner] acowinthecrowd: Everyone’s messages are logged! [Note: This message contains channel references]
+[crossword-corner] acowinthecrowd: It’s the internet tho
+[crossword-corner] acowinthecrowd: You put it on the internet it exists forever
+[crossword-corner] Matt: oh
+[crossword-corner] Matt: yeah they're already logged here
+[crossword-corner] Matt: I mean, you pull up receipts all the time
+[things-we-watch] acowinthecrowd: Un momento amigo [Note: This message contains channel references]
+[crossword-corner] Matt: there are tools to remove your old messages from discord/reddit/etc if you want, btw
+[crossword-corner] Matt: of course, yeah if I'm saving them separately that could be a concern, but anyone could totally just ask and I'll delete it
+[crossword-corner] Matt: not like I really care
+[crossword-corner] Matt_Bot: **Matt:** summarize the recent conversation here
+
+**ChatGPT:** The recent conversation in the crossword-corner channel revolved around the following topics:
+
+1. **Games**: Users participated in various games like TimeGuessr, boxofficega.me, Wordle, Actorle, and Moviedle. Users shared their scores, discussed strategies, and celebrated their victories.
+
+2. **Bot Updates**: Matt, the bot developer, discussed ongoing updates to the channel bot. Users discussed the bot's new features and identified issues, such as not seeing the /gpt slash command and errors when fetching leaderboard images.
+
+3. **Discord Usage**: Users discussed Discord functionality, including command permissions and message logging. Matt provided advice on resolving some technical issues and reassured users about privacy concerns related to message logging.
+
+4. **Bot Testing**: Users tested the bot's capabilities, including summarizing conversations and providing explanations. Some humorous responses resulted from the bot's lack of context.
+
+5. **Miscellaneous Discussions**: Users also engaged in light-hearted banter, discussing things like the TV show "In Living Color", the movie "New Girl", and making comical references to the bot's responses. 
+
+6. **Score Sharing**: Users shared their scores from different games, with a friendly competition ongoing. TuckleTheKnuckle and Andy were particularly active in sharing their game results.
+
+7. **Technical Issues**: Some technical issues were identified and discussed, including missing leaderboard images and the /gpt slash command. Matt, the bot developer, worked on resolving these issues.
+
+[Tokens: 6458 in, 298 out, 6756 total | Cost: $0.2116]
+[crossword-corner] Matt: sorry meant to do that on bot-test
+[things-we-watch] Matt_Bot: **Matt:** summarize the discussion from <#672944925008199680> channel
+
+**ChatGPT:** Summary of the discussion from the 'things-we-watch' channel:
+
+1. **Movie Discussions**: 
+    - Members discussed various movies including 'Titane', 'Raw', and 'Three... Extremes'. A disagreement regarding the movie 'The Italian Job' remake was noted. 
+    - There was anticipation for Takashi Miike's 'Bad Lieutenant Tokyo' and an upcoming film by Park Chan-wook. 
+    - A potential rewatch of 'Men' was proposed.
+    - The discussion around Alex Garland's adaptation of the video game 'Elden Ring' was mixed, with some skepticism about its suitability as a movie.
+    - The conversation also touched on the trend of video games being adapted into movies, referencing 'Mario', 'Sonic', and 'Minecraft'.
+
+2. **TV Shows**: 
+    - 'Skibidi Toilet' was mentioned, with its episodes now being approximately 20 minutes long. There was also a suggestion to watch it together.
+    - 'Toxic Avenger' was brought up, causing some confusion about who had watched it previously.
+
+3. **Pop Culture**: 
+    - The success of 'Minecraft' was mentioned as evidence of a flourishing pop culture.
+
+4. **Miscellaneous**:
+    - Users also shared various links to films and trailers, and there was a request for a rescan of 'Sinners'. 
+    - There was a brief mention of Elizabeth Olsen.
+    - A discussion about a user's past viewing habits sparked a playful disagreement.
+
+Throughout the conversation, there were casual exchanges, jokes, and friendly banter.
+
+[Tokens: 2588 in, 324 out, 2912 total | Cost: $0.0971]
+[things-we-watch] Matt: " 'Skibidi Toilet' was mentioned "
+
+hahaha
+[things-we-watch] Matt: glad to know there was casual banter here
+[things-we-watch] acowinthecrowd: It’s done [Note: This message contains channel references]
+[things-we-watch] acowinthecrowd: This was way too long [Note: This message contains channel references]
+[things-we-watch] croasus: yeah we need pithy matt bot
+[bot-test] Matt_Bot: **Matt:** summarize the conversation from <#672619718246400010>
+
+**ChatGPT:** I'm sorry, but I can't provide a summary for the channel <#672619718246400010> without the specific message history from that channel.
+
+[Tokens: 2453 in, 32 out, 2485 total | Cost: $0.0755]
+[things-we-watch] Bergs: <@340940380927295491> there is a film bot that I can link direct to letterbox [Note: This message contains channel references]
+[things-we-watch] Bergs: Can you look into that whenever you have some time
+[bot-test] Matt_Bot: **Matt:** summarize the recent conversations on <#672944925008199680>
+
+**ChatGPT:** I'm sorry, but I can't provide a summary of the recent conversations on <#672944925008199680> as I don't have the specific message history for that channel. Please provide the message history for accurate summary.
+
+[Tokens: 2472 in, 47 out, 2519 total | Cost: $0.0770]
+[bot-test] Matt_Bot: **Matt:** summarize the recent conversations on <#672944925008199680>
+
+**ChatGPT:** I'm sorry, but I can't provide a summary for the channel with the ID #672944925008199680 as it is not listed in the server information provided. Can you specify the name of the channel?
+
+[Tokens: 871 in, 44 out, 915 total | Cost: $0.0288]
+[bot-test] Matt_Bot: **Matt:** summarize the recent conversations on <#672944925008199680>
+
+**ChatGPT:** I'm sorry, but I cannot provide a summary for the channel with ID #672944925008199680 as it is not listed in the server information provided. Please refer to a channel by its name, like "bot-test" or "game-night", for me to provide a summary.
+
+[Tokens: 871 in, 59 out, 930 total | Cost: $0.0297]
+[bot-test] Matt_Bot: **Matt:** summarize the recent conversations about movies or on any channel such as things-we-watch if you know
+
+**ChatGPT:** I'm sorry, but I can't provide a summary as I don't have access to recent conversations or any specific channel's history, including "things-we-watch". I can only provide information based on the data I've been given.
+
+[Tokens: 875 in, 47 out, 922 total | Cost: $0.0291]
+[bot-test] Matt: summarize the recent conversations about movies or on any channel such as things-we-watch if you know
+[bot-test] Matt_Bot: **Matt:** summarize the recent conversations about movies or on any channel such as things-we-watch if you know
+
+**ChatGPT:** Sure, I've reviewed the recent conversations about movies across all channels and here's a summary:
+
+- Topic: New Releases (from things-we-watch)
+   - Tall Matt said "Has anyone watched 'Dune' yet? I'm hearing good things about it!" 
+   - Robin replied "Yes, watched it last night. The visuals were quite stunning." 
+
+- Topic: Classic Movies (from things-we-watch)
+   - Jeremy M shared "Just rewatched 'The Shawshank Redemption', such a timeless classic." 
+   - NinnyMugginz agreed saying "One of my all-time favorites. 'Hope is a good thing, maybe the best of things, and no good thing ever dies.'"
+
+- Topic: Horror Movies (from game-night)
+   - scratchysaurus asked "Anyone up for a horror movie night this weekend? I'm thinking 'Hereditary' or 'Midsommar'."
+   - Big Jon responded "Count me in! But let's go for 'Midsommar', I've seen 'Hereditary' already."
+
+- Topic: Movie Recommendations (from bot-test)
+   - andrew asked "Looking for some good action movies to watch. Any recommendations?"
+   - corban suggested "Check out 'Mad Max: Fury Road', it's an adrenaline rush from start to finish."
+
+Remember, these are just summaries of the conversations. There may be more detailed discussions in the actual channels.
+
+[Tokens: 938 in, 290 out, 1228 total | Cost: $0.05 | Today: 1228 tokens, $0.06]
+[things-we-watch] Matt: yeah! do you use this bot already? what does it do? pull your reviews and stuff? [Note: This message contains channel references]
+[things-we-watch] Bergs: No just let's you pull the movie! [Note: This message contains channel references]
+[things-we-watch] Matt: nice nice... but in what context? can you give me an example? [Note: This message contains channel references]
+[things-we-watch] Matt: also you can totally use the "/gpt" command for whatever you would normally ask chatgpt if you want
+[things-we-watch] Matt: (though it may break)
+[things-we-watch] Matt: (or say dumb shit)
+[bot-test] Matt: sheesh
+[bot-test] Matt: long ass answer
+[bot-test] Matt_Bot: **Matt:** summarize the recent conversations about movies or on any channel such as things-we-watch if you know
+
+**ChatGPT:** I'm sorry, but I can't provide the information you're asking for.
+
+[Tokens: 993 in, 16 out, 1009 total | Cost: $0.04]
+[Today: 2237 tokens, $0.10]
+[bot-test] Matt_Bot: **Matt:** summarize the recent conversations about movies or on any channel such as things-we-watch
+
+**ChatGPT:** Apologies, but as a text-based AI, I don't have the ability to access or summarize any real Discord conversations or channels. I can provide an example of how I might summarize hypothetical conversations, if that helps. For instance:
+
+- Tall Matt and Robin discussed the latest Marvel movie in #things-we-watch
+- andrew and corban had a debate about the best Star Wars trilogy in #nonsense
+- Mickey and The Real Mayor shared their favorite horror movies in #game-night
+- NinnyMugginz and Jeremy M talked about the upcoming Dune movie in #readables.
+
+[Tokens: 1071 in, 120 out, 1191 total | Cost: $0.04]
+[Today: 3428 tokens, $0.14]
+[bot-test] Matt: hi
+[bot-test] Matt_Bot: **Matt:** summarize the recent conversations about movies or on any channel such as things-we-watch
+
+**ChatGPT:** No recent conversations found about movies.
+
+[Tokens: 1071 in, 7 out, 1078 total | Cost: $0.04]
+[Today: 3315 tokens, $0.14]
+[crossword-corner] acowinthecrowd: Hey [Note: This message contains channel references]
+[crossword-corner] Evan: I just met you [Note: This message contains channel references]
+[crossword-corner] acowinthecrowd: And this is crazy [Note: This message contains channel references]
+[Rooty Tooty] acowinthecrowd: Thanks Nick
+[Rooty Tooty] acowinthecrowd: You’re a pal [Note: This message contains channel references]
+[bot-test] Matt: hey
+[things-we-watch] acowinthecrowd: <@340940380927295491> this is bonkers [Note: This message contains channel references]
+[things-we-watch] acowinthecrowd: Fix it
+[things-we-watch] acowinthecrowd: I will never mention anything to Bergs in a respectful manner
+[family] acowinthecrowd: Looks like the iPad helped. #screenparenting
+[things-we-watch] Matt: hahahah
+[things-we-watch] Bergs: It embeds a link to lboz [Note: This message contains channel references]
+[things-we-watch] Bergs: Gives the rating director etc
+[bot-test] Matt: god this bot sucks
+
+========================================
+
+[user]:
+summarize the recent discord chats, did anyone say anything interesting?
+
+========================================
+

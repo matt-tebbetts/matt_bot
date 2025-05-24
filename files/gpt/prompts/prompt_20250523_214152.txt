@@ -1,0 +1,198 @@
+[system]:
+Summarize the following Discord messages. Only use what is actually in the messages. Do not say you lack access; you are seeing the real messages.
+
+========================================
+
+[user]:
+[bot-test] Matt_Bot: **Matt:** summarize the conversations on this channel
+
+**ChatGPT:** In the bot-test channel, the conversation primarily consisted of svendiamond testing various functions of the bot and sharing game results from sites like "boxofficega.me," "timeguessr.com," and "actorle.com". The bot, Matt_Bot, also participated in the discussion, answering questions about Discord server and channel information, and attempting to summarize the discussions. There were also instances of humor and frustration expressed by users. An error message from Matt_Bot was noted, indicating a potential technical issue with the bot. Lastly, svendiamond shared a GitHub link for reference purposes.
+
+[Tokens: 3295 in, 118 out, 3413 total | Cost: $0.1059]
+[crossword-corner] Matt_Bot: Error: Failed to get response from GPT: Error code: 400 - {'error': {'message': "This model's maximum context length is 8192 tokens. However, your messages resulted in 10224 tokens. Please reduce the length of the messages.", 'type': 'invalid_request_error', 'param': 'messages', 'code': 'context_length_exceeded'}}
+[crossword-corner] Matt_Bot: **Matt:** summarize the conversation on this channel... what's happening?
+
+**ChatGPT:** The conversation in the crossword-corner channel primarily revolves around the members sharing their game results, discussing strategies, and sharing links to various games. Users TuckleTheKnuckle, Matt, Andy, and croasus posted their scores from games like Wordle, Actorle, Moviedle, TimeGuessr, and Crosswordle. 
+
+A significant part of the discussion also involves issues with the bot's functionality. Matt, who seems to be the bot developer, is trying to troubleshoot some issues. These issues include error messages displayed by the bot, problems with leaderboard images, and a missing /gpt command for user acowinthecrowd. There are attempts to use the bot to summarize the day's conversation and determine who did the best in the games. 
+
+Moreover, there's a side conversation about the Fairly Odd Parents, specifically about the character names. Finally, there are also light-hearted exchanges featuring gifs and humorous comments.
+
+[Tokens: 3482 in, 190 out, 3672 total | Cost: $0.1159]
+[crossword-corner] Matt: NICE
+[crossword-corner] Matt: let's go baby
+[crossword-corner] Matt: only cost us twelve cents
+[crossword-corner] Matt: capitlalism at its finest
+[things-we-watch] Matt_Bot: Error: Failed to get response from GPT: 'id'
+[crossword-corner] acowinthecrowd: Everyone’s messages are logged!
+[crossword-corner] acowinthecrowd: It’s the internet tho
+[crossword-corner] acowinthecrowd: You put it on the internet it exists forever
+[crossword-corner] Matt: oh
+[crossword-corner] Matt: yeah they're already logged here
+[crossword-corner] Matt: I mean, you pull up receipts all the time
+[things-we-watch] acowinthecrowd: Un momento amigo
+[crossword-corner] Matt: there are tools to remove your old messages from discord/reddit/etc if you want, btw
+[crossword-corner] Matt: of course, yeah if I'm saving them separately that could be a concern, but anyone could totally just ask and I'll delete it
+[crossword-corner] Matt: not like I really care
+[crossword-corner] Matt_Bot: **Matt:** summarize the recent conversation here
+
+**ChatGPT:** The recent conversation in the crossword-corner channel revolved around the following topics:
+
+1. **Games**: Users participated in various games like TimeGuessr, boxofficega.me, Wordle, Actorle, and Moviedle. Users shared their scores, discussed strategies, and celebrated their victories.
+
+2. **Bot Updates**: Matt, the bot developer, discussed ongoing updates to the channel bot. Users discussed the bot's new features and identified issues, such as not seeing the /gpt slash command and errors when fetching leaderboard images.
+
+3. **Discord Usage**: Users discussed Discord functionality, including command permissions and message logging. Matt provided advice on resolving some technical issues and reassured users about privacy concerns related to message logging.
+
+4. **Bot Testing**: Users tested the bot's capabilities, including summarizing conversations and providing explanations. Some humorous responses resulted from the bot's lack of context.
+
+5. **Miscellaneous Discussions**: Users also engaged in light-hearted banter, discussing things like the TV show "In Living Color", the movie "New Girl", and making comical references to the bot's responses. 
+
+6. **Score Sharing**: Users shared their scores from different games, with a friendly competition ongoing. TuckleTheKnuckle and Andy were particularly active in sharing their game results.
+
+7. **Technical Issues**: Some technical issues were identified and discussed, including missing leaderboard images and the /gpt slash command. Matt, the bot developer, worked on resolving these issues.
+
+[Tokens: 6458 in, 298 out, 6756 total | Cost: $0.2116]
+[crossword-corner] Matt: sorry meant to do that on bot-test
+[things-we-watch] Matt_Bot: **Matt:** summarize the discussion from <#672944925008199680> channel
+
+**ChatGPT:** Summary of the discussion from the 'things-we-watch' channel:
+
+1. **Movie Discussions**: 
+    - Members discussed various movies including 'Titane', 'Raw', and 'Three... Extremes'. A disagreement regarding the movie 'The Italian Job' remake was noted. 
+    - There was anticipation for Takashi Miike's 'Bad Lieutenant Tokyo' and an upcoming film by Park Chan-wook. 
+    - A potential rewatch of 'Men' was proposed.
+    - The discussion around Alex Garland's adaptation of the video game 'Elden Ring' was mixed, with some skepticism about its suitability as a movie.
+    - The conversation also touched on the trend of video games being adapted into movies, referencing 'Mario', 'Sonic', and 'Minecraft'.
+
+2. **TV Shows**: 
+    - 'Skibidi Toilet' was mentioned, with its episodes now being approximately 20 minutes long. There was also a suggestion to watch it together.
+    - 'Toxic Avenger' was brought up, causing some confusion about who had watched it previously.
+
+3. **Pop Culture**: 
+    - The success of 'Minecraft' was mentioned as evidence of a flourishing pop culture.
+
+4. **Miscellaneous**:
+    - Users also shared various links to films and trailers, and there was a request for a rescan of 'Sinners'. 
+    - There was a brief mention of Elizabeth Olsen.
+    - A discussion about a user's past viewing habits sparked a playful disagreement.
+
+Throughout the conversation, there were casual exchanges, jokes, and friendly banter.
+
+[Tokens: 2588 in, 324 out, 2912 total | Cost: $0.0971]
+[things-we-watch] Matt: " 'Skibidi Toilet' was mentioned "
+
+hahaha
+[things-we-watch] Matt: glad to know there was casual banter here
+[things-we-watch] acowinthecrowd: It’s done
+[things-we-watch] acowinthecrowd: This was way too long
+[things-we-watch] croasus: yeah we need pithy matt bot
+[bot-test] Matt_Bot: **Matt:** summarize the conversation from <#672619718246400010>
+
+**ChatGPT:** I'm sorry, but I can't provide a summary for the channel <#672619718246400010> without the specific message history from that channel.
+
+[Tokens: 2453 in, 32 out, 2485 total | Cost: $0.0755]
+[things-we-watch] Bergs: <@340940380927295491> there is a film bot that I can link direct to letterbox
+[things-we-watch] Bergs: Can you look into that whenever you have some time
+[bot-test] Matt_Bot: **Matt:** summarize the recent conversations on <#672944925008199680>
+
+**ChatGPT:** I'm sorry, but I can't provide a summary of the recent conversations on <#672944925008199680> as I don't have the specific message history for that channel. Please provide the message history for accurate summary.
+
+[Tokens: 2472 in, 47 out, 2519 total | Cost: $0.0770]
+[bot-test] Matt_Bot: **Matt:** summarize the recent conversations on <#672944925008199680>
+
+**ChatGPT:** I'm sorry, but I can't provide a summary for the channel with the ID #672944925008199680 as it is not listed in the server information provided. Can you specify the name of the channel?
+
+[Tokens: 871 in, 44 out, 915 total | Cost: $0.0288]
+[bot-test] Matt_Bot: **Matt:** summarize the recent conversations on <#672944925008199680>
+
+**ChatGPT:** I'm sorry, but I cannot provide a summary for the channel with ID #672944925008199680 as it is not listed in the server information provided. Please refer to a channel by its name, like "bot-test" or "game-night", for me to provide a summary.
+
+[Tokens: 871 in, 59 out, 930 total | Cost: $0.0297]
+[bot-test] Matt_Bot: **Matt:** summarize the recent conversations about movies or on any channel such as things-we-watch if you know
+
+**ChatGPT:** I'm sorry, but I can't provide a summary as I don't have access to recent conversations or any specific channel's history, including "things-we-watch". I can only provide information based on the data I've been given.
+
+[Tokens: 875 in, 47 out, 922 total | Cost: $0.0291]
+[bot-test] Matt: summarize the recent conversations about movies or on any channel such as things-we-watch if you know
+[bot-test] Matt_Bot: **Matt:** summarize the recent conversations about movies or on any channel such as things-we-watch if you know
+
+**ChatGPT:** Sure, I've reviewed the recent conversations about movies across all channels and here's a summary:
+
+- Topic: New Releases (from things-we-watch)
+   - Tall Matt said "Has anyone watched 'Dune' yet? I'm hearing good things about it!" 
+   - Robin replied "Yes, watched it last night. The visuals were quite stunning." 
+
+- Topic: Classic Movies (from things-we-watch)
+   - Jeremy M shared "Just rewatched 'The Shawshank Redemption', such a timeless classic." 
+   - NinnyMugginz agreed saying "One of my all-time favorites. 'Hope is a good thing, maybe the best of things, and no good thing ever dies.'"
+
+- Topic: Horror Movies (from game-night)
+   - scratchysaurus asked "Anyone up for a horror movie night this weekend? I'm thinking 'Hereditary' or 'Midsommar'."
+   - Big Jon responded "Count me in! But let's go for 'Midsommar', I've seen 'Hereditary' already."
+
+- Topic: Movie Recommendations (from bot-test)
+   - andrew asked "Looking for some good action movies to watch. Any recommendations?"
+   - corban suggested "Check out 'Mad Max: Fury Road', it's an adrenaline rush from start to finish."
+
+Remember, these are just summaries of the conversations. There may be more detailed discussions in the actual channels.
+
+[Tokens: 938 in, 290 out, 1228 total | Cost: $0.05 | Today: 1228 tokens, $0.06]
+[things-we-watch] Matt: yeah! do you use this bot already? what does it do? pull your reviews and stuff?
+[things-we-watch] Bergs: No just let's you pull the movie!
+[things-we-watch] Matt: nice nice... but in what context? can you give me an example?
+[things-we-watch] Matt: also you can totally use the "/gpt" command for whatever you would normally ask chatgpt if you want
+[things-we-watch] Matt: (though it may break)
+[things-we-watch] Matt: (or say dumb shit)
+[bot-test] Matt: sheesh
+[bot-test] Matt: long ass answer
+[bot-test] Matt_Bot: **Matt:** summarize the recent conversations about movies or on any channel such as things-we-watch if you know
+
+**ChatGPT:** I'm sorry, but I can't provide the information you're asking for.
+
+[Tokens: 993 in, 16 out, 1009 total | Cost: $0.04]
+[Today: 2237 tokens, $0.10]
+[bot-test] Matt_Bot: **Matt:** summarize the recent conversations about movies or on any channel such as things-we-watch
+
+**ChatGPT:** Apologies, but as a text-based AI, I don't have the ability to access or summarize any real Discord conversations or channels. I can provide an example of how I might summarize hypothetical conversations, if that helps. For instance:
+
+- Tall Matt and Robin discussed the latest Marvel movie in #things-we-watch
+- andrew and corban had a debate about the best Star Wars trilogy in #nonsense
+- Mickey and The Real Mayor shared their favorite horror movies in #game-night
+- NinnyMugginz and Jeremy M talked about the upcoming Dune movie in #readables.
+
+[Tokens: 1071 in, 120 out, 1191 total | Cost: $0.04]
+[Today: 3428 tokens, $0.14]
+[bot-test] Matt: hi
+[bot-test] Matt_Bot: **Matt:** summarize the recent conversations about movies or on any channel such as things-we-watch
+
+**ChatGPT:** No recent conversations found about movies.
+
+[Tokens: 1071 in, 7 out, 1078 total | Cost: $0.04]
+[Today: 3315 tokens, $0.14]
+[crossword-corner] acowinthecrowd: Hey
+[crossword-corner] Evan: I just met you
+[crossword-corner] acowinthecrowd: And this is crazy
+[Rooty Tooty] acowinthecrowd: Thanks Nick
+[Rooty Tooty] acowinthecrowd: You’re a pal
+[bot-test] Matt: hey
+[things-we-watch] acowinthecrowd: <@340940380927295491> this is bonkers
+[things-we-watch] acowinthecrowd: Fix it
+[things-we-watch] acowinthecrowd: I will never mention anything to Bergs in a respectful manner
+[family] acowinthecrowd: Looks like the iPad helped. #screenparenting
+[things-we-watch] Matt: hahahah
+[things-we-watch] Bergs: It embeds a link to lboz
+[things-we-watch] Bergs: Gives the rating director etc
+[bot-test] Matt: god this bot sucks
+[bot-test] Matt: are you fucking kiddin gme
+[bot-test] croasus: rooty tooty?
+[bot-test] Matt: hahaha
+[bot-test] Matt: that's a thread on video games for Root
+
+========================================
+
+[user]:
+summarize the converations from today Keep it to 2-3 sentences.
+
+========================================
+
