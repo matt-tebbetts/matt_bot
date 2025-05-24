@@ -118,9 +118,9 @@ async def collect_recent_messages(channel, latest_ts: str = None, lookback_days:
                 # Enhanced fields (simplified for bulk collection)
                 "attachments": [{"filename": att.filename, "content_type": att.content_type, "size": att.size} for att in message.attachments],
                 "interaction_info": {
-                    "interaction_id": message.interaction_metadata.id,
-                    "command_name": message.interaction_metadata.name,
-                    "user_id": message.interaction_metadata.user.id
+                    "interaction_id": getattr(message.interaction_metadata, 'id', None),
+                    "command_name": getattr(message.interaction_metadata, 'name', None),
+                    "user_id": getattr(message.interaction_metadata.user, 'id', None) if hasattr(message.interaction_metadata, 'user') else None
                 } if getattr(message, 'interaction_metadata', None) else None,
                 "reply_info": {
                     "replied_to_message_id": message.reference.message_id
