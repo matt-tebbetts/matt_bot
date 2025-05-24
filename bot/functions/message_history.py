@@ -59,6 +59,7 @@ async def collect_recent_messages(channel, oldest_ts: str = None, lookback_days:
             # Default to lookback_days ago if no timestamp provided
             after = datetime.now(pytz.timezone('US/Eastern')) - timedelta(days=lookback_days)
         
+        print(f"[DEBUG] Fetching messages for channel: {channel.name}")
         async for message in channel.history(after=after, limit=None):
             # Skip if message already exists
             if str(message.id) in existing_messages:
@@ -86,6 +87,7 @@ async def collect_recent_messages(channel, oldest_ts: str = None, lookback_days:
             # Check for game scores
             if is_game_score(message.content)[0]:
                 game_score_count += 1
+        print(f"[DEBUG] Finished fetching messages for channel: {channel.name} (fetched {len(new_messages)} new messages)")
         
         # Update messages file
         existing_messages.update(new_messages)
