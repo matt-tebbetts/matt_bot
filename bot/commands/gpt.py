@@ -220,10 +220,16 @@ class GPT:
                 temperature=0.3
             )
             
-            analysis_result = json.loads(response.choices[0].message.content)
-            needs_context = analysis_result["needs_context"]
-            analysis = analysis_result["explanation"]
-            filter_params = analysis_result["filter_params"]
+            try:
+                analysis_result = json.loads(response.choices[0].message.content)
+                needs_context = analysis_result.get("needs_context", True)  # Default to True for safety
+                analysis = analysis_result.get("explanation", "Analysis completed")
+                filter_params = analysis_result.get("filter_params", {})
+            except json.JSONDecodeError:
+                # If JSON parsing fails, default to using context
+                needs_context = True
+                analysis = "Defaulting to context due to analysis error"
+                filter_params = {}
             
             # Ensure required fields are set
             filter_params['guild_name'] = guild_name
@@ -265,7 +271,7 @@ class GPT:
             
         except Exception as e:
             # For conversation-related queries, default to using context
-            conversation_keywords = ['summarize', 'conversation', 'messages', 'chat', 'discussion', 'talk']
+            conversation_keywords = ['summarize', 'conversation', 'messages', 'chat', 'discussion', 'talk', 'what happened', 'what was said']
             prompt_lower = prompt.lower()
             
             # Check if the prompt is about conversations
@@ -274,7 +280,7 @@ class GPT:
             # Default to using context for conversation queries
             needs_context = is_conversation_query
             
-            return needs_context, f"Error in analysis: {str(e)}", {
+            return needs_context, f"Defaulting to context for conversation query", {
                 'guild_name': guild_name,
                 'current_channel': current_channel,
                 'channels': [current_channel]
