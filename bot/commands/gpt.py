@@ -426,8 +426,13 @@ Users: {', '.join([u['display_name'] for u in guild_config['users']])}"""
                 formatted_messages = []
                 for msg in sorted_messages:
                     if msg['content'].strip():  # Only include non-empty messages
-                        # More compact format for messages
-                        formatted_msg = f"{msg['author_nick']}: {msg['content']}"
+                        # Format: [Channel] Author: Content
+                        # Replace channel mentions with their names
+                        content = msg['content']
+                        if msg.get('has_mentions'):
+                            # If the message has mentions, add a note about channel references
+                            content += " [Note: This message contains channel references]"
+                        formatted_msg = f"[{msg['channel_nm']}] {msg['author_nick']}: {content}"
                         formatted_messages.append(formatted_msg)
                 
                 # Convert to a more compact format
