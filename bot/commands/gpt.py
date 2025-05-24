@@ -254,10 +254,10 @@ class GPT:
         current_time = datetime.now(pytz.timezone('US/Eastern'))
         cutoff_time = current_time - timedelta(days=7)  # Only include last 7 days
         
-        # First pass: apply basic filters
+        # First pass: basic validation and date filtering
         for msg_id, msg in messages.items():
             # Skip if message doesn't have required fields
-            if not all(k in msg for k in ['create_ts', 'channel_nm', 'author_nm', 'content']):
+            if not all(k in msg for k in ['create_ts', 'channel_nm', 'author_nm', 'content', 'author_nick']):
                 continue
                 
             # Apply date filter (last 7 days)
@@ -268,31 +268,17 @@ class GPT:
                     continue
             except Exception:
                 continue
-                
-            # Apply channel filter
-            if filter_params.get('channels') and msg['channel_nm'] not in filter_params['channels']:
-                continue
-                
-            # Apply user filter
-            if filter_params.get('users') and msg['author_nm'] not in filter_params['users']:
-                continue
-            
-            # Apply keyword filter
-            if filter_params.get('keywords'):
-                content_lower = msg['content'].lower()
-                if not any(keyword.lower() in content_lower for keyword in filter_params['keywords']):
-                    continue
             
             filtered_messages[msg_id] = msg
         
-        # Second pass: sort by timestamp
+        # Sort by timestamp (most recent first)
         sorted_msgs = sorted(
             filtered_messages.values(),
             key=lambda x: datetime.strptime(x['create_ts'], '%Y-%m-%d %H:%M:%S'),
             reverse=True
         )
         
-        # Create new dictionary with original message IDs, keeping as many messages as possible within token limit
+        # Keep as many messages as possible within token limit
         filtered_messages = {}
         current_tokens = 0
         max_tokens = 6000  # Leave room for system prompt and response
@@ -307,7 +293,9 @@ class GPT:
                 
             # Find the original message ID and add to filtered messages
             for msg_id, original_msg in messages.items():
-                if original_msg['create_ts'] == msg['create_ts'] and original_msg['content'] == msg['content']:
+                if (original_msg['create_ts'] == msg['create_ts'] and 
+                    original_msg['content'] == msg['content'] and 
+                    original_msg['author_nick'] == msg['author_nick']):
                     filtered_messages[msg_id] = msg
                     current_tokens += msg_tokens
                     break
