@@ -480,7 +480,8 @@ class GPT:
                 for msg in sorted_messages:
                     if msg['content'].strip():
                         content = msg['content']
-                        formatted_msg = f"[{msg['channel_nm']}] {msg['author_nick']}: {content}"
+                        # Include timestamp in the format: [channel] timestamp author: content
+                        formatted_msg = f"[{msg['channel_nm']}] {msg['create_ts']} {msg['author_nick']}: {content}"
                         formatted_messages.append(formatted_msg)
                 message_text = "\n".join(formatted_messages)
                 messages.append({"role": "user", "content": message_text})
