@@ -95,7 +95,7 @@
         "scoring_type": "guesses",
         "emoji": "🎭",
         "bonus_emojis": {
-            "single_guess": "🌟",
+            "single_guess": "🎯",
             "under_3": "✨"
         }
     },

@@ -3,8 +3,12 @@ import os
 from typing import Dict, List, Tuple
 from bot.functions.admin import direct_path_finder
 from bot.functions.save_messages import is_game_score
+from bot.functions.save_scores import process_game_score
+from bot.functions import execute_query
+from bot.connections.config import DEBUG_MODE
 from datetime import datetime, timedelta
 import pytz
+import discord
 
 def get_metadata_path(guild_name: str) -> str:
     """Get the path to the metadata file for a guild."""
@@ -57,23 +61,22 @@ async def collect_recent_messages(channel, latest_ts: str = None, lookback_days:
         if latest_ts:
             after = datetime.strptime(latest_ts, '%Y-%m-%d %H:%M:%S')
             after = pytz.timezone('US/Eastern').localize(after)
-            print(f"[DEBUG] Fetching messages in {channel.name} after latest known: {latest_ts}")
         else:
             # Default to lookback_days ago if no latest timestamp provided
             after = datetime.now(pytz.timezone('US/Eastern')) - timedelta(days=lookback_days)
-            print(f"[DEBUG] Fetching messages in {channel.name} from last {lookback_days} days")
         
-        print(f"[DEBUG] About to start iterating messages for channel: {channel.name}")
         msg_count = 0
         async for message in channel.history(after=after, limit=None):
             msg_count += 1
-            if msg_count % 10 == 0:
-                print(f"[DEBUG] {msg_count} messages fetched so far in {channel.name}")
+            
             # Skip if message already exists
             if str(message.id) in existing_messages:
                 continue
                 
-            # Save message
+            # Check for game scores first (we'll use this for both metadata and processing)
+            is_score, game_name, game_info = is_game_score(message.content)
+            
+            # Save message with enhanced metadata structure
             new_messages[str(message.id)] = {
                 "id": message.id,
                 "content": message.content,
@@ -81,22 +84,108 @@ async def collect_recent_messages(channel, latest_ts: str = None, lookback_days:
                 "edit_ts": message.edited_at.replace(tzinfo=pytz.utc).astimezone(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d %H:%M:%S") if message.edited_at else None,
                 "bot_added_ts": datetime.now(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d %H:%M:%S"),
                 "length": len(message.content),
+                
+                # Author information
                 "author_id": message.author.id,
                 "author_nm": message.author.name,
                 "author_nick": message.author.display_name,
+                "author_is_bot": message.author.bot,
+                
+                # Channel information
                 "channel_id": message.channel.id,
                 "channel_nm": message.channel.name,
+                "channel_type": type(message.channel).__name__,
+                
+                # Message type detection
+                "message_type": "bot_message" if message.author.bot else ("interaction_response" if getattr(message, 'interaction_metadata', None) else ("command" if message.content.startswith(('/', '!', '?')) else ("possible_interaction" if message.content == "" and (message.attachments or message.embeds) else "regular"))),
+                "system_message_type": message.type.name if message.type != discord.MessageType.default else None,
+                
+                # Content analysis
                 "has_attachments": bool(message.attachments),
-                "has_links": bool(message.embeds),
+                "has_embeds": bool(message.embeds),
+                "has_links": bool(message.embeds),  # Using embeds as proxy for links
                 "has_mentions": bool(message.mentions),
-                "is_game_score": is_game_score(message.content)[0]
+                "has_reactions": bool(message.reactions),
+                "has_reply": bool(message.reference),
+                "is_pinned": message.pinned,
+                "is_game_score": is_score,
+                
+                # Legacy compatibility fields
+                "list_of_attachment_types": [attachment.content_type for attachment in message.attachments],
+                "list_of_links": [],  # Would need URL parsing which we skip for bulk collection
+                "list_of_mentioned": [str(user.name) for user in message.mentions],
+                
+                # Enhanced fields (simplified for bulk collection)
+                "attachments": [{"filename": att.filename, "content_type": att.content_type, "size": att.size} for att in message.attachments],
+                "interaction_info": {
+                    "interaction_id": message.interaction_metadata.id,
+                    "command_name": message.interaction_metadata.name,
+                    "user_id": message.interaction_metadata.user.id
+                } if getattr(message, 'interaction_metadata', None) else None,
+                "reply_info": {
+                    "replied_to_message_id": message.reference.message_id
+                } if message.reference else None,
+                "thread_info": {
+                    "thread_name": message.channel.name,
+                    "parent_channel_id": message.channel.parent.id if hasattr(message.channel, 'parent') and message.channel.parent else None
+                } if isinstance(message.channel, discord.Thread) else None
             }
             
-            # Check for game scores
-            if is_game_score(message.content)[0]:
+            # Process game scores
+            if is_score:
                 game_score_count += 1
-        print(f"[DEBUG] Finished iterating messages for channel: {channel.name} (total: {msg_count})")
-        print(f"[DEBUG] Finished fetching messages for channel: {channel.name} (fetched {len(new_messages)} new messages)")
+                
+                # Check if this score already exists in the database
+                try:
+                    check_query = """
+                        SELECT COUNT(*) as count
+                        FROM games.game_history 
+                        WHERE user_name = %s 
+                        AND game_name = %s 
+                        AND game_date = %s
+                    """
+                    game_date = message.created_at.astimezone(pytz.timezone('US/Eastern')).strftime("%Y-%m-%d")
+                    result = await execute_query(check_query, [message.author.name, game_name, game_date])
+                    
+                    # If score doesn't exist, process it
+                    if result[0]['count'] == 0:
+                        try:
+                            # Process and save the game score
+                            score_result = await process_game_score(message, game_name, game_info)
+                            
+                            if score_result:
+                                # Load games configuration for emoji reactions
+                                games_file_path = direct_path_finder('files', 'games.json')
+                                with open(games_file_path, 'r', encoding='utf-8') as f:
+                                    games_config = json.load(f)
+                                game_config = games_config.get(game_name, {})
+                                
+                                # Add main emoji reaction
+                                if 'emoji' in game_config:
+                                    try:
+                                        await message.add_reaction(game_config['emoji'])
+                                    except:
+                                        pass  # Ignore reaction errors
+                                
+                                # Add bonus reactions if any
+                                if game_bonuses := score_result.get('game_bonuses'):
+                                    for bonus in game_bonuses.split(', '):
+                                        if emoji := game_config.get('bonus_emojis', {}).get(bonus):
+                                            try:
+                                                await message.add_reaction(emoji)
+                                            except:
+                                                pass  # Ignore reaction errors
+                        except Exception as e:
+                            print(f"[WARNING] Error processing historical game score: {e}")
+                except Exception as e:
+                    print(f"[WARNING] Error checking existing game score: {e}")
+        
+        # Only show output for channels that actually had new messages
+        # if len(new_messages) > 0:
+        #     print(f"✓ {channel.name}: {len(new_messages)} new messages")
+        # elif DEBUG_MODE:
+        #     # In debug mode, show all channels processed
+        #     print(f"✓ {channel.name}: 0 new messages ({msg_count} total checked)")
         
         # Update messages file
         existing_messages.update(new_messages)

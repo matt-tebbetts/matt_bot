@@ -8,6 +8,9 @@ from bot.functions.admin import direct_path_finder
 # Load environment variables
 load_dotenv()
 
+# Debug configuration
+DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
+
 # Platform-specific configurations
 IS_MAC = platform.system() == 'Darwin'
 IS_WINDOWS = platform.system() == 'Windows'
@@ -27,7 +30,6 @@ FONT_PATHS = {
 FONT_PATH = FONT_PATHS.get(platform.system(), FONT_PATHS['Linux'])
 
 async def save_guild_config(guild: discord.Guild):
-    print(f"[DEBUG] Starting to save config for guild: {guild.name}")
     guild_info = {
         "guild_id": str(guild.id),
         "guild_name": guild.name,
@@ -36,7 +38,6 @@ async def save_guild_config(guild: discord.Guild):
         "default_channel_id": None
     }
 
-    print(f"[DEBUG] Gathering channel info for {guild.name}")
     # Gather channel information
     for channel in guild.text_channels:
         channel_info = {
@@ -51,36 +52,28 @@ async def save_guild_config(guild: discord.Guild):
         if channel.name in ["game-scores", "crossword-corner"]:
             guild_info["default_channel_id"] = str(channel.id)
 
-    print(f"[DEBUG] Gathering user info for {guild.name}")
     # Gather user information
     for member in guild.members:
-        if not member.bot:
-            user_info = {
-                "id": str(member.id),
-                "name": member.name,
-                "display_name": member.display_name,
-                "nickname": member.nick if member.nick else None,
-                "joined_at": member.joined_at.strftime('%Y-%m-%d %H:%M:%S') if member.joined_at else None,
-                "roles": [{"id": str(role.id), "name": role.name} for role in member.roles if role.name != "@everyone"],
-                "is_owner": member.id == guild.owner_id,
-                "is_admin": member.guild_permissions.administrator
-            }
-            guild_info["users"].append(user_info)
+        user_info = {
+            "id": str(member.id),
+            "name": member.name,
+            "display_name": member.display_name,
+            "bot": member.bot,
+            "joined_at": member.joined_at.isoformat() if member.joined_at else None
+        }
+        guild_info["users"].append(user_info)
 
-    print(f"[DEBUG] Saving config file for {guild.name}")
-    # Save to config.json
-    config_path = direct_path_finder('files', 'guilds', guild.name, 'config.json')
-    # Create directory if it doesn't exist
-    os.makedirs(os.path.dirname(config_path), exist_ok=True)
-    with open(config_path, "w", encoding="utf-8") as f:
-        json.dump(guild_info, f, indent=4)
-    print(f"[DEBUG] Finished saving config for {guild.name}")
+    # Save to file
+    config_file = direct_path_finder('files', 'guilds', guild.name, 'config.json')
+    os.makedirs(os.path.dirname(config_file), exist_ok=True)
+    with open(config_file, 'w', encoding='utf-8') as f:
+        json.dump(guild_info, f, indent=2, ensure_ascii=False)
+    
+    print(f"✓ Saved config for {guild.name} ({len(guild_info['channels'])} channels, {len(guild_info['users'])} users)")
 
 async def save_all_guild_configs(client: discord.Client):
-    print("[DEBUG] Starting to save configs for all guilds")
     for guild in client.guilds:
         try:
             await save_guild_config(guild)
         except Exception as e:
-            print(f"[DEBUG] Error saving config for {guild.name}: {e}")
-    print("[DEBUG] Finished saving all guild configs")
+            print(f"[ERROR] Failed to save config for {guild.name}: {e}")

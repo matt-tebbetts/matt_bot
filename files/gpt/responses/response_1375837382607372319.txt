@@ -1,0 +1,24 @@
+Request ID: 1375837382607372319
+Timestamp: 2025-05-24 10:06:43
+User: svendiamond (Matt)
+User ID: 340940380927295491
+Guild: Nerd City
+Channel: bot-test
+Model: gpt-4-1106-preview
+Input Tokens: 14631
+Output Tokens: 200
+Total Tokens: 14831
+Messages Referenced: 883
+
+============================================================
+
+RESPONSE:
+🚨 **GOSSIP HIGHLIGHT REEL: DRAMA, BANTER, AND BOARD GAMES GALORE!** 🚨
+
+**Techie Troubles in Crossword Corner!** 🤖
+Matt's bot experiments in #crossword-corner had everyone in stitches! From bot responses with ZERO characters to Matt's frustration with GPT's randomness calling it "such a pain," the chaos was real. Accusations of "being so wrong" and playful jabs like "heh shaddup dickweed" kept the vibe lively and hilarious. Plus, the bot hilariously charging Matt nearly two dollars for a response? Priceless! 😂💸
+
+**Hot Takes in Science and Tech!** 📱
+Over in #science-and-technology, the debate raged about kids and screen time. Matt's strong stance on parental responsibility clashed with Bergs' view on societal pressures. Then Sarah swooped in, spicing up the convo with real
+
+Referenced 883 messages

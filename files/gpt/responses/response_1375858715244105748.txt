@@ -1,0 +1,18 @@
+Request ID: 1375858715244105748
+Timestamp: 2025-05-24 11:31:23
+User: svendiamond (Matt)
+User ID: 340940380927295491
+Guild: Nerd City
+Channel: bot-test
+Model: gpt-4-1106-preview
+Input Tokens: 14714
+Output Tokens: 11
+Total Tokens: 14725
+Messages Referenced: 884
+
+============================================================
+
+RESPONSE:
+Which user talked the most in the provided conversation logs?
+
+Referenced 884 messages

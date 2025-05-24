@@ -1,0 +1,26 @@
+Request ID: 1375837128201601154
+Timestamp: 2025-05-24 10:05:41
+User: svendiamond (Matt)
+User ID: 340940380927295491
+Guild: Nerd City
+Channel: bot-test
+Model: gpt-4-1106-preview
+Input Tokens: 14631
+Output Tokens: 200
+Total Tokens: 14831
+Messages Referenced: 883
+
+============================================================
+
+RESPONSE:
+🔥 HOT GOSSIP ALERT: Discord Drama, Tech Troubles, and Tattoo Temptations! 🔥
+
+🤖 BOT BLUNDERS: Matt's mishap with Matt_Bot had the #crossword-corner in stitches as it spewed random bot_responses, proving artificial intelligence can still be hilariously artificial!
+
+🎮 GAMING GOSSIP: acowinthecrowd's obsession with board games and Root revealed in #crossword-corner, while Matt struggles with the complex rules. Plus, Berg's smooth gaming experience prompts acowinthecrowd to reconsider a purchase!
+
+🍸 SOBER SHENANIGANS: The head lady at CFA won't drink, and neither will anyone else at her table, leading to a very sober steakhouse dinner shared in #rogue-corner-🗡.
+
+👾 TECH TALK TURNS TENSE: Matt and Bergs duke it out in #science-and-technology over parental responsibility in regulating kids
+
+Referenced 883 messages

@@ -1,0 +1,26 @@
+Request ID: 1375833160872362055
+Timestamp: 2025-05-24 09:49:56
+User: svendiamond (Matt)
+User ID: 340940380927295491
+Guild: Nerd City
+Channel: bot-test
+Model: gpt-4-1106-preview
+Input Tokens: 15830
+Output Tokens: 200
+Total Tokens: 16030
+Messages Referenced: 923
+
+============================================================
+
+RESPONSE:
+Guild: Nerd City
+
+In the bustling virtual hub of Nerd City, the conversations are as varied as the interests of its denizens. Let's dive into the highlights:
+
+In #food, the air fryer becomes a culinary hero for Bergs, who shares a tantalizing recipe for salsa that gets everyone's taste buds curious. Meanwhile, acowinthecrowd raises eyebrows with skepticism, questioning the liquid logistics of air frying salsa.
+
+Over in #politics-but-only-the-good-stuff, Andy and Bergs engage in a reflective debate on the impact of consuming politics on social media, while Matt chimes in with a reminder of the simpler, quieter times before the digital age bombarded our mornings with news from around the world.
+
+Family dynamics take center stage in #family, where sarahsalley951 shares the trials and tribulations of parenting teens, including the brief daily interactions with her son Jack. The BK hat makes a cameo as a symbol of generational fashion acceptance,
+
+Referenced 923 messages

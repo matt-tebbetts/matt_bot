@@ -1,15 +1,14 @@
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 import discord
 from discord import app_commands
 from bot.functions.admin import direct_path_finder
+from bot.connections.config import DEBUG_MODE, BOT_NAME, SYSTEM_NAME
 import openai
-from typing import Optional, Dict, List, Tuple
-import pytz
+from typing import Dict, List, Tuple
 import tiktoken
 import re
-import time
 
 class GPT:
     def __init__(self, client, tree):
@@ -18,10 +17,7 @@ class GPT:
         self.load_command()
         
         # Load prompts
-        self.analysis_prompt_template = self._load_prompt('analysis_prompt.txt')
-        self.analysis_system_prompt = self._load_prompt('analysis_system_prompt.txt')
         self.system_prompt_template = self._load_prompt('system_prompt.txt')
-        self.summary_prompt_template = self._load_prompt('summary_prompt.txt')
         
         # Initialize tokenizer
         self.encoding = tiktoken.encoding_for_model("gpt-4")
@@ -101,27 +97,28 @@ class GPT:
     def load_command(self):
         async def gpt_command(interaction: discord.Interaction, prompt: str):
             print(f"/gpt called by {interaction.user.name} in {interaction.guild.name}")
+            
+            # Temporary disable - return early with message
+            await interaction.response.send_message("Sorry, this command is temporarily disabled because I'm a stupid, idiotic robot who can't do basic text analysis. 🔧", ephemeral=True)
+            return
+            
             try:
                 await interaction.response.defer()
                 
                 # Always load messages and provide context
                 guild_name = interaction.guild.name
-                messages_file = direct_path_finder('files', 'guilds', guild_name, 'messages.json')
-                with open(messages_file, 'r', encoding='utf-8') as f:
-                    messages = json.load(f)
                 
                 # Simple filter params
                 filter_params = {
                     'guild_name': guild_name,
-                    'current_channel': interaction.channel.name,
-                    'channels': [interaction.channel.name]
+                    'current_channel': interaction.channel.name
                 }
                 
                 # Get response with context
-                response, input_tokens, output_tokens, message_count, channels_used = await self.get_gpt_response(
+                response, input_tokens, output_tokens, message_count, request_id = await self.get_gpt_response(
                     prompt=prompt,
-                    messages_data=messages,
-                    filter_params=filter_params
+                    filter_params=filter_params,
+                    interaction=interaction
                 )
                 
                 # Calculate total tokens and cost
@@ -131,16 +128,13 @@ class GPT:
                 # Log the response
                 self.log_prompt_analysis(
                     interaction=interaction,
-                    prompt=prompt,
-                    needs_context=True,  # Always true now
-                    analysis="Always providing conversation context",
-                    final_response=response,
                     message_count=message_count,
                     filter_params=filter_params,
                     input_tokens=input_tokens,
                     output_tokens=output_tokens,
                     total_tokens=total_tokens,
-                    cost=cost
+                    cost=cost,
+                    request_id=request_id
                 )
                 
                 # Get user's display name
@@ -183,151 +177,153 @@ class GPT:
         )
         self.tree.add_command(app_command)
     
-    async def analyze_prompt(self, prompt: str, guild_name: str, current_channel: str) -> Tuple[bool, str, Dict]:
-        """Analyze if the prompt needs message context and what filtering to apply.
-        Returns (needs_context, analysis, filter_params)"""
-        try:
-            client = openai.AsyncOpenAI()
-            
-            # Get guild config to know available channels
-            config_path = direct_path_finder('files', 'guilds', guild_name, 'config.json')
-            guild_config = {}
-            if os.path.exists(config_path):
-                with open(config_path, 'r', encoding='utf-8') as f:
-                    guild_config = json.load(f)
-            
-            # Get list of available channels
-            available_channels = [ch['name'] for ch in guild_config.get('channels', [])]
-            channels_info = f"Available channels: {', '.join(available_channels)}"
-            
-            # Format the analysis prompt with the user's prompt and channel info
-            analysis_prompt = self.analysis_prompt_template.format(
-                prompt=prompt,
-                channels_info=channels_info
-            )
+    def filter_messages(self, messages: Dict, exclude_channel_names: List[str] = None) -> Dict:
+        """
+        Basic filter for messages:
+        - Excludes specified channels (e.g., 'bot-test').
+        - Excludes messages flagged as game scores.
+        - Excludes messages without essential fields.
+        """
+        if exclude_channel_names is None:
+            exclude_channel_names = ['bot-test']
 
-            response = await client.chat.completions.create(
-                model="gpt-4",  # Using GPT-4 for better analysis
-                messages=[
-                    {"role": "system", "content": self.analysis_system_prompt},
-                    {"role": "user", "content": analysis_prompt}
-                ],
-                max_tokens=300,
-                temperature=0.3
-            )
-            
-            try:
-                analysis_result = json.loads(response.choices[0].message.content)
-                needs_context = analysis_result.get("needs_context", True)  # Default to True for safety
-                analysis = analysis_result.get("explanation", "Analysis completed")
-                filter_params = analysis_result.get("filter_params", {})
-            except json.JSONDecodeError:
-                # If JSON parsing fails, default to using context
-                needs_context = True
-                analysis = "Defaulting to context due to analysis error"
-                filter_params = {}
-            
-            # Ensure required fields are set
-            filter_params['guild_name'] = guild_name
-            
-            # If channels were suggested by GPT, use those
-            if filter_params.get('channels'):
-                # Validate that suggested channels exist
-                valid_channels = [ch for ch in filter_params['channels'] if ch in available_channels]
-                if valid_channels:
-                    filter_params['channels'] = valid_channels
-                    filter_params['current_channel'] = valid_channels[0]  # Use first valid channel as current
-                else:
-                    # If no valid channels were suggested, default to current
-                    filter_params['channels'] = [current_channel]
-                    filter_params['current_channel'] = current_channel
-            else:
-                # Default to current channel if no channels suggested
-                filter_params['channels'] = [current_channel]
-                filter_params['current_channel'] = current_channel
-            
-            # Check if the prompt mentions a specific channel
-            channel_mentions = re.findall(r'[#]?(\w+(?:-\w+)*)', prompt.lower())
-            if channel_mentions:
-                # Look for exact matches in available channels
-                for mention in channel_mentions:
-                    # Try exact match first
-                    if mention in available_channels:
-                        filter_params['channels'] = [mention]
-                        filter_params['current_channel'] = mention
-                        break
-                    # Try case-insensitive match
-                    for channel in available_channels:
-                        if channel.lower() == mention:
-                            filter_params['channels'] = [channel]
-                            filter_params['current_channel'] = channel
-                            break
-            
-            return needs_context, analysis, filter_params
-            
-        except Exception as e:
-            # For conversation-related queries, default to using context
-            conversation_keywords = ['summarize', 'conversation', 'messages', 'chat', 'discussion', 'talk', 'what happened', 'what was said', 'personality', 'user', 'says', 'describe', 'about', 'people']
-            prompt_lower = prompt.lower()
-            
-            # Check if the prompt is about conversations
-            is_conversation_query = any(keyword in prompt_lower for keyword in conversation_keywords)
-            
-            # Default to using context for conversation queries
-            needs_context = is_conversation_query
-            
-            return needs_context, f"Defaulting to context for conversation query", {
-                'guild_name': guild_name,
-                'current_channel': current_channel,
-                'channels': [current_channel]
-            }
-    
-    def filter_messages(self, messages: Dict, filter_params: Dict) -> Dict:
-        """Filter messages based on date and token limit, but NOT by channel."""
         filtered_messages = {}
-        current_time = datetime.now(pytz.timezone('US/Eastern'))
-        cutoff_time = current_time - timedelta(days=7)  # Include last 7 days instead of 24 hours
-
-        # First pass: basic validation and date filtering
+        total_messages = len(messages)
+        excluded_channels = 0
+        excluded_game_scores = 0
+        excluded_missing_fields = 0
+        
         for msg_id, msg in messages.items():
-            if not all(k in msg for k in ['create_ts', 'channel_nm', 'author_nm', 'content', 'author_nick']):
+            # Check for required fields
+            required_fields = ['create_ts', 'channel_nm', 'author_nm', 'content', 'author_nick', 'is_game_score']
+            if not all(k in msg for k in required_fields):
+                excluded_missing_fields += 1
                 continue
-            try:
-                msg_time = datetime.strptime(msg['create_ts'], '%Y-%m-%d %H:%M:%S')
-                msg_time = pytz.timezone('US/Eastern').localize(msg_time)
-                if msg_time < cutoff_time:
-                    continue
-            except Exception:
+                
+            # Exclude bot-test and other specified channels
+            channel_name = msg.get('channel_nm', '')
+            if channel_name in exclude_channel_names:
+                excluded_channels += 1
                 continue
+                
+            # Exclude game scores
+            if msg.get('is_game_score', False):
+                excluded_game_scores += 1
+                continue
+                
+            # Message passed all filters
             filtered_messages[msg_id] = msg
+        
+        # Debug output
+        remaining_messages = len(filtered_messages)
+        if DEBUG_MODE:
+            print(f"[DEBUG] Message filtering results:")
+            print(f"[DEBUG]   Total messages: {total_messages}")
+            print(f"[DEBUG]   Excluded channels: {excluded_channels} (channels: {exclude_channel_names})")
+            print(f"[DEBUG]   Excluded game scores: {excluded_game_scores}")
+            print(f"[DEBUG]   Excluded missing fields: {excluded_missing_fields}")
+            print(f"[DEBUG]   Remaining messages: {remaining_messages}")
+        
+        return filtered_messages
 
-        # Sort by timestamp (most recent first)
-        sorted_msgs = sorted(
+    async def _prepare_gpt_messages_from_file(self, guild_name: str, max_total_messages_to_consider: int = 10000, messages_per_channel_target: int = 100, min_messages_per_active_channel: int = 10) -> Tuple[str, int]:
+        """
+        Loads messages from messages.json, filters them, selects a balanced set
+        from active channels, formats them, and saves to messages.txt.
+
+        Returns:
+            - Path to the messages.txt file.
+            - Count of messages included.
+        """
+        messages_json_path = direct_path_finder('files', 'guilds', guild_name, 'messages.json')
+        if not os.path.exists(messages_json_path):
+            return "", 0
+
+        with open(messages_json_path, 'r', encoding='utf-8') as f:
+            all_messages_data = json.load(f)
+
+        # Apply centralized filtering (removes game scores, bot-test, etc.)
+        filtered_messages = self.filter_messages(all_messages_data)
+        
+        # Show filtering summary
+        total_original = len(all_messages_data)
+        total_filtered = len(filtered_messages)
+        excluded_count = total_original - total_filtered
+        # if excluded_count > 0:
+        #     print(f"[FILTER] Excluded {excluded_count} messages ({total_filtered} remaining from {total_original} total)")
+
+        # Identify channels with recent activity and count messages
+        channel_message_counts = {}
+        channel_recent_messages = {} 
+        
+        # Sort all filtered messages by timestamp to easily get recent ones
+        sorted_filtered_messages = sorted(
             filtered_messages.values(),
             key=lambda x: datetime.strptime(x['create_ts'], '%Y-%m-%d %H:%M:%S'),
             reverse=True
         )
+        
+        # Limit to a large pool of recent messages to make processing faster
+        recent_messages_pool = sorted_filtered_messages[:max_total_messages_to_consider]
 
-        # Keep as many messages as possible within token limit (increased to 5000)
-        filtered_messages = {}
-        current_tokens = 0
-        max_tokens = 5000  # Increased from 3000
+        for msg in recent_messages_pool:
+            channel_nm = msg['channel_nm']
+            if channel_nm not in channel_message_counts:
+                channel_message_counts[channel_nm] = 0
+                channel_recent_messages[channel_nm] = []
+            channel_message_counts[channel_nm] += 1
+            channel_recent_messages[channel_nm].append(msg)
 
-        for msg in sorted_msgs:
-            msg_tokens = self._count_tokens(f"{msg['author_nick']}: {msg['content']}")
-            if current_tokens + msg_tokens > max_tokens:
-                break
-            for msg_id, original_msg in messages.items():
-                if (original_msg['create_ts'] == msg['create_ts'] and 
-                    original_msg['content'] == msg['content'] and 
-                    original_msg['author_nick'] == msg['author_nick']):
-                    filtered_messages[msg_id] = msg
-                    current_tokens += msg_tokens
-                    break
+        # Sort channels by message count (most popular first)
+        # Only consider channels that have at least min_messages_per_active_channel
+        active_channels_sorted = sorted(
+            [ch for ch, count in channel_message_counts.items() if count >= min_messages_per_active_channel],
+            key=lambda ch: channel_message_counts[ch],
+            reverse=True
+        )
 
-        return filtered_messages
+        # Format messages into messages.txt
+        guild_dir = direct_path_finder('files', 'guilds', guild_name)
+        os.makedirs(guild_dir, exist_ok=True)
+        messages_txt_path = os.path.join(guild_dir, 'messages.txt')
 
-    def log_prompt_analysis(self, interaction: discord.Interaction, prompt: str, needs_context: bool, analysis: str, final_response: str = None, message_count: int = 0, filter_params: Dict = None, input_tokens: int = 0, output_tokens: int = 0, total_tokens: int = 0, cost: float = 0.0):
+        total_messages_written = 0
+        with open(messages_txt_path, 'w', encoding='utf-8') as f:
+            f.write("=== CONVERSATION HISTORY ===\n\n")
+            
+            for channel_nm in active_channels_sorted:
+                # Get the latest messages_per_channel_target messages for this channel, ensure chronological order.
+                # channel_recent_messages[channel_nm] contains messages sorted most recent first.
+                messages_for_this_channel = list(reversed(channel_recent_messages[channel_nm][:messages_per_channel_target]))
+                
+                if not messages_for_this_channel:
+                    continue
+
+                f.write(f"#{channel_nm}:\n")
+                
+                for msg in messages_for_this_channel:
+                    author_display = msg.get('author_nick') or msg.get('author_nm', 'UnknownUser')
+                    content = msg.get('content', '').strip()
+                    
+                    # Truncate Matt_Bot responses to keep conversation flow
+                    if author_display == BOT_NAME: 
+                        # Completely replace content with a placeholder and character count
+                        original_length = len(content)
+                        content = f"(bot_response, {original_length} characters)"
+                    elif author_display == SYSTEM_NAME: 
+                         if len(content) > 100:
+                            content = content[:100] + f"... (system_msg_truncated, {len(content)} chars)"
+                    
+                    if content:
+                        f.write(f"{author_display}: {content}\n")
+                        total_messages_written += 1
+                f.write("\n")
+
+            f.write("========================================\n")
+        
+        return messages_txt_path, total_messages_written
+
+    def log_prompt_analysis(self, interaction: discord.Interaction, message_count: int = 0, filter_params: Dict = None, input_tokens: int = 0, output_tokens: int = 0, total_tokens: int = 0, cost: float = 0.0, request_id: str = None):
         """Log the prompt analysis to a JSON file."""
         try:
             # Use central history file
@@ -376,14 +372,11 @@ class GPT:
                     "id": str(interaction.channel.id)
                 },
                 "message_id": str(interaction.message.id) if interaction.message else None,
-                "prompt": prompt,
-                "needs_context": needs_context,
-                "analysis": analysis,
-                "final_response": final_response,
+                "request_id": request_id,
                 "context_info": {
                     "message_count": message_count,
                     "model_used": "gpt-4",
-                    "has_messages": needs_context,
+                    "has_messages": True,
                     "input_tokens": input_tokens,
                     "output_tokens": output_tokens,
                     "total_tokens": total_tokens,
@@ -405,9 +398,9 @@ class GPT:
             print(f"[ERROR] Error logging prompt analysis: {str(e)}")
             print(f"[ERROR] Full error details: {str(e.__class__.__name__)}: {str(e)}")
     
-    async def get_gpt_response(self, prompt: str, system_prompt: str = None, messages_data: Dict = None, filter_params: Dict = None) -> Tuple[str, int, int, int, set]:
+    async def get_gpt_response(self, prompt: str, filter_params: Dict = None, interaction = None) -> Tuple[str, int, int, int, str]:
         """Get a response from OpenAI's GPT model.
-        Returns (response, input_tokens, output_tokens, message_count, channels_used)"""
+        Returns (response, input_tokens, output_tokens, message_count, request_id)"""
         try:
             client = openai.AsyncOpenAI()
             
@@ -430,33 +423,10 @@ class GPT:
                 return f"#{channel_id_to_name.get(channel_id, channel_id)}"
             prompt = re.sub(r'<#(\d+)>', replace_channel_id, prompt)
 
-            # Check if this is a conversation-related request
-            conversation_keywords = ['summarize', 'summary', 'what happened', 'what was said', 'discuss', 'talk about', 'conversation', 'personality', 'user', 'says', 'describe', 'about', 'people']
-            is_conversation_request = any(keyword in prompt.lower() for keyword in conversation_keywords)
-            
-            # If summarization, always request a much shorter, more specific summary
-            if is_conversation_request:
-                prompt = (
-                    prompt.strip() +
-                    " Keep it to 2-3 sentences, but mention specific topics, movies, games, or issues discussed. "
-                    "Do not just say 'users are discussing movies' or 'users are talking about games.' Instead, name the actual movies, games, or issues and describe the nature of the discussion (e.g., disagreement, praise, recommendations, troubleshooting, etc.). "
-                    "Summarize it as if you're a 24/7 news reporter who needs to make fun and interesting headlines. "
-                    "Example of a bad summary: 'Users are discussing movies and games.'\n"
-                    "Example of a good summary: 'In #things-we-watch, Matt and Sarah debated whether Dune was overrated, with Matt praising the visuals and Sarah saying it was too slow. In #crossword-corner, users shared Octordle scores and debugged the /gpt command, with acowinthecrowd expressing frustration about privacy and Matt reassuring them about data deletion.'"
-                )
-
-            # Always include message history if available
-            message_count = 0
-            channels_used = set()
-            filtered_messages = {}
-            
-            # Process messages first to get channels_used
-            if messages_data:
-                print(f"[DEBUG] Raw messages_data length: {len(messages_data)}")
-                filtered_messages = self.filter_messages(messages_data, filter_params)
-                message_count = len(filtered_messages)
-                channels_used = {msg['channel_nm'] for msg in filtered_messages.values()}
-                print(f"[DEBUG] After filtering: {message_count} messages, channels: {list(channels_used)}")
+            # Process messages using the centralized filtering method
+            conversation_text_file_path, message_count = await self._prepare_gpt_messages_from_file(guild_name)
+            if DEBUG_MODE:
+                print(f"[DEBUG] Prepared messages.txt: {conversation_text_file_path} with {message_count} messages.")
 
             # Use the loaded system prompt template
             guild_info = f"Guild: {guild_name}"
@@ -471,62 +441,52 @@ class GPT:
             messages = [
                 {"role": "system", "content": system_prompt}
             ]
-            print(f"[DEBUG] Checking if should add messages: messages_data={messages_data is not None}, filtered_count={len(filtered_messages) if filtered_messages else 0}")
-            if messages_data and len(filtered_messages) > 0:
-                print(f"[DEBUG] Adding messages to API call...")
-                # Sort messages by timestamp
-                sorted_messages = sorted(
-                    filtered_messages.values(),
-                    key=lambda x: datetime.strptime(x['create_ts'], '%Y-%m-%d %H:%M:%S')
-                )
-                # Format messages as a real chat log, one per line
-                formatted_messages = [
-                    "=== REAL CONVERSATION LOGS - DO NOT FABRICATE ===",
-                    f"Total messages: {len(sorted_messages)}",
-                    f"Channels: {', '.join(channels_used)}",
-                    "These are the ACTUAL messages. Summarize only what you see below.",
-                    "=== ACTUAL MESSAGES START HERE ===",
-                    ""
-                ]
-                for msg in sorted_messages:
-                    content = msg['content'].strip()
-                    if content:
-                        # Include timestamp in the format: [channel] timestamp author: content
-                        formatted_msg = f"[{msg['channel_nm']}] {msg['create_ts']} {msg['author_nick']}: {content}"
-                        formatted_messages.append(formatted_msg)
-                    else:
-                        # Debug: Track empty messages
-                        print(f"[DEBUG] Skipping empty message from {msg['author_nick']} in {msg['channel_nm']}")
-                
-                print(f"[DEBUG] Total sorted messages: {len(sorted_messages)}")
-                print(f"[DEBUG] Messages with content: {len(formatted_messages) - 6}")  # Subtract header lines
-                formatted_messages.append("\n=== END OF ACTUAL MESSAGES ===")
-                message_text = "\n".join(formatted_messages)
-                messages.append({"role": "user", "content": message_text})
-                
-                # Debug: Print message count and sample for troubleshooting
-                print(f"[DEBUG] Filtered messages count: {len(filtered_messages)}")
-                print(f"[DEBUG] First few formatted messages: {formatted_messages[:10]}")
-                if len(formatted_messages) < 10:
-                    print(f"[DEBUG] All formatted messages: {formatted_messages}")
-            else:
-                print(f"[DEBUG] NO MESSAGES ADDED TO API CALL - this is the problem!")
-
-            # Add the user's prompt as the final user message
-            messages.append({"role": "user", "content": prompt})
             
-            print(f"[DEBUG] Final API messages structure:")
-            for i, msg in enumerate(messages):
-                print(f"[DEBUG] Message {i} ({msg['role']}): {len(msg['content'])} characters")
+            # Add the user's query
+            user_display_name = interaction.user.display_name
+            formatted_user_prompt = f"{user_display_name} in {guild_name}'s channel \"{current_channel}\" asks this question:\n{prompt}"
+            messages.append({"role": "user", "content": formatted_user_prompt})
+            
+            # Add conversation history if available
+            if conversation_text_file_path and os.path.exists(conversation_text_file_path) and message_count > 0:
+                if DEBUG_MODE:
+                    print(f"[DEBUG] Adding conversation history from {conversation_text_file_path}...")
+                with open(conversation_text_file_path, 'r', encoding='utf-8') as f:
+                    history_content = f.read()
+                conversation_text_with_label = f"[context]:\n{history_content}"
+                messages.append({"role": "user", "content": conversation_text_with_label}) 
+                if DEBUG_MODE:
+                    print(f"[DEBUG] Added {message_count} messages from {conversation_text_file_path} with [context] label")
+            else:
+                if DEBUG_MODE:
+                    print(f"[DEBUG] No conversation history to add from file or message_count is 0.")
+            
+            if DEBUG_MODE:
+                print(f"[DEBUG] Final API messages structure:")
+                for i, msg in enumerate(messages):
+                    print(f"[DEBUG] Message {i} ({msg['role']}): {len(msg['content'])} characters")
+
+            # Create a unique identifier for this request
+            if interaction and hasattr(interaction, 'message') and interaction.message:
+                request_id = str(interaction.message.id)
+            elif interaction:
+                request_id = str(interaction.id)
+            else:
+                request_id = datetime.now().strftime('%Y%m%d_%H%M%S')
 
             # Save the full prompt to a file for debugging
             prompt_dir = direct_path_finder('files', 'gpt', 'prompts')
             os.makedirs(prompt_dir, exist_ok=True)
-            prompt_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            prompt_path = os.path.join(prompt_dir, f"prompt_{prompt_timestamp}.txt")
+            prompt_path = os.path.join(prompt_dir, f"prompt_{request_id}.txt")
             with open(prompt_path, 'w', encoding='utf-8') as f:
-                for m in messages:
-                    f.write(f"[{m['role']}]:\n{m['content']}\n\n{'='*40}\n\n")
+                for i, m in enumerate(messages):
+                    if m['role'] == 'user' and m['content'].startswith('[context]:'):
+                        f.write(f"{m['content']}\n") 
+                    else:
+                        f.write(f"[{m['role']}]:\n{m['content']}\n")
+                    
+                    if i < len(messages) - 1: 
+                        f.write("\n")
 
             # Count input tokens
             input_tokens = sum(self._count_tokens(msg["content"]) for msg in messages)
@@ -536,7 +496,7 @@ class GPT:
                 messages = self._trim_messages_to_token_limit(messages)
                 input_tokens = sum(self._count_tokens(msg["content"]) for msg in messages)
 
-            # Load daily totals from history file (moved up to ensure variables are defined)
+            # Load daily totals from history file
             history_file = direct_path_finder('files', 'gpt', 'gpt_history.json')
             daily_tokens = 0
             daily_cost = 0.0
@@ -551,21 +511,42 @@ class GPT:
             daily_cost = round(daily_cost + 0.005, 2)
 
             response = await client.chat.completions.create(
-                model="gpt-4-1106-preview",  # Use the best available GPT-4 model for summarization
+                model="gpt-4-1106-preview",
                 messages=messages,
-                max_tokens=500,  # Lowered to encourage shorter output
+                max_tokens=200,
                 temperature=0.7
             )
 
-            # Get output tokens
+            # Get output tokens and response text
             output_tokens = self._count_tokens(response.choices[0].message.content)
-
-            # Add message and channel count to response
             response_text = response.choices[0].message.content
+            
+            # Add message count info if messages were referenced
             if message_count > 0:
-                response_text += f"\n\nReferenced {message_count} messages from {len(channels_used)} channels: {', '.join(channels_used)}"
+                response_text += f"\n\nReferenced {message_count} messages"
 
-            return response_text, input_tokens, output_tokens, message_count, channels_used
+            # Save the response to a file for analysis
+            response_dir = direct_path_finder('files', 'gpt', 'responses')
+            os.makedirs(response_dir, exist_ok=True)
+            response_path = os.path.join(response_dir, f"response_{request_id}.txt")
+            with open(response_path, 'w', encoding='utf-8') as f:
+                f.write(f"Request ID: {request_id}\n")
+                f.write(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                if interaction:
+                    f.write(f"User: {interaction.user.name} ({interaction.user.display_name})\n")
+                    f.write(f"User ID: {interaction.user.id}\n")
+                f.write(f"Guild: {guild_name}\n")
+                f.write(f"Channel: {current_channel}\n")
+                f.write(f"Model: gpt-4-1106-preview\n")
+                f.write(f"Input Tokens: {input_tokens}\n")
+                f.write(f"Output Tokens: {output_tokens}\n")
+                f.write(f"Total Tokens: {input_tokens + output_tokens}\n")
+                f.write(f"Messages Referenced: {message_count}\n\n")
+                f.write("="*60 + "\n\n")
+                f.write("RESPONSE:\n")
+                f.write(response_text)
+
+            return response_text, input_tokens, output_tokens, message_count, request_id
 
         except Exception as e:
             print(f"[ERROR] Failed to get response from GPT: {str(e)}")
@@ -575,5 +556,4 @@ class GPT:
             raise Exception(f"Failed to get response from GPT: {str(e)}")
 
 async def setup(client, tree):
-    gpt = GPT(client, tree)
     gpt = GPT(client, tree)

@@ -1,0 +1,211 @@
+Request ID: 1375829744066629752
+Timestamp: 2025-05-24 09:36:13
+User: svendiamond (Matt)
+Interaction ID: 1375829744066629752
+Guild: Nerd City
+Channel: bot-test
+
+============================================================
+
+[system]:
+You are a gossip reporter. Your job is to explain the best parts of conversations - the interesting discussions, drama, funny moments, and notable interactions. Be concise and engaging.
+
+Guild: Nerd City
+
+You are being asked from channel: bot-test 
+
+========================================
+
+[user]:
+summarize the latest sports conversations
+
+========================================
+
+[user]:
+=== CONVERSATION HISTORY ===
+
+#Rooty Tooty:
+acowinthecrowd: Thanks Nick
+acowinthecrowd: You’re a pal
+
+#crossword-corner:
+croasus: Daily Octordle #1215
+🕛6️⃣
+7️⃣5️⃣
+🔟9️⃣
+8️⃣4️⃣
+Score: 61
+croasus: Daily Rescue Octordle #1215
+7️⃣8️⃣
+9️⃣🕐
+5️⃣🔟
+6️⃣🕛
+Score: 8
+Matt_Bot: **acowinthecrowd... (continued, 276 characters)
+Matt: K I just pushed some updates. Let's see how it works now
+Matt_Bot: **Matt:** descri... (continued, 489 characters)
+Matt: https://tenor.com/view/right-yeah-right-yeah-oh-yeah-ohh-gif-14553729619893238098
+Matt_Bot: **acowinthecrowd... (continued, 129 characters)
+acowinthecrowd: <@297550265299763212> check that out
+Matt: Hahahaha
+Matt: Confidently incorrect
+Matt: I can't figure out how to properly get it to read the attachments
+acowinthecrowd: wtf is an attachment
+Matt: Well, I save the messages into a file and when you send a prompt, it's supposed to basically append all that into the prompt
+acowinthecrowd: Is that a little intrusive
+Matt: intrusive in what way
+Matt: Actorle #1164 2/8
+🟨🟩
+Play here: 
+#Actorle #MovieChallenge
+Matt_Bot: Error: Failed to... (continued, 315 characters)
+Matt_Bot: **Matt:** summar... (continued, 1082 characters)
+Matt: NICE
+Matt: let's go baby
+Matt: only cost us twelve cents
+Matt: capitlalism at its finest
+acowinthecrowd: Everyone’s messages are logged!
+acowinthecrowd: It’s the internet tho
+acowinthecrowd: You put it on the internet it exists forever
+Matt: oh
+Matt: yeah they're already logged here
+Matt: I mean, you pull up receipts all the time
+Matt: there are tools to remove your old messages from discord/reddit/etc if you want, btw
+Matt: of course, yeah if I'm saving them separately that could be a concern, but anyone could totally just ask and I'll delete it
+Matt: not like I really care
+Matt_Bot: **Matt:** summar... (continued, 1679 characters)
+Matt: sorry meant to do that on bot-test
+acowinthecrowd: Hey
+Evan: I just met you
+acowinthecrowd: And this is crazy
+acowinthecrowd: "Matt_bot flops under pressure"
+acowinthecrowd: ha!
+acowinthecrowd: it's self aware
+acowinthecrowd: oh ok
+acowinthecrowd: thanks
+Matt: hsahhahahahah
+Matt: I paid a penny for that
+acowinthecrowd: it DEFINITELY did not touch Rooty Tooty
+acowinthecrowd: things have gone down there
+Matt: hahahahaha
+acowinthecrowd: thats .... so wrong
+acowinthecrowd: matt
+acowinthecrowd: c'mon
+Matt: Haha
+Matt: It was referencing Whit's comment on <#813831098312294490>
+Matt: this is just because I keep stopping and restarting it
+Matt: it's just the GPT part that's being so difficult
+Matt: the normal bot stuff is fine
+acowinthecrowd: is it though
+Matt: the leaderboards? yeah
+Matt_Bot: Error: Error sho... (continued, 161 characters)
+Matt: hahahahahaha
+Matt: see? everything's fine
+Matt: no mini?
+Matt: oh wait
+Matt: sheesh, finally
+acowinthecrowd: no <@340940380927295491> its broken
+acowinthecrowd: cause i'm in 2nd
+Matt: heh
+acowinthecrowd: heh shaddup
+acowinthecrowd: dickweed
+Matt_Bot: **Matt:** summar... (continued, 810 characters)
+Matt: LMAO
+Matt: THIS COST ALMOST TWO DOLLARS
+Matt: "Meanwhile, in Rooty Tooty, acowinthecrowd granted user access, highlighting their pivotal role in channel operations."
+Matt: you're so pivotal to this community <@163849350827606016>
+acowinthecrowd: i OWN THIS COMMUNITY
+Matt: oh maybe that only cost 18 cents
+acowinthecrowd: i also won our last root game of the year
+Matt: haha nice
+acowinthecrowd: against bots tho
+Matt: yeah I gotta play IRL to get the hang of it
+acowinthecrowd: false
+Matt: I can't do things by myself
+acowinthecrowd: i've never played irl
+Matt: it just doesn't seem interesting to me I guess
+Matt: it's a weird game
+Matt: and too many rules
+Matt: can't take all the different faction stuff
+acowinthecrowd: a baord game where everyone plays a different game on the same board
+Matt: haha yeah
+acowinthecrowd: how can that be NOT interesting
+acowinthecrowd: thats the dream man
+Matt: idk
+Matt: if you explained it to me in person
+Matt: or
+Matt: in person online whatever
+Matt: as we're playing
+Matt: verbally
+Matt: then MAYBE
+Matt_Bot: **Matt:** what's... (continued, 367 characters)
+Matt_Bot: **Matt:** summar... (continued, 595 characters)
+acowinthecrowd: but it's me
+acowinthecrowd: and i'm also acowinthecrowd everywhere
+Matt_Bot: **Matt:** descri... (continued, 815 characters)
+Matt: lol
+acowinthecrowd: KSP????????????
+Matt_Bot: **Matt:** descri... (continued, 527 characters)
+acowinthecrowd: this is MONTHS ago
+Matt: ughhhhh
+acowinthecrowd: he's not wrong KSP is amazing
+Matt: here's the full prompt it just supposedly sent through chatgpt
+Matt: weird... KSP is not in that prompt at all
+Matt: ugh
+Matt: this is such a pain to work through
+Matt: it's so random
+Matt_Bot: **Matt:** summar... (continued, 983 characters)
+Matt: you stupid fuck
+Matt: look at this fucking idiocy
+acowinthecrowd: wow
+acowinthecrowd: o uwu pwease don be mad at me uwu
+Matt_Bot: **acowinthecrowd... (continued, 502 characters)
+Matt_Bot: **acowinthecrowd... (continued, 831 characters)
+Matt_Bot: **acowinthecrowd... (continued, 1851 characters)
+Matt_Bot: **acowinthecrowd... (continued, 776 characters)
+
+#family:
+Bergs: Cal built no help
+acowinthecrowd: Looks like the iPad helped. #screenparenting
+Bergs: The directions  in digital do rock
+
+#food:
+acowinthecrowd: I like seeing how much use you get out of your creuset
+Bergs: A good dutch oven (regardless of brand) is just so useful!
+acowinthecrowd: That’s what they say
+
+#things-we-watch:
+Bergs: <@163849350827606016> hook me up with a rescan of sinners
+Bergs: I love Elizabeth Olsen too
+Matt_Bot: Error: Failed to... (continued, 44 characters)
+acowinthecrowd: Un momento amigo
+Matt_Bot: **Matt:** summar... (continued, 1579 characters)
+Matt: " 'Skibidi Toilet' was mentioned "
+
+hahaha
+Matt: glad to know there was casual banter here
+acowinthecrowd: It’s done
+acowinthecrowd: This was way too long
+croasus: yeah we need pithy matt bot
+Bergs: <@340940380927295491> there is a film bot that I can link direct to letterbox
+Bergs: Can you look into that whenever you have some time
+Matt: yeah! do you use this bot already? what does it do? pull your reviews and stuff?
+Bergs: No just let's you pull the movie!
+Matt: nice nice... but in what context? can you give me an example?
+Matt: also you can totally use the "/gpt" command for whatever you would normally ask chatgpt if you want
+Matt: (though it may break)
+Matt: (or say dumb shit)
+acowinthecrowd: <@340940380927295491> this is bonkers
+acowinthecrowd: Fix it
+acowinthecrowd: I will never mention anything to Bergs in a respectful manner
+Matt: hahahah
+Bergs: It embeds a link to lboz
+Bergs: Gives the rating director etc
+
+#video-games:
+Nick: <@340940380927295491> have you and your dad/brothers tried roadcraft ?
+Matt: no but consider it purchased now hahahaha
+
+
+========================================
+

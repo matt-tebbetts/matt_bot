@@ -64,6 +64,7 @@ def get_score_info(message, game_name, game_info):
         "boxoffice": process_boxoffice,
         "travle": process_travle,
         "worldle": process_worldle,
+        "wordle": process_wordle,
         "octordle": process_octordle,
         "octordle_rescue": process_octordle,
         "octordle_sequence": process_octordle,
@@ -108,6 +109,9 @@ def process_connections(message):
     if got_lost:
         bonuses.append('lost')
     
+    # Convert bonuses list to a comma-separated string (consistent with other games)
+    bonuses_str = ', '.join(bonuses) if bonuses else None
+    
     # get game detail
     game_detail = lines[1].strip()
 
@@ -115,7 +119,7 @@ def process_connections(message):
     score_info = {
         'game_score': score,
         'game_detail': game_detail,
-        'game_bonuses': bonuses
+        'game_bonuses': bonuses_str
     }
     return score_info
 
@@ -310,5 +314,20 @@ def process_actorle(message):
         'game_score': score,
         'game_detail': game_detail,
         'game_bonuses': bonus
+    }
+    return score_info
+
+def process_wordle(message):
+    lines = message.split('\n')
+    game_detail = lines[0] if lines else None  # e.g., "Wordle 1,234 3/6"
+    
+    # Extract score (e.g., "3/6" or "X/6")
+    score_match = re.search(r'(\d+|X)/6', message)
+    score = score_match.group(0) if score_match else None
+    
+    score_info = {
+        'game_score': score,
+        'game_detail': game_detail,
+        'game_bonuses': None
     }
     return score_info

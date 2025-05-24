@@ -1,0 +1,18 @@
+Request ID: 1375842049256984657
+Timestamp: 2025-05-24 10:25:10
+User: svendiamond (Matt)
+User ID: 340940380927295491
+Guild: Nerd City
+Channel: bot-test
+Model: gpt-4-1106-preview
+Input Tokens: 14819
+Output Tokens: 29
+Total Tokens: 14848
+Messages Referenced: 883
+
+============================================================
+
+RESPONSE:
+What can I do for you today? If you have any questions or need assistance with specific parts of the conversation history, feel free to ask!
+
+Referenced 883 messages

@@ -1,0 +1,1002 @@
+[system]:
+You are a gossip reporter. Your job is to explain the best parts of conversations - the interesting discussions, drama, funny moments, and notable interactions. Be concise and engaging.
+
+Guild: Nerd City
+
+You are being asked from channel: bot-test 
+
+[user]:
+Matt in Nerd City's channel "bot-test" asks this question:
+summarize the sports discussions
+
+[user]:
+[context]:
+=== CONVERSATION HISTORY ===
+
+#crossword-corner:
+Matt_Bot: **Matt:** summarize the conversation on this channel... what's happening?
+
+**ChatGPT:** The conversation in the crossword-corner channel primarily revolves around the members sharing their game result... (bot_response_truncated, 1082 chars)
+Matt: NICE
+Matt: let's go baby
+Matt: only cost us twelve cents
+Matt: capitlalism at its finest
+acowinthecrowd: Everyone’s messages are logged!
+acowinthecrowd: It’s the internet tho
+acowinthecrowd: You put it on the internet it exists forever
+Matt: oh
+Matt: yeah they're already logged here
+Matt: I mean, you pull up receipts all the time
+Matt: there are tools to remove your old messages from discord/reddit/etc if you want, btw
+Matt: of course, yeah if I'm saving them separately that could be a concern, but anyone could totally just ask and I'll delete it
+Matt: not like I really care
+Matt_Bot: **Matt:** summarize the recent conversation here
+
+**ChatGPT:** The recent conversation in the crossword-corner channel revolved around the following topics:
+
+1. **Games**: Users participated in variou... (bot_response_truncated, 1679 chars)
+Matt: sorry meant to do that on bot-test
+acowinthecrowd: Hey
+acowinthecrowd: thats .... so wrong
+acowinthecrowd: matt
+acowinthecrowd: c'mon
+Matt: Haha
+Matt: It was referencing Whit's comment on <#813831098312294490>
+Matt: this is just because I keep stopping and restarting it
+Matt: it's just the GPT part that's being so difficult
+Matt: the normal bot stuff is fine
+acowinthecrowd: is it though
+Matt: the leaderboards? yeah
+Matt_Bot: Error: Error showing leaderboard: Failed to create leaderboard image: [Errno 2] No such file or directory: '/root/projects/matt_bot/files/images/leaderboard.png'
+Matt: hahahahahaha
+Matt: see? everything's fine
+Matt: no mini?
+Matt: oh wait
+Matt: sheesh, finally
+acowinthecrowd: no <@340940380927295491> its broken
+acowinthecrowd: cause i'm in 2nd
+Matt: heh
+acowinthecrowd: heh shaddup
+acowinthecrowd: dickweed
+Matt_Bot: **Matt:** summarize what acowinthecrowd has been talking about today
+
+**ChatGPT:** Acowinthecrowd jousted with the Matt_Bot in #crossword-corner, poking fun at the bot's performance under pressure and... (bot_response_truncated, 810 chars)
+Matt: LMAO
+Matt: THIS COST ALMOST TWO DOLLARS
+Matt: "Meanwhile, in Rooty Tooty, acowinthecrowd granted user access, highlighting their pivotal role in channel operations."
+Matt: you're so pivotal to this community <@163849350827606016>
+acowinthecrowd: i OWN THIS COMMUNITY
+Matt: oh maybe that only cost 18 cents
+acowinthecrowd: i also won our last root game of the year
+Matt: haha nice
+acowinthecrowd: against bots tho
+Matt: yeah I gotta play IRL to get the hang of it
+acowinthecrowd: false
+Matt: I can't do things by myself
+acowinthecrowd: i've never played irl
+Matt: it just doesn't seem interesting to me I guess
+Matt: it's a weird game
+Matt: and too many rules
+Matt: can't take all the different faction stuff
+acowinthecrowd: a baord game where everyone plays a different game on the same board
+Matt: haha yeah
+acowinthecrowd: how can that be NOT interesting
+acowinthecrowd: thats the dream man
+Matt: idk
+Matt: if you explained it to me in person
+Matt: or
+Matt: in person online whatever
+Matt: as we're playing
+Matt: verbally
+Matt: then MAYBE
+Matt_Bot: **Matt:** what's acowinthecrowd's deal?
+
+**ChatGPT:** The Discord messages you've provided do not contain any information about "acowinthecrowd," so I cannot summarize their deal based on the given te... (bot_response_truncated, 367 chars)
+Matt_Bot: **Matt:** summarize the things acowinthecrowd says and try to describe his personality
+
+**ChatGPT:** I'm sorry, but I cannot provide summaries of Discord messages or describe the personality of a user... (bot_response_truncated, 595 chars)
+acowinthecrowd: but it's me
+acowinthecrowd: and i'm also acowinthecrowd everywhere
+Matt_Bot: **Matt:** describe the personality of acowinthecrowd
+
+**ChatGPT:** acowinthecrowd appears to be a thoughtful and privacy-conscious individual. In a discussion surrounding the recent changes to Discord... (bot_response_truncated, 815 chars)
+Matt: lol
+acowinthecrowd: KSP????????????
+Matt_Bot: **Matt:** describe every person based on whatever messages you have access to
+
+**ChatGPT:** Unfortunately, I do not have access to specific Discord messages or the content of any conversations. If you... (bot_response_truncated, 527 chars)
+acowinthecrowd: this is MONTHS ago
+Matt: ughhhhh
+acowinthecrowd: he's not wrong KSP is amazing
+Matt: here's the full prompt it just supposedly sent through chatgpt
+Matt: weird... KSP is not in that prompt at all
+Matt: ugh
+Matt: this is such a pain to work through
+Matt: it's so random
+Matt_Bot: **Matt:** summarize the prompt I'm giving you
+
+**ChatGPT:** I do not have access to the actual Discord messages or conversations. However, to summarize a prompt in the way you've described, you would ... (bot_response_truncated, 983 chars)
+Matt: you stupid fuck
+Matt: look at this fucking idiocy
+acowinthecrowd: wow
+acowinthecrowd: o uwu pwease don be mad at me uwu
+Matt_Bot: **acowinthecrowd:** suck it
+
+**ChatGPT:** I'm sorry, but I don't have access to the actual conversation logs, and it seems like there's a lack of context here. If you have any questions about crosswor... (bot_response_truncated, 502 chars)
+Matt_Bot: **acowinthecrowd:** does this reall cost matt real life money
+
+**ChatGPT:** As an AI, I don't have access to external systems or databases to verify individual financial transactions, especially not w... (bot_response_truncated, 831 chars)
+Matt_Bot: **acowinthecrowd:** explain what a balance sheet is
+
+**ChatGPT:** A balance sheet is a financial statement that provides a snapshot of a company's financial position at a specific point in time. It li... (bot_response_truncated, 1851 chars)
+Matt_Bot: **acowinthecrowd:** p&l?
+
+**ChatGPT:** It seems like you're asking for something related to "P&L" in the context of the channel named "crossword-corner." "P&L" typically stands for "Profit and Loss," ... (bot_response_truncated, 776 chars)
+
+#science-and-technology:
+Matt: so like
+acowinthecrowd: or at least a ton of bots
+Matt: if you give your kid a device it's up to YOU to try to regulate it
+Matt: I mean you KNOW it's the wild west
+Matt: of all people, our generation knows the most
+Matt: so like... why would you do that, and allow them to use these apps?
+Matt: isn't it like...
+Matt: up to you?
+acowinthecrowd: Yeah to that end there have been some huge movements within the phones for kids arenas. Imagine your minimalist app but permanently locked to that
+acowinthecrowd: boom
+Matt: there ya go
+Matt: that's the ONLY solution for me, just do not let your kid use things you don't want them to use
+Bergs: I think you are not touching on a critical point that a lot of parents end up giving kids cell phones because of peer pressure cause other parents do ; it's not a super simple solution.  This is where some other intervention (gov, schools, etc) is needed imo
+Matt: I disagree entirely
+Matt: yes, obivously if the other kids have snapchat, your kid is going to cry about wanting it
+Matt: but that's still on you
+Bergs: ok well you aren't talking to parents with teenage kids
+Matt: you can't just say "well I have to give it to them, so now I need the government to regulate it"
+Bergs: it's not that you *have* to
+Matt: oh, what do you mean?
+Matt: sorry do you mean the argument about like, not wanting to make your kid be a social outcast because they're the only one without the app?
+Bergs: sorry I thought you meant you disagreed that parents get pressure on giving kids devices.  
+
+I think generally, we have had an experiment on kids the past 10 or so years, that everyone largely agrees was a failure.  I have not talked to anyone personally , nor anything I've read on the matter indicates that there are pocket of parents out there that think their 12 year old being on instagram is a positive thing.  Same with schools.  Same in different areas of the government.  
+
+There is also a class based discussion here that is another rabbit hole (single working mom relies on youtube and social media to entertain her kids while she does night shifts or whatever).  that needs to be said and acknowledged and I am not sure the answer.
+
+You are correct dude, that in isolation we shouldn't regulate things just because parents can't put their foot down.  But when there is such general consensus that (a) a topic is bad and (b) people want it to change - I don't see even if policy isn't 100% effective we shouldn't try to control it.  To me , putting that burden on individual families doesn't align with how we treat other parts of life from a policy perspective.
+Matt: Fair enough! We regulate TV after all. I also agree that it's incredibly unhealthy for kids to be on these apps.
+
+I'm watching a live expirement happen, where my oldest bro manages his kid's screen time, but my other bro basically lets them run rampant and I can see how it makes a very negative impact on the screen watchers.
+
+I'm happy to watch the attempts to mitigate the issue, but my issue is that I just do not see how regulating specific apps or doing ID checks would prevent the issues they're trying to prevent.
+sarahsalley951: Sarah has entered the chat
+acowinthecrowd: haha you guys are in for it now
+sarahsalley951: I mean we are parents of a teenager and in about an hour technically he will be a high schooler
+acowinthecrowd: There's also no incentive for the government to even do anything about it. The billionaires behind the apps run the government and they don't want to lose revenue, nor do those lawmakers that hold stock in the companies, on top of the fact it's been made pretty clear that improving the lives of citizens isn't really on the agenda.
+acowinthecrowd: thats why we won't see any regulation, regardless of how many people agree there should be
+acowinthecrowd: I am on berg's side (ugh) that it is unhealthy and very hard to combat
+Matt: Haha, that's a side? I'm on that side too...
+acowinthecrowd: so we're all in agreement here
+Matt: Literally saying it's impossible to regulate
+Matt: No, no
+Matt: The other side is "yeah government should try to regulate"
+acowinthecrowd: thats an extension, i'm stopping where i stopped
+acowinthecrowd: so that we can all agree
+Matt: Ah, hahaha
+Matt: Well duh but that's boring
+sarahsalley951: Yeah I lost interest
+Matt: Of course everyone agrees social media can be harmful especially for kids lol
+acowinthecrowd: you never HAD interest!
+Matt: ^
+Matt: Yeah this is the section for endless arguing about technology
+sarahsalley951: I had opinions but you guys go too  fast
+acowinthecrowd: maybe the physical hardware is where the regulations go
+acowinthecrowd: can't buy a Class C Smart Device until 16
+acowinthecrowd: Only Class A and B
+acowinthecrowd: Class A is a flip phone
+B is one of those control phones
+Matt: Lol I think they/we need to step back and think about what actual problem we're trying to solve here
+acowinthecrowd: since you said the physical items are easy to regulate
+Matt: Yeah sure! I like that idea...
+Matt: But, still you can't hide the internet from kids, that's still just parenting
+Matt: So, even regulation on that...
+Matt: No point
+Matt: Parents are the ones buying the phone and giving it to the child
+Matt: Again... The real question is
+Matt: What is the specific problem?
+Matt: Like... Back to Jon's post
+Matt: What's the specific problem? Advertising?
+Matt: It's kinda hard to define what the actual problem is
+sarahsalley951: Oh I did want to ask about this. I have found through years of my kids and my friends, all this depends on the kids too
+sarahsalley951: Like how old are the kids
+Matt: Right? For sure, and how much good parenting have they had?
+
+People who value their own self worth and aren't as impacted by advertising/algorithms are that way because of their parents
+acowinthecrowd: Ours? very little good parenting
+sarahsalley951: Oh because I just pulled out Popsicles to make pool Margaritas? That's bad parenting??
+sarahsalley951: Also I think the first thing that needs to happen is that every school district needs to ban phones through 8th. Instead they basically make them mandatory. You can't win against that
+acowinthecrowd: Oh band practice is going 30 min later than the calendar said?
+acowinthecrowd: "so everyone let their parents know please!"
+acowinthecrowd: So <@340940380927295491> why do you hate kids so much
+Matt: https://tenor.com/view/seth-meyers-right-am-i-right-totally-same-gif-7475706689465415663
+sarahsalley951: He could have sent out a text blast to the hood instead he ditched technology and wrote a note
+Nick: And he ditched the Js
+sarahsalley951: Strictly school shoes. Not allowed to wear those at other times. Even his friends haha
+Andy: https://www.reddit.com/r/interestingasfuck/comments/1ksh3iy/all_these_videos_are_ai_generated_audio_included/
+
+The video on this link is bananas
+Andy: I think i'm behind some kind of global internet regulation where there's a way to prove something is human made, and anything not from a verified human is trated as slop
+Bergs: Video games are gonna look so insane in a few years
+Andy: Wtf I love AI now!
+Nick: Are they not insane now ?
+Nick: We dont even have hardware for most common consumers to run games at max settings today
+Andy: Tbf, while the look great, this is photorealism
+Matt: Agreed but at some point, imagine playing NBA 2K and they are just literal VIDEOS of the actual players
+Nick: I always think of the movie gamer , and how far away are we from that
+acowinthecrowd: wowzers
+acowinthecrowd: the only thing blatantly unnatural is the walking, sometimes
+Big Jon: We can finally settle the goat debate with a 1 on 1
+acowinthecrowd: hahahaha
+Bergs: No not really
+Bergs: They look like video games
+Nick: <@487577343079088128> have you tried this app ?
+Nick: https://play.google.com/store/apps/details?id=com.brickit.brickit
+Bergs: Nope what is it - building ideas?
+Nick: Basically.  You take photo of all your bricks and it gives suggestions on what you csn build with instructions
+croasus: Are the suggestions for real sets with real instructions? Or is it basically chatgpt for Legos?
+Nick: Looks like user/chatgpt not official <@163822913848475649>
+Nick: Also looks pricey
+Nick: 6 bucks a month , adds up quickly
+Bergs: It’s a great idea
+Bergs: All of ours are in little drawers
+Bergs: We have the Lego build app which is sick, but just for sets i think
+
+#rogue-corner-🗡:
+Bergs: So
+Bergs: Katy customer is CFA
+Bergs: She had a dinner with them last night
+Bergs: She said they are soooooo weird
+acowinthecrowd: Ya I am not surprised
+Bergs: The head lady doesn’t drink
+Bergs: They went to a steakhouse
+Bergs: No one else will drink when she’s there
+Bergs: Like not even a glass of wine haha
+Bergs: ////////////////////////////////
+Bergs: Ok
+Bergs: 90FPS
+Bergs: 1.68GB
+Bergs: God i love indie games
+acowinthecrowd: Not any lagging?
+acowinthecrowd: when placing units?
+Bergs: Nope
+Bergs: Smooth as a dick through a hallway
+acowinthecrowd: DANG
+acowinthecrowd: ok I'll buy it again and figure it out
+Bergs: Excellent
+acowinthecrowd: ok no issues
+Bergs: 🎉
+acowinthecrowd: you like it/
+acowinthecrowd: drinking is a sin
+acowinthecrowd: your body is a temple
+acowinthecrowd: https://tenor.com/view/am-ia-joke-to-you-meme-original-video-am-ia-joke-joke-to-you-gif-27389464
+acowinthecrowd: -Catholocism
+acowinthecrowd: bergs i'm capped at 60 fps
+Bergs: I think the oled has a 90hz screen
+acowinthecrowd: ah
+Bergs: Out doing wine now
+acowinthecrowd: fun
+acowinthecrowd: Is this work stuff
+Bergs: Haha no I ditched this afternoon
+acowinthecrowd: Oh fun
+Bergs: The artwork is much better in mt2 I've noticed
+acowinthecrowd: A thousand times
+acowinthecrowd: I leaned real heavy into the Valor mechanic on this one
+acowinthecrowd: Final boss didn’t even get into their combat phase
+Bergs: I'm not getting the mobile game art work at all which is a great improvement
+acowinthecrowd: Yep! Same here
+Bergs: It could be actual pixel art
+Bergs: Can't tell
+acowinthecrowd: I didn’t double check this but someone says whenever you pull up details on a unit it shows the artist which is neat
+acowinthecrowd: Some guy named I guess Albert, or Al for short did most of it 🤷
+Bergs: Hahaha
+acowinthecrowd: The deployment phase is awesome
+Bergs: I really enjoyed my first run
+Bergs: Explain to me valor and more largely how stacks work
+acowinthecrowd: Valor stacks increase your attack in a 1:1 ratio. Additionally at the end of the turn, you’ll gain armor up to your valor stacks. So maybe you’ll get +0 armor if you’re already there
+acowinthecrowd: I upgraded the champ to gain *permanent* valor whenever they shifted
+acowinthecrowd: And gave them items that triggered shift too
+acowinthecrowd: So I was getting ten to twenty permanent per battle from moving it around
+acowinthecrowd: It was neat
+Bergs: That's awesome
+Bergs: I'm still not understanding quite, the pyrophelgm operates in a similar manner I think but only procs if you hit them?
+acowinthecrowd: Ya similarly they take one extra damage per stack of that
+Bergs: This game is good
+Bergs: Very good
+acowinthecrowd: I like the addition of equipment and rooms
+acowinthecrowd: I hate having to decide what path to take. It never seems like there’s that that has all I need
+Bergs: Hahaha
+Bergs: That you can play a rogue is a miracle in itself
+acowinthecrowd: how close are you to a new faction
+acowinthecrowd: i just got one
+Bergs: I just did one run last night
+Bergs: But I'm in
+acowinthecrowd: yeah boy it's fun
+Bergs: I gotta show Cal this
+Bergs: He's gonna love all the monsters
+acowinthecrowd: looks like luna is the casting clan
+acowinthecrowd: focus on spells
+acowinthecrowd: but a fun mechanic about phases of the moon!
+acowinthecrowd: <@487577343079088128> 14,000 players right now
+Bergs: Playing concurrent?
+acowinthecrowd: ya
+acowinthecrowd: it sounds like a lot for 1245 on a thursday
+acowinthecrowd: ahy are your shorts so short
+acowinthecrowd: is that underwear
+Bergs: It's the style apparently
+acowinthecrowd: it really shouldn't be
+acowinthecrowd: i picture the rest of it is a scrooge mcduck tank top swimsuit
+acowinthecrowd: is that what it looks like
+acowinthecrowd: a male one piece
+acowinthecrowd: Is this the style
+Bergs: Do you still wear swim trunks past your knees or something
+acowinthecrowd: When you’re a short king, all swimsuits are past your knees
+Bergs: Haha such a goon
+Bergs: <@163849350827606016> this game rocks
+Bergs: I feel like the new room and equipment cards (at least I don't remember them) are great
+Bergs: The graphics make such a difference
+acowinthecrowd: Those are definitely new
+acowinthecrowd: And I love how a simple addition has a ripple effect like now there’s also trinkets that relate to rooms and equipment and upgrade shops for rooms and equipment
+
+#things-we-watch:
+Andy: 2004 Horror Anthology, Three... Extremes added to plex, just for US
+Andy: Upsetting is the word
+Bergs: what the heck is this- what a murderers row
+Andy: Haha, yep
+Andy: I requested all of Park's shorts
+Andy: This is the only one to show up
+Bergs: i will have to check it out
+Bergs: I am so very excited for his new movie this year
+Bergs: and also Mikke's bad lieutenant tokyo
+Andy: A sequel? A reboot? A seqboot?!
+Bergs: We’re all delighted to reinterpret this iconic IP with a master filmmaker like Takashi Miike,” said producer Jeremy Thomas of Recorded Picture Company. “We’ve produced 10 films in Japan, most recently Grand Maison Paris, which has grossed over $28M domestically, and it’s a fertile place to create and distribute films. I feel the time is right for this irreverent hybrid.”
+acowinthecrowd: <@487577343079088128> this made me laugh
+Bergs: Hahaha
+Bergs: So good
+Bergs: https://youtu.be/uww2zyJgbE0?si=aZn3csiP9pWmfMgf
+Bergs: <@163849350827606016>
+acowinthecrowd: Yay!
+acowinthecrowd: Apparently Sarah didn’t watch these with me
+acowinthecrowd: She’s never heard of toxic avenger
+acowinthecrowd: I wonder who watched it with me haha
+mbbananas: <@487577343079088128> the assessment is great - i feel like you would like it
+Bergs: Is that the one with the lady that's acting like a kid
+mbbananas: Yeah Alicia vikander
+Bergs: I'll do it!  Seems like something I can get katy to watch too
+Andy: <@487577343079088128> are you in a safe space
+Andy: i really need to know you're somewhere comfortable and ideally away from your loved ones
+Andy: ||https://deadline.com/2025/05/elden-ring-alex-garland-directing-a24-movie-1236408999/||
+Bergs: Don't break my heart
+Bergs: Haha yes!  Saw this reported last week.
+Bergs: I have mixed feelings in Garland but this sounds like a very cool marriage
+Andy: Men rewatch?
+Bergs: Haha birth train baby
+Bergs: What do you think?  Hype or meh
+Andy: errr
+Andy: i don't think it really lends itself to a movie beyond a setting
+Andy: at least in my case, there's really almost no story
+Andy: the only question is which role is Sonoya Mizuno going to have
+Bergs: My hope is they lean into the vibes and not do some silly over wrought plot
+Bergs: Based on annihilation Garland can absolutely capture the majesty and horror of the game
+Andy: Hmmm, maybe
+Andy: Hopefully
+Andy: While annihilation is a vibes book, it's still a book with a big story
+Andy: Seems like after the Mario, Sonic and Minecraft movies were going to get a glut of these, maybe like the epics which came out after LOTR
+Bergs: Agreed
+Andy: Hopefully this is more Kingdom of Heaven than Clash of the Titans
+Bergs: But in this case, you do have talent behind the camera (even if I think he's a fake transgressive fan boy)
+Andy: Whats he done to hurt you?
+Bergs: The one two punch of Men and Civil War haha
+Andy: Eh, civil war slapped
+Andy: And while Men did not, I'm not sure how it made him fake or transgressive
+Bergs: No no
+Bergs: I'm saying he's a cheap wanna be provocateur / transgressive
+Bergs: I thought civil war was good
+Bergs: But it Def thought it to be edgier than it was - felt like a real missed opportunity
+acowinthecrowd: A good example of our channel description
+Bergs: 🙄
+Andy: I think you're making assumptions about his intent and getting angry about him for missing them
+Bergs: Yeah, I think there are glimpses of what I'm assuming (the ending is probably the best example of tapping into it) which makes me think what he's going for
+Bergs: The discourse around the movie is painful, I feel like so many critics missed the mark criticizing it for being apolitical - which was the entire point
+Andy: Yeah
+Bergs: But again, I liked it!  Some of my favorite needle drops in recent memory
+Andy: I honestly think his movie was meant to be watched in a similar way as The Road than some super edgy political satire
+Bergs: it's hard for me to ignore the more annoying parts of Civil War (in a movie that was supposed to be "apolitical" it sure goes out if it's way to mention Antifa)
+Bergs: But anyway
+Bergs: Elden Ring
+Bergs: Biggest budget movie in A24 history
+Bergs: Exciting
+Bergs: I'm getting pinged by all the homies <@297550265299763212>
+Bergs: Here's another angle
+Bergs: Annihilation was a real creative adaptation
+Bergs: It was nothing like the book
+Bergs: Maybe Garland takes huge liberties with this one and doesn't create the type of story we think
+sarahsalley951: The way you fought with me that I did though
+acowinthecrowd: still not convinced
+sarahsalley951: 3 seconds of the trailer I know I didn't. You did go through a phase where you watched all of bergs weird stuff
+acowinthecrowd: this was like, in COLLEGE
+acowinthecrowd: i think michael was even there
+sarahsalley951: Ok probably
+Bergs: <@163849350827606016> hook me up with a rescan of sinners
+Bergs: I love Elizabeth Olsen too
+Matt_Bot: Error: Failed to get response from GPT: 'id'
+acowinthecrowd: Un momento amigo
+Matt_Bot: **Matt:** summarize the discussion from <#672944925008199680> channel
+
+**ChatGPT:** Summary of the discussion from the 'things-we-watch' channel:
+
+1. **Movie Discussions**: 
+    - Members discussed va... (bot_response_truncated, 1579 chars)
+Matt: " 'Skibidi Toilet' was mentioned "
+
+hahaha
+Matt: glad to know there was casual banter here
+acowinthecrowd: It’s done
+acowinthecrowd: This was way too long
+croasus: yeah we need pithy matt bot
+Bergs: <@340940380927295491> there is a film bot that I can link direct to letterbox
+Bergs: Can you look into that whenever you have some time
+Matt: yeah! do you use this bot already? what does it do? pull your reviews and stuff?
+Bergs: No just let's you pull the movie!
+Matt: nice nice... but in what context? can you give me an example?
+Matt: also you can totally use the "/gpt" command for whatever you would normally ask chatgpt if you want
+Matt: (though it may break)
+Matt: (or say dumb shit)
+
+#self-improvement:
+Bergs: Super cool though our local bookstore had some tattoo guys just set up a chair in it haha
+Nick: I like the moon reading
+Big Jon: The whale is pretty sick
+Bergs: Yeah I'm between the whale, tube wolf and skeleton jester 😂
+Nick: Skeleton jester is bad ass as well
+Bergs: Yea dude
+Bergs: That one is more expensive
+Nick: Worth it. Right calf
+Bergs: I think whatever i do im going wrist
+Bergs: They aren’t big enough for a calf unfortunately or that would be dope
+sarahsalley951: I agree!
+Big Jon: All three people on Kelsey’s team have tats from this guy
+Nick: I know alot if tattoo shops do a Friday the 13th, $13 tattoos like this with a bunch of pre design quick stencil
+Bergs: Their instagram pages are so good. Incredibly talented artists- full of whimsy
+sarahsalley951: So whimsical
+Bergs: SO MUCH WHIMSY
+sarahsalley951: I'm so bothered
+Nick: So what did you get <@487577343079088128>
+Bergs: Going around 4
+Big Jon: Think you’ll actually get a spot
+Bergs: Let's see!  Looked like I was around 5 on the list
+Nick: .... were waiting
+Bergs: I'm suited and booted
+Bergs: First tat in over ten years!
+Nick: Which one
+Bergs: Wolf
+Bergs: With the tube's
+Bergs: I guess a few of these are LOTR haha
+Big Jon: Is that the tree of Gondor?
+Big Jon: Kelsey’s friend has a full upper arm tree beard from the guy
+Bergs: Haha I think so
+Big Jon: Sick
+Big Jon: I want more tattoos
+Bergs: Doing the whole other sleeve next year!
+Bergs: So addicting
+Big Jon: I liked your advice about not have to make each tattoo have some really deep meaning
+Big Jon: I kinda want to copy your approach and bring a bunch of little ideas so someone with better style and than me to see what kind of half sleeve they can come up with
+Big Jon: Poppy flower, golden spike, cheese wedge, howler or sons of ares helmet, maybe a raven or something? 🤣
+Big Jon: Can’t decide between that or just getting one-offs in different spots as more individual pieces
+Bergs: Dude this is the way!! Can't wait to get a xenomorph tattoo haha
+Bergs: This can be cool too, sometimes sleeves can look too cohesive imo
+Big Jon: Did I send you a picture of Ricky’s sleeve? (Tommy’s brother)
+Bergs: I can't remember but I'd like to see it
+Big Jon: He got all his favorite video game and movie weapons- wow hammer, gladiator sword, red rising himanthus
+Bergs: Yessss
+Big Jon: <@320002960719609856>  drop a pic!
+Big Jon: And a list of weapons
+Bergs: I may do a similar thing to Ricky but with horror flicks
+Big Jon: Love that idea
+Bergs: Do a tattoo for Cal and Kenna but abstract it to the point you'd never know hahaha
+Big Jon: Like their faces as Frankenstein and the monster?
+Big Jon: 🤣
+Bergs: Haha yeah I'm thinking for Cal, a crazy piece of mecha godzilla cause we watched godzilla a few times 😂, etc
+Bergs: Shit like that
+Big Jon: On your latest tat- I never know which orientation those should go
+Big Jon: It’ll be upside down while you’re standing right? But I guess it’s for you to look at so who cares
+Bergs: Yeah I struggle with this too, even wearing rings haha
+Bergs: I do usually go decide whatever looks best from your orientation
+acowinthecrowd: Should keep the grosstee??
+acowinthecrowd: Does it make me look taller??
+acowinthecrowd: Maybe just keep the Ron Swanson
+Matt: Yes
+Matt: Aw I liked the goatee. Did Sarah hate it? I say just go completely full clean shaven
+acowinthecrowd: haha yes she did, i am scruff shaven
+acowinthecrowd: 1/8"
+acowinthecrowd: the final
+Bergs: Holy shit
+Bergs: THAT’S BRICE
+Matt: I forgot he was a regular human under there
+Matt: SHAVE THE SCRUFF
+acowinthecrowd: ew no
+Matt: It's a friggin once in a long time opportunity
+acowinthecrowd: everyone looks better with a beard
+Matt: Wtf
+Matt: It'll come back so fast
+Matt: It's fun
+Matt: It's fun to look funny
+Matt: Lemme see if I have a no beard Pic
+acowinthecrowd: what if i told you i clean shaved right after the gotee
+acowinthecrowd: and now it's here
+sarahsalley951: Ew
+acowinthecrowd: i think i shoulda done 1/4, this is a bit short
+acowinthecrowd: oh well give it a few days
+Matt: Check me out lol
+acowinthecrowd: no
+Matt: Hey how I actually had hair
+Matt: Man I gotta fix that
+acowinthecrowd: see this is why i won't go no beard
+acowinthecrowd: might look like that
+Matt: Hahahahaha
+Matt: It's so funny, it makes the BIGGEST difference
+Matt: More than any other trait
+acowinthecrowd: i think one of my middle school photos probably doesn't have a beard
+Matt: Lmao
+
+#marketplace:
+Bergs: You can of course set timers for whatever apps you want to limit
+Matt: Yeah Brice, who's the non-technical person now!
+Nick: Still bergs
+Bergs: Sometimes gotta educate the fools of the world how to do the tech stuff
+acowinthecrowd: Still bergs
+acowinthecrowd: Oh Nick had me covered
+acowinthecrowd: So if they watch an hour of kids YouTube then it bricks then they wanna watch lego builds they can’t cause it’s bricked?
+Bergs: Lego build is a different app
+Bergs: *come around the fire and listen*
+acowinthecrowd: I think we have different definitions of a bricked device
+Bergs: The apps black out
+Bergs: Can’t be used
+Bergs: So whatever that is !
+acowinthecrowd: So they watch an hour of YouTube kids and the iPad is bricked, meaning all apps are blacked out. 
+
+Yet because Lego builds is a different app they can still get to it?
+
+What am I missing
+Bergs: No the YouTube app bricks
+Bergs: You can brick it , app by app baby
+acowinthecrowd: So…… the device can do anything and everything but play YouTube?
+Bergs: Yep.
+Bergs: Choose your own adventure
+acowinthecrowd: And yet you call that bricked?
+Bergs: Yeah in context of a 3 or 5 year old that all they know how to do is watch YouTube?  Bricked
+Bergs: If you wanna get technical they COULD still use the digital ruler
+acowinthecrowd: “Bricked” means they can use all apps on the device except one specific one?
+acowinthecrowd: In most circles, a “bricked” device means it can’t do anything more than a literal, actual brick can do. That’s why I was a little confused about what you meant the kids can do with a device you’ve called “bricked”
+acowinthecrowd: I’m *sure* you explained it very well and, as always, I’m the dummy
+Bergs: From the kids perspective after YouTube is gone, it's a brick - hence bricked
+acowinthecrowd: ⛽️ 💡
+Bergs: https://tenor.com/view/cardiachill-diamondhands-gif-21811381
+Bergs: Haha your brain
+acowinthecrowd: “The iPad bricks after an hour of YouTube. I mean you can use any other app other than YouTube for as long as you want. But it’s totally bricked.”
+Bergs: If you give a calculator to a squirrel is it useful?
+Bergs: It's wild your inability to abstract even the most simple concepts
+acowinthecrowd: I find it crazy that I am assigned the role of “insane” when all I try to do is figure out a concrete definition of a term
+Bergs: Has the word insane entered the conversation?  Why is it in quotes haha
+acowinthecrowd: Geez more gaslighting.
+Bergs: 😂😂😂😂
+acowinthecrowd: I find it crazy that I am assigned the role of “wild” when all I try to do is figure out a concrete definition of a term
+Bergs: You are a wild boy
+acowinthecrowd: Yeah
+acowinthecrowd: Wild like a fox
+acowinthecrowd: Or something
+Bergs: Look at you making some analogies
+acowinthecrowd: Analagous like a fox
+Matt: I'm with Bruce
+Bergs: Well at least you understand my position
+Bergs: He's still reeling in confusion
+Matt: He's dumb and weird
+Matt: Let's ostracize him
+Bergs: He's literally, LITERALLY insane
+acowinthecrowd: “The device gets bricked”
+Oh no I don’t think bricking is necessarily the right option
+“Oh well not bricked”
+acowinthecrowd: Then,,,, what
+acowinthecrowd: OBVIOUSLY I meant the definition of bricked that I meant.
+acowinthecrowd: What….??
+acowinthecrowd: But no, im the crazy one somehow
+acowinthecrowd: Gas. Light.
+Bergs: Haha you are loving this term!
+Bergs: Did you watch some boss babe content today
+Big Jon: Bricked as a very common meaning- the device is completely inoperable and generally won’t turn on. Brice was initially confused, but should have realized that bergs isn’t very precise with his technical language and moved on. Meeting adorned
+Bergs: Here here!  To middle mgmt!
+Big Jon: 🫡  good work team, let’s circle back next week
+Matt: Props to Jon's management skills to get Bergs to agree to a comment that basically said he has no idea what he's talking about
+Big Jon: I’m changing teams after this week! bye Luke!
+Matt: TEN MILLION ROWS IN THIS TABLE BRO
+Big Jon: 4 Billion SKU branch combinations a DAY 🤓
+Matt: NUMBERS ARE BIG I'M IMPORTANT
+Andy: Thoroughly enjoyable conversation to read after waking up, 10/10 pedantry and intransigence guys
+Bergs: Waaaay better than politics
+Bergs: The mark of a great people manager is a master manipulator
+sarahsalley951: This was all too much to read
+sarahsalley951: Also Logan doesn't get anything bricked. He asked me Friday if he had any limits on screentime or VR or if he should use his conscious free will and I said what? I don't care 😂
+Nick: Anyone have experience with something like these for concerts ? 
+
+https://www.amazon.com/gp/aw/d/B075SJ3Y8M/ref=ox_sc_act_title_1?smid=AP3YH085XHE3B&psc=1
+Nick: (No they dont block out the concert, they just reduce the decibels to save your ears but allow you to still hear clearly)
+Andy: Aurgasm > Eargasm, dreadful marketing
+Nick: Trademark ?
+Bergs: You know brice is massively hungover when he has only one discord post pre 1030am
+Nick: What's the occasion
+Matt: Saturday
+sarahsalley951: Yeah we watched final destination. What more of an occasion do you need
+sarahsalley951: I'm about to make mimosas because Sunday
+Nick: <@163849350827606016> did you find a 3rd party remote?
+acowinthecrowd: Nope I ended up upgrading roku and I am *happily* using my Bluetooth headphones to watch
+Nick: Upgrading software or device
+acowinthecrowd: Device. It is SO zippy too haha
+acowinthecrowd: Our Roku was over 5 years old
+acowinthecrowd: I think
+Nick: They have a trade in offer ?
+acowinthecrowd: Nah but it was 30% off that’s kinda what sealed the deal
+acowinthecrowd: Do you want an old roku box??
+Nick: Negative. Thanks though
+Nick: After 2 months it finally shipped !!   Joker and Boba fett
+Nick: <@178958369955119104>  / <@163849350827606016>  you need to get one of these for the Blackstone 
+https://www.instagram.com/reel/DJ7LdlUOGcl/?igsh=bmEyanR4OThyZDBp
+acowinthecrowd: Nice that’ll cover like 2.5 cooks!
+Big Jon: I would love to hook it up to the houses gas line
+Nick: Would you need a different type of flattop ? Assuming its like a bbq ? <@178958369955119104>
+Evan: I know this is incredibly last minute and I’m sharing this with several folks, would you like two tickets to see Shucked at the Fox theater tonight (with parking included)? Show starts at 7:30
+Nick: @here ^^
+acowinthecrowd: Shuck no
+
+#family:
+sarahsalley951: Yeah don't let them become teenagers. It's annoying
+acowinthecrowd: They don’t want to wear the bk hat when they’re teenagers
+acowinthecrowd: I still do of course
+sarahsalley951: the one time jack talks to me daily is when I drop him at school and he says "see ya" and that's because months ago I said I would stop driving him unless he at least acknowledged me
+Matt: Hahahaha
+Matt: Good for you
+Matt: I remember being a stinky little teenager
+Matt: It only lasted like 5 years though
+Matt: So, you'll be good soon
+Matt: Except with the Logan overlap
+Matt: He's an angel though, right? Right?
+sarahsalley951: Yeah he's a dream
+sarahsalley951: I just walked by him and he asked for a hug so yeah, he's an angel
+Matt: Aw
+sarahsalley951: Omg she's going to pop that mat. This is stressful for me
+Matt: Man, Harley got her good hahaha
+Nick: Him*
+Matt: well well well, if it isn't my old friend mister "to", "your" and other grammatical error-maker
+Matt: You may have won this time but I'll be back!
+Nick: https://tenor.com/view/masters-of-the-universe-skeletor-mot-u-gif-23595861
+Nick: So are you living back in smyrna area ?
+acowinthecrowd: Don’t presume!
+Matt: I'm in Sandy Springs but yeah nearby! Whatcha doing this weekend? Play board games at a brewery with me
+Nick: Got my friend and her boyfriend visiting from the UK this weekend
+Matt: hey man, I speak English!
+Matt: tell them "hello, governor and governess"
+Nick: My next few weekends are shit,  but let's do get something once im back from cali , June 14th
+Bergs: Damn <@340940380927295491> he put your thirsty ass on ice
+croasus: <@487577343079088128> yeah dude I heard nick would rather have shit weekends than play board games with matt at a brewery
+Bergs: He must really despise him
+Matt: Definitely have to remember this phrase
+Matt: You're next on my list
+Nick: No I just meant they are jam packed  , and that's the next free one
+Nick: Between friends/family visitors,  work travel, and work deadlines. This month is going to kill me
+Bergs: I'm booked until 2028
+Nick: Bergs may get arrested in China over his tattoos
+Nick: Stay safe <@549395004569812994> !
+Nick: (Tornado warning)
+Bergs: My bro in law just sent this
+Bergs: In Springfield
+Big Jon: Damn
+TJ Tank: Whoooooa
+sarahsalley951: <@392005946651443201> Logan is wearing a friend's shoes today (that are 11  sizes too  big) to Surprise his friends today. To jazz up the last day of school. He's a shoe head
+Nick: This kid is going places
+sarahsalley951: He sure thinks he is
+Nick: <@340940380927295491> brewery around 1ish tomorrow?
+Matt: Yeahhhhh
+Nick: Will have little man with me, but can have a couple beers and some food
+Nick: https://tenor.com/view/the-hangover-gif-19110210
+acowinthecrowd: the carrier is just the best thing to have
+acowinthecrowd: i remember our kids would just go everywhere around the house in em
+acowinthecrowd: and they're so much quicker than a stroller
+acowinthecrowd: like for the store
+acowinthecrowd: or for going anywhere, you can even keep wearing it (sans baby) while driving and it's just ready to plop em in when you get there
+Bergs: Cal built no help
+Bergs: The directions  in digital do rock
+
+#politics-but-only-the-good-stuff:
+Bergs: https://x.com/spencerhakimian/status/1923538441276461069?s=46
+Bergs: Hahaha
+Andy: Your life your choice dear bergs, but speaking from sole experience I feel a lot better when im not getting a hit of politics right as I wake up (or go to sleep)
+Bergs: Would it make you feel better if I told you after checking twitter as I brew coffee I read an actual, real book ?
+Andy: It wouldn't
+Andy: It's not a criticism, just passing on something I've found beneficial recently
+Bergs: Does reading about politics online give you anxiety?
+Andy: Not directly
+Andy: But evidence suggests that indirectly it does
+Bergs: I used to have a rule that i didn’t check my phone after 9pm
+Bergs: That was a good rule
+Matt: I think it definitely jolts you into the media world instead of just existing in your own world with your kids or whoever
+Matt: It's like "oh right everything's fucked out there, for many other people"
+Bergs: The Jon line of defense here would be “our parents have been watching the morning news for 50 years”.
+Andy: Ah yes, those famed rationalists, the boomers
+Bergs: “In the 1800s, people would just go to the bulletin board to read about all the awful shit in their community”
+Bergs: Haha not saying I agree, but these are often arguments presented around these parts
+Bergs: I think looking at this stuff particularly the short form shit you find on twitter and other social media , is not good for you.
+Matt: Boomers waking up to morning news is equally as bad
+Matt: I can't stand it
+Matt: It's like
+Matt: You have a nice quiet house here
+Matt: Everything is wonderful
+Matt: Why are you poisoning it
+Matt: (this is me yelling at someone watching the news on a quiet morning)
+Matt: That would take some effort haha
+Bergs: Just like the claim pop culture isn’t in a place of stagnation due to all the creativity overflowing into tik tok, i guess my claim is that we have been doom scrolling for all of human history !
+Bergs: Someone getting woken up from a deep sleep by the town crier/herald in medieval England !
+Andy: Bad take
+Bergs: My specialty
+Bergs: I actually don't believe that and aligned am with you Andy.  This is just what I hear from the "life is a flat circle crowd" aka you can't make value judgements on anything because every generation goes through this dissonance
+Andy: Name em
+Andy: Tag em
+Andy: EXPOSE EM
+Bergs: Haha you know, we know, they know
+Bergs: What do you do first thing in the morning <@297550265299763212> , give me a good routine
+Andy: Doom scroll, then 6 hours pass before you wake up and I forget about it
+Bergs: This is totally off topic but what would you say your biggest interest is - and second question is how do you consume news on that topic
+Andy: This question has stressed me out
+Andy: I honestly don't know what my interests are - I like games, movies, music & sport but really it's just consuming media right?
+Andy: Is my cat an interest?
+Andy: Can my wife be an interest?
+Bergs: Yes!  Do you check a cat sub reddit haha
+Bergs: Or I guess for sports let's say
+Bergs: Footy
+Bergs: Do you read or listen to podcasts on it
+Bergs: Or just watch
+Andy: Ok, football we have -
+
+A (theoretical) football forum, but with specific team threads, so I'll look in the Liverpool thread, or other teams thread if I'm bored
+
+R/soccer (but not r/LiverpoolFC as its full of the international fans cosplaying as diehards)
+
+Podcasts - up to 3 options, you could feasibly do more. However, I specifically avoid 'punditry' around it (also a reddit issue, too much yapping)
+
+The Guardian app ofc
+
+Very occasionally after a major result I may see a YouTube analysis video
+Bergs: Ok there you go !  Sounds like a fertile garden
+Bergs: https://x.com/yashar/status/1924519962397360221?s=46
+Bergs: Unreal
+Matt: Uhh
+Matt: The person shot BY police
+Matt: And what happened to the people who attacked that other police officer, who died the following day?
+Matt: I believe they were pardoned
+Matt: Was it a Trump-appointed judge?
+
+#food:
+Andy: Sincere congrats on having a meal with unprocessed vegetables in it
+sarahsalley951: I like having things like this for emergencies. The problem is that it takes two to three to feed us which can be painful, but still worth it to have
+Bergs: Man
+Bergs: Great use of air fryer - salsa !
+acowinthecrowd: ……. wut
+Bergs: Yeah dude, just halve some tomatoes , jalapeños , onion , garlic, spray with some cooking spray and blast it in the air fryer
+Bergs: Peel skin off , blend with some lime juice, cilantro, and salt pepper
+Bergs: Boom
+acowinthecrowd: You’re putting liquid into your air fryer?
+Bergs: What do you mean
+Bergs: The tomatoes Def give off liquid
+Nick: This is the prep work
+Bergs: What is salsa if not prep work
+Nick: I was telling <@163849350827606016>
+Bergs: He's moving a bit slow today, go easy on him
+acowinthecrowd: I don’t wanna be gaslit anymore but I don’t cook salsa in an air fryer.
+Bergs: You should try it
+Bergs: https://youtube.com/shorts/NVPHyDKByYs?si=PIExaMIDE2Pd-Vvz
+Nick: Wasn't gaslighting, was helping.  Charring/roasting releases alot of flavor
+acowinthecrowd: Mambo italiano
+acowinthecrowd: <@178958369955119104> Logan got some peach rings the other day
+acowinthecrowd: And man….
+acowinthecrowd: You’re spot on
+acowinthecrowd: So friggin good
+Big Jon: I knew Logan had a good head on his shoulders
+Bergs: Didn't we have an argument about these?  Jon calls them like "gas station gummies" or something weird
+acowinthecrowd: I sure hope so cause that is weird af
+Bergs: Omg matt and whit
+acowinthecrowd: Hahhahaha
+acowinthecrowd: Classic those guys
+croasus: https://tenor.com/view/nodding-dan-levy-david-david-rose-schitts-creek-gif-20255697
+Matt: Good times
+Bergs: I love how Matt in the early minutes of me making fun of him tried to reverse dunk on me when he got some fake confidence cause Whit also didn't know 😂
+croasus: I feel like this is also a slam on me 😂
+Bergs: Haha you are collateral damage for sure
+Matt: Was just saving you time
+acowinthecrowd: I like seeing how much use you get out of your creuset
+Bergs: A good dutch oven (regardless of brand) is just so useful!
+acowinthecrowd: That’s what they say
+
+#work-stuff:
+Andy: We're adding a 50 Euro surcharge for any shippers not using our inland haulage in Belgium
+Andy: I'm already looking forward to the investigation of why our customer satisfaction score has tanked
+Nick: Almost like how our single carrier booking agent fee, we charge customers $50 to have us book on their behalf with maersk
+Bergs: No wonder you guys can’t hang onto any order management business
+Nick: Gotta win it to hold on to it
+Nick: And we cant even do that currently
+Bergs: Haha
+Nick: Currently my team was asked how are we driving the pipeline for new business , but also my rebuttal is were not sales nor do we have a budget to be meeting new customers 
+
+We dont do any of the trade conventions , and were at the mercy of sales.  Sales doesnt want to sell a product where they only get a SIP when they sell 3 year contract and also a product that causes the most amount if heachaches and followup for them once live
+Bergs: Our team that's the same as you guys has to maintain a pipeline of 50 customers at all time
+Bergs: I find order management guys love to blame sales for everything so this all tracks
+Nick: When sales brings us a customer to talk to sure, but its not our job to be on the streets finding the customer
+Bergs: Yeah you are parasites
+acowinthecrowd: You need to work on being a team player
+Andy: Omg a sales guy blaming an ops guy!
+Bergs: Nick isn't ops
+Andy: Omg an ops guy blaming a sales guy!
+Andy: This is groundbreaking
+Bergs: He's wanna be sales
+Bergs: That doesn't have to do anything hard
+Bergs: That has to do with sales
+Andy: ☝️
+Bergs: We have these same leeches - they get on the phone and complain about sales not generating enough leads but are too lazy to even talk to the sales people haha
+Bergs: They'll only talk to mgmt
+acowinthecrowd: Middle managers, the true parasites
+acowinthecrowd: I think all of you need to come together and realize your true enemy is finance.
+acowinthecrowd: They set the impossible to sell rates and are stingy with the budgets
+Andy: Amen!
+Bergs: Hmmm
+Bergs: Finance is not in charge of pricing
+Bergs: BUT
+Bergs: They are in charge of credit
+Bergs: Which is true they are an enemy
+Big Jon: Its the shareholders that are the true enemy
+acowinthecrowd: Look at the big brain on Jon
+Andy: Yknow who I hate? The CUSTOMER
+acowinthecrowd: The American people are your problem, buying all this junk
+Bergs: The true enemy is the enemy within
+Matt: https://tenor.com/view/what-would-you-say-you-do-here-interview-office-space-gif-17713133
+Nick: Is this scm shippers or ocean ?
+Andy: Errrr, unclear to me
+Andy: No way Nike pays it, so I'm not that arsed <:bergs:929073310019502141>
+
+#readables:
+acowinthecrowd: cant wait!
+Big Jon: So far away
+Big Jon: I was betting that they would spot red god into two books
+acowinthecrowd: it'll be here before you know it
+Bergs: He lives!!!
+acowinthecrowd: haha i been crosswordin!
+acowinthecrowd: BOOM
+Bergs: Be honest
+Bergs: How hungover were you yesterday
+acowinthecrowd: shockingly less than expected, probably only like a 6
+Bergs: Some beautiful children's books
+Big Jon: <@487577343079088128> <@549395004569812994>  Sanderson, Brown, and Abercrombie did a joint Q&A is Salt Lake City yesterday! Man, I would have taken a day off work to do this is in ATL
+Bergs: Wow!  Murderers row of nerds
+Bergs: Who was reading Sanderson was that you Jon?
+TJ Tank: Whaaaaaat
+TJ Tank: Dude seriously
+Big Jon: Yeah, and Tommy. Hated it
+Bergs: Hahaha why??
+Bergs: I didn't care for the one I tried, it was def entertaining and cool world building but felt like a marvel movie set in high fantasy
+Big Jon: Terrible dialog, boring characters, it was like it was written by a nerd that had never spoken to a female before
+Big Jon: Magic system was cool though
+Big Jon: Mistborn
+Bergs: I tried way of kings I think maybe 5 years ago haha
+
+#video-games:
+Nick: <@163849350827606016>
+acowinthecrowd: Luckily I was a SEGA BOY
+acowinthecrowd: The friggin maze in Return to Pride Rock
+acowinthecrowd: So annoying
+Nick: https://www.theverge.com/tech/672479/nvidia-geforce-now-six-month-subscription-deal
+Matt: That's actually pretty sick
+Matt: $30 to play without a real computer
+Matt: I can't remember if that includes games or not
+acowinthecrowd: it does not
+Andy: Combines with gamepass though right?
+Andy: (I'm googling Matt's question and got that answer)
+acowinthecrowd: i would hope so
+acowinthecrowd: but probably not all games
+acowinthecrowd: cause it's not your machine to install on of course
+acowinthecrowd: so it's limited to what they've got installed
+acowinthecrowd: if i recall the list is quite extensive though
+acowinthecrowd: but you might not be playing super meat boy on it
+acowinthecrowd: or whatever the latest furry porn game that you're into is
+Andy: It's still super meat boy
+Andy: https://tenor.com/view/super-meat-boy-nugget-wave-bye-gif-25327180
+acowinthecrowd: as well it should be
+Bergs: I need to cancel and do this
+Nick: <@340940380927295491> have you and your dad/brothers tried roadcraft ?
+
+#musix:
+Bergs: <@244563940242096138> need you
+Bergs: Powered bookshelf speakers that can plug into a TV and also play Bluetooth music
+Bergs: Under $200
+Jeremy M: How do you want them to plug into the tv?
+Bergs: Umm earc or hdmi?
+Jeremy M: Hmm that might be hard I'll look around
+Bergs: OK cool
+Bergs: Any other ideas welcome
+Jeremy M: Well optical is easy but you'll need a separate remote for volume
+Jeremy M: https://a.co/d/cNHciYK these are pretty much the only E-arc pair of bookshelves I see recommended at this price point
+Bergs: OK thanks dude any other ideas on a budget are welcome!
+Bergs: Could be a different set up
+Bergs: Trying to figure out something for the garage
+Matt: Reggaeton club hits are so innocently sweet
+Matt: It'll be the most bass heavy song, and when you check the translation it's always the way a 12 year old would profess their love for their crush
+Nick: <@487577343079088128>
+Bergs: AI?
+Matt: Big if false
+
+#nonsense:
+Matt: Hey, I just met you, and this is crazy, but here's my bumble profile and if you like it then maybe we can chat on there for a while and if that goes well, maybe you can get my number and ask me on a date and we could meet in perso- OH RIGHT
+acowinthecrowd: and then they see you keep your phone on 11% at 9:13am
+acowinthecrowd: flag redder than your battery bar
+acowinthecrowd: i tried to match you but i'd have to download bumble and i dunno if that would go over well
+Matt: There is a section for friends on there. But, it's so weird, swiping right on dudes hahaha
+acowinthecrowd: maybe if had kept my goatee
+sarahsalley951: I already got on it when I saw your facial hair pic
+acowinthecrowd: i bet your phone exploded with all the swipe rights on you
+sarahsalley951: Yeah but only because I put Luna as my pic
+Matt: Every time I see signs like this I can't help but read them as "it's fine to park here if you pay $50"
+acowinthecrowd: Haha I mean…… that IS what it’s saying right??
+acowinthecrowd: It’s not illegal to park here it just costs 50 bucks
+Matt: $50? Fine, no problem
+Matt: I like the littering ones better. $1000 Fine Littering on Highway.
+
+OH okay so if the value of my trash is 1000+ then it's okay?
+Matt: I realize how stupid that interpretation is but it's HOW I READ IT
+
+#news:
+Bergs: https://www.bbc.com/news/articles/cyvme1e8gd5o.amp
+Bergs: https://www.nytimes.com/2025/05/21/us/politics/israel-embassy-staffers-killed.html
+Bergs: So fucked
+Matt: Fatally shot by...
+Matt: Hmm, just some guy
+Matt: Wtf
+Bergs: He had a manifesto about gaza
+Matt: Good. We need to stop bringing people in. This AMERICA for white Christians only I mean cmon
+Matt: Why would we want smart people to live and work here and benefit our society
+Matt: If they're gonna be brown
+Matt: Just ruins everything
+Bergs: <@687701357360185568> https://www.thetimes.com/world/europe/article/hamburg-central-station-stabbing-germany-r0tbmv30x
+acowinthecrowd: this is why the EU needs guns, knives don't run out of ammo
+acowinthecrowd: it's just safer
+
+#cars:
+acowinthecrowd: Alright <@392005946651443201> I’m trying your car place
+sarahsalley951: Logan pre vacuumed it so they weren't horrified and charge us more
+sarahsalley951: Huskies be shedding
+Nick: They still working on it ?
+acowinthecrowd: Took em a little over an hour
+acowinthecrowd: Definitely cleaner than when I came in, but, and it could be my expectations of a maintenance versus full detail, but I’m not fully impressed
+acowinthecrowd: I know better than to expect like the upholstery shampooed
+acowinthecrowd: But the windshield has smudges, for example
+acowinthecrowd: All the windows really
+sarahsalley951: Omg even Luna's window?😭
+acowinthecrowd: even lunas window =\
+sarahsalley951: I think they put smudges on it. It's so bad
+
+#health:
+Nick: 211!
+Andy: Nice man, how are you doing it?
+Nick: Just diet control really,  cook unity has been helpful with smaller portions and really trying to limit the snacking i do
+Nick: Also at the gym, I stopped lifting so heavy and going more reps when I can
+Nick: (Also been sick twice in the last month cause of Jordan at daycare bringing home germs. So be ready for that )
+Andy: Nice
+Andy: Nice
+Andy: Nice
+acowinthecrowd: Nice
+acowinthecrowd: only eating cook unity, that must be like... what 700 cals/day?
+Nick: No but it drastically reduces the meals at dinner, lunch i typically make a sandwich.. breakfast is hit and miss. Eggs and toast or nothing
+
+========================================
+

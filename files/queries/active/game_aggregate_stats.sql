@@ -6,7 +6,7 @@ WITH game_stats AS (
         AVG(seconds) as avg_score,
         COUNT(CASE WHEN game_rank = 1 THEN 1 END) as wins,
         COUNT(CASE WHEN game_rank < 6 THEN 1 END) as top_5
-    FROM game_view
+    FROM games.game_view
     WHERE game_date BETWEEN %s AND %s
         AND game_name = %s
     GROUP BY player_name

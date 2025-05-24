@@ -105,8 +105,12 @@ class Leaderboards(commands.Cog):
             # Get date range
             start_date, end_date = self.get_date_range(timeframe)
             
-            # Determine if we need daily scores or aggregate stats
-            if timeframe in ["today", "yesterday"]:
+            # Special case for winners - always use daily_winners.sql for today/yesterday
+            if game == "winners" and timeframe in ["today", "yesterday"]:
+                sql_file = "daily_winners.sql"
+                params = [start_date]
+            # Determine if we need daily scores or aggregate stats for other games
+            elif timeframe in ["today", "yesterday"]:
                 # Use daily scores query
                 sql_file = "game_daily_scores.sql"
                 params = [start_date, game]

@@ -4,7 +4,7 @@ SELECT
     game_score,
     points,
     game_detail
-FROM game_view
+FROM games.game_view
 WHERE game_date = %s
     AND game_name = %s
 ORDER BY 
