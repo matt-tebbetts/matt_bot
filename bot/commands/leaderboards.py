@@ -174,7 +174,7 @@ class Leaderboards(commands.Cog):
                     # If no interaction provided, we can't determine the user
                     raise ValueError("my_scores command requires user interaction to determine discord username")
             
-            # Special case for winners - always use daily_winners.sql for today/yesterday
+            # Special case for winners - always use daily_winners.sql but show 2 weeks of games
             elif game == "winners" and timeframe.lower() in ["today", "yesterday"]:
                 sql_file = "daily_winners.sql"
                 params = [start_date]
@@ -203,6 +203,13 @@ class Leaderboards(commands.Cog):
             try:
                 result = await execute_query(query, params)
                 df = pd.DataFrame(result)
+                
+                # Clean any NaN values that might have been introduced during DataFrame processing
+                df = df.fillna("-")
+                
+                # Also clean any string representations of None/nan
+                df = df.replace(['None', 'nan', 'NaN', 'null', 'NULL'], "-")
+                
             except Exception as e:
                 print(f"Error executing query: {str(e)}")
                 return f"Error executing query: {str(e)}"

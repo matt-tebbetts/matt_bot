@@ -12,56 +12,9 @@ from bot.commands import Leaderboards
 from bot.functions.admin import get_default_channel_id
 from bot.functions.admin import direct_path_finder
 
-# task 1 - check for users who haven't completed the mini
-@tasks.loop(hours=1)
-async def send_warning_loop(client: discord.Client):
-    
-    # Skip on startup - wait for first scheduled run
-    if send_warning_loop.current_loop == 0:
-        print("Skipping warning loop on startup - will run on schedule")
-        return
-    
-    # see if anyone needs a warning
-    users_to_warn = await find_users_to_warn()
-    if len(users_to_warn) == 0:
-        return
-    
-    # send warning to each user
-    warning_text = "this is your reminder to complete the Mini!"
-    warning_data = []
-    guild_member_ids = {member.id for guild in client.guilds for member in guild.members}
-    for user in users_to_warn:
-        if user['discord_id_nbr'] not in guild_member_ids:
-            status = 'Failed'
-            error_msg = 'Bot not in user\'s guild(s)'
-            msg = 'Did not attempt to send warning'
-        else:
-            try:
-                discord_id = await client.fetch_user(user['discord_id_nbr'])
-                msg = f'Hi {user["name"]}, {warning_text}'
-                await discord_id.send(msg)
-                print(f"tasks.py: sent warning to {user['name']}")
-                status = 'Sent'
-                error_msg = ''
-            except Exception as e:
-                status = 'Failed'
-                error_msg = str(e)
+# Removed redundant send_warning_loop - functionality moved to daily_mini_summary task
 
-        # combine warning metadata
-        warning_data.append({
-            'warning_dttm': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'user_name': user['name'],
-            'platform': 'discord',
-            'message_status': status,
-            'message_error': error_msg,
-            'message_text': msg
-        })
-    
-    # save warning metadata
-    df = pd.DataFrame(warning_data)
-    await send_df_to_sql(df, 'games.mini_warning_history', if_exists='append')
-
-# task 2 - check for new mini leaders and post to discord
+# task 1 - check for new mini leaders and post to discord
 @tasks.loop(seconds=60)
 async def post_new_mini_leaders(client: discord.Client, tree: discord.app_commands.CommandTree):
     try:
@@ -108,7 +61,7 @@ async def post_new_mini_leaders(client: discord.Client, tree: discord.app_comman
     except Exception as e:
         print(f"Error in post_new_mini_leaders task: {e}")
 
-# task 3 - reset leaders when mini resets
+# task 2 - reset leaders when mini resets
 @tasks.loop(hours=1)
 async def reset_mini_leaders(client: discord.Client):
     try:
@@ -123,7 +76,7 @@ async def reset_mini_leaders(client: discord.Client):
     except Exception as e:
         print(f"Error in reset_mini_leaders: {e}")
 
-# task 4 - end of day mini summary and warnings
+# task 3 - end of day mini summary and warnings
 @tasks.loop(hours=1)
 async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.CommandTree):
     try:
@@ -137,7 +90,14 @@ async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.
             if users_to_warn:
                 warning_text = "⏰ **Mini reminder!** Only 2 hours left to complete today's mini crossword!"
                 
+                # Check which users are in connected guilds to avoid unnecessary API calls
+                guild_member_ids = {member.id for guild in client.guilds for member in guild.members}
+                
                 for user in users_to_warn:
+                    if user['discord_id_nbr'] not in guild_member_ids:
+                        print(f"Skipping DM to {user['name']} - not in any connected guilds")
+                        continue
+                        
                     try:
                         # Get user by discord ID and send DM
                         discord_user = await client.fetch_user(user['discord_id_nbr'])

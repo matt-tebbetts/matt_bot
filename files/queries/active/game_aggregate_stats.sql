@@ -9,8 +9,8 @@ WITH game_stats AS (
         COUNT(CASE WHEN game_rank = 3 THEN 1 END) as 3rd,
         COUNT(CASE WHEN game_rank < 6 THEN 1 END) / COUNT(*) as top_5
     FROM games.game_view
-    WHERE game_date BETWEEN '2025-05-01' and '2025-05-24'
-        AND game_name = 'mini'
+    WHERE game_date BETWEEN %s and %s
+        AND game_name = %s
     GROUP BY player_name
 )
 SELECT 

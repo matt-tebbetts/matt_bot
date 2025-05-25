@@ -58,12 +58,25 @@ async def get_pool():
     return _pool
 
 async def execute_query(query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
-    """Execute a SQL query and return the results."""
+    """Execute a SQL query and return the results with cleaned None values."""
     pool = await get_pool()
     async with pool.acquire() as conn:
         async with conn.cursor(aiomysql.DictCursor) as cur:
             await cur.execute(query, params or ())
-            return await cur.fetchall()
+            results = await cur.fetchall()
+            
+            # Clean None/NULL values and replace with "-"
+            cleaned_results = []
+            for row in results:
+                cleaned_row = {}
+                for key, value in row.items():
+                    if value is None:
+                        cleaned_row[key] = "-"
+                    else:
+                        cleaned_row[key] = value
+                cleaned_results.append(cleaned_row)
+            
+            return cleaned_results
 
 async def execute_many(query: str, params_list: List[tuple]) -> None:
     """Execute multiple SQL queries with different parameters."""
