@@ -8,7 +8,7 @@ from bot.functions.admin import direct_path_finder
 from bot.functions.df_to_image import df_to_image
 from datetime import datetime, timedelta
 import pandas as pd
-from typing import Optional, Literal, Tuple
+from typing import Optional, Tuple
 
 class Leaderboards(commands.Cog):
     def __init__(self, client, tree):
@@ -25,7 +25,12 @@ class Leaderboards(commands.Cog):
 
         for game_name, game_info in games_data.items():
             command_name = game_info["game_name"]
-            command_description = f"Show {command_name.capitalize()} leaderboard"
+            # Special description for my_scores command
+            if command_name == "my_scores":
+                command_description = "Show your personal scores for a specific date (default: today)"
+            else:
+                command_description = f"Show {command_name.capitalize()} leaderboard"
+            
             if not self.tree.get_command(command_name):
                 self.create_command(command_name, command_description)
             else:
@@ -34,7 +39,7 @@ class Leaderboards(commands.Cog):
     # this creates a leaderboard command for each game so you can call /mini or /octordle
     def create_command(self, name, description):
         async def command(interaction: discord.Interaction,
-                         timeframe: Literal["today", "yesterday", "this month", "last month", "this year", "all time"] = "today"):
+                         timeframe: str = "today"):
             print(f"/{name} called by {interaction.user.name} in {interaction.guild.name}")
             try:
                 # Defer the response immediately
@@ -67,6 +72,7 @@ class Leaderboards(commands.Cog):
             callback=command,
             description=description
         )
+        app_command = app_commands.describe(timeframe="Date or timeframe (today, yesterday, this month, last month, this year, all time, or custom date like 2024-01-15)")(app_command)
         self.tree.add_command(app_command)
 
     def get_date_range(self, timeframe: str) -> Tuple[datetime, datetime]:
@@ -98,24 +104,77 @@ class Leaderboards(commands.Cog):
         else:  # all time
             return datetime(2020, 1, 1).date(), today
 
+    def parse_timeframe_or_date(self, timeframe_input: str) -> Tuple[datetime, datetime]:
+        """Parse timeframe input - handles both predefined timeframes and custom dates."""
+        # Normalize input
+        input_lower = timeframe_input.lower().strip()
+        
+        # Handle predefined timeframes
+        predefined_timeframes = ["today", "yesterday", "this month", "last month", "this year", "all time"]
+        if input_lower in predefined_timeframes:
+            return self.get_date_range(input_lower)
+        
+        # Try to parse as custom date - multiple formats
+        date_formats = [
+            '%Y-%m-%d',      # 2024-01-15
+            '%m/%d/%Y',      # 1/15/2024  
+            '%m-%d-%Y',      # 1-15-2024
+            '%B %d %Y',      # January 15 2024
+            '%b %d %Y',      # Jan 15 2024
+            '%Y/%m/%d',      # 2024/01/15
+            '%d-%m-%Y',      # 15-01-2024
+            '%m/%d',         # 1/15 (current year)
+            '%m-%d',         # 1-15 (current year)
+        ]
+        
+        current_year = datetime.now().year
+        
+        for fmt in date_formats:
+            try:
+                parsed_date = datetime.strptime(timeframe_input.strip(), fmt).date()
+                # For formats without year, assume current year
+                if parsed_date.year == 1900:  # strptime default year
+                    parsed_date = parsed_date.replace(year=current_year)
+                return parsed_date, parsed_date
+            except ValueError:
+                continue
+        
+        # If nothing works, default to today and raise a warning
+        print(f"Warning: Could not parse '{timeframe_input}', defaulting to today")
+        today = datetime.now().date()
+        return today, today
+
     # leaderboard for any game
     async def show_leaderboard(self, interaction: Optional[discord.Interaction] = None, game: str = None, 
                              timeframe: Optional[str] = 'today') -> str:
         try:
-            # Get date range
-            start_date, end_date = self.get_date_range(timeframe)
+            # Parse timeframe or custom date
+            start_date, end_date = self.parse_timeframe_or_date(timeframe)
+            
+            # Special case for my_scores command
+            if game == "my_scores":
+                # For my_scores, we need to use the daily_myscores.sql query
+                # and pass member_nm (discord username) and game_date as parameters
+                sql_file = "daily_myscores.sql"
+                if interaction:
+                    # Get the discord username from the interaction
+                    member_nm = interaction.user.name
+                    params = [member_nm, start_date]
+                else:
+                    # If no interaction provided, we can't determine the user
+                    raise ValueError("my_scores command requires user interaction to determine discord username")
             
             # Special case for winners - always use daily_winners.sql for today/yesterday
-            if game == "winners" and timeframe in ["today", "yesterday"]:
+            elif game == "winners" and timeframe.lower() in ["today", "yesterday"]:
                 sql_file = "daily_winners.sql"
                 params = [start_date]
             # Determine if we need daily scores or aggregate stats for other games
-            elif timeframe in ["today", "yesterday"]:
-                # Use daily scores query
+            elif timeframe.lower() in ["today", "yesterday"] or start_date == end_date:
+                # Use daily scores query for single days
                 sql_file = "game_daily_scores.sql"
                 params = [start_date, game]
             else:
-                # Use aggregate stats query
+                # Use aggregate stats query for date ranges
                 sql_file = "game_aggregate_stats.sql"
                 params = [start_date, end_date, game]
 
@@ -152,11 +211,19 @@ class Leaderboards(commands.Cog):
                 if 'game_detail' in df.columns:
                     df = df.drop(columns=['game_detail'])
                 
+                # Customize title for my_scores
+                if game == "my_scores" and interaction:
+                    title = f"{interaction.user.display_name}'s Scores"
+                    subtitle = f"Date: {start_date}"
+                else:
+                    title = f"{game} Leaderboard"
+                    subtitle = game_detail if game_detail else "Leaderboard"
+                
                 img_path = df_to_image(
                     df, 
                     "files/images/leaderboard.png", 
-                    f"{game} Leaderboard",
-                    img_subtitle=game_detail if game_detail else "Leaderboard"
+                    title,
+                    img_subtitle=subtitle
                 )
                 if not os.path.exists(img_path):
                     raise FileNotFoundError(f"Image file was not created at {img_path}")

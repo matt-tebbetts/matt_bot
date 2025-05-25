@@ -69,7 +69,20 @@ def save_message_detail(message: discord.Message) -> None:
     command_info = {}
     
     # Check if this is an interaction (slash command, button, etc.)
-    if message.interaction:
+    if hasattr(message, 'interaction_metadata') and message.interaction_metadata:
+        message_type = "interaction_response"
+        interaction_info = {
+            "interaction_id": message.interaction_metadata.id,
+            "interaction_type": message.interaction_metadata.type.name if message.interaction_metadata.type else None,
+            "command_name": message.interaction_metadata.name,
+            "user": {
+                "id": message.interaction_metadata.user.id,
+                "name": message.interaction_metadata.user.name,
+                "display_name": message.interaction_metadata.user.display_name
+            }
+        }
+    # Fallback to old interaction attribute for compatibility
+    elif hasattr(message, 'interaction') and message.interaction:
         message_type = "interaction_response"
         interaction_info = {
             "interaction_id": message.interaction.id,
@@ -89,8 +102,7 @@ def save_message_detail(message: discord.Message) -> None:
         if command_parts:
             command_info = {
                 "command": command_parts[0],
-                "args": command_parts[1:] if len(command_parts) > 1 else []
-            }
+                "args": command_parts[1:] if len(command_parts) > 1 else []            }
     
     # Check if this looks like a slash command result (empty content but has attachments/embeds)
     elif message.content == "" and (message.attachments or message.embeds):
@@ -146,7 +158,7 @@ def save_message_detail(message: discord.Message) -> None:
         
         # Channel information
         "channel_id": message.channel.id,
-        "channel_nm": message.channel.name,
+        "channel_nm": getattr(message.channel, 'name', 'DM') if hasattr(message.channel, 'name') else 'DM',
         "channel_type": type(message.channel).__name__,
         
         # Message type and context
@@ -186,6 +198,13 @@ def save_message_detail(message: discord.Message) -> None:
         "game_name": game_name if is_score else None,
         "game_info": game_info if is_score else None
     }
+
+    # Handle DM messages (no guild)
+    if message.guild is None:
+        # For DM messages, we can either skip them or store them separately
+        # For now, let's skip DM messages since the bot structure expects guild-based storage
+        print(f"Skipping DM message from {message.author.name}: {message.content[:50]}...")
+        return
 
     # set file path
     file_path = direct_path_finder('files', 'guilds', message.guild.name, 'messages.json')

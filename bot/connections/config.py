@@ -17,8 +17,13 @@ IS_WINDOWS = platform.system() == 'Windows'
 IS_LINUX = platform.system() == 'Linux'
 
 # Bot token configuration
-BOT_TOKEN = os.getenv("MATT_BOT")
-BOT_NAME = "Matt_Bot"
+if IS_LINUX:
+    BOT_TOKEN = os.getenv("MATT_BOT")
+    BOT_NAME = "Matt_Bot"
+else:
+    BOT_TOKEN = os.getenv("TEST_BOT")
+    BOT_NAME = "Test_Bot"
+
 SYSTEM_NAME = platform.system()
 
 # Font configuration

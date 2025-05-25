@@ -1,13 +1,17 @@
 import discord
+import pandas as pd
 from bot.functions import execute_query
 from bot.functions.admin import read_json, write_json
 from bot.functions.admin import direct_path_finder
 
 # find users who haven't completed the mini
 async def find_users_to_warn():
-    df = await execute_query("SELECT * FROM matt.mini_not_completed")
+    result = await execute_query("SELECT * FROM matt.mini_not_completed")
+    df = pd.DataFrame(result)
+    
     if df.empty:
         return []
+    
     users_to_message = []
     for index, row in df.iterrows():
         users_to_message.append({
@@ -29,7 +33,15 @@ async def check_mini_leaders():
         where game_date = (select max(game_date) from matt.mini_view)
         and game_rank = 1
     """
-    df = await execute_query(query)
+    result = await execute_query(query)
+    
+    # Convert result to DataFrame
+    df = pd.DataFrame(result)
+    
+    # Check if we have any data
+    if df.empty:
+        print("No mini leaders found for today")
+        return {}
 
     # get leaders by guild
     aggregated_df = df.groupby('guild_nm')['player_name'].apply(list).reset_index()
