@@ -2,6 +2,7 @@ import discord
 from discord.ext import tasks
 from datetime import datetime
 import pandas as pd
+import os
 
 from bot.functions import find_users_to_warn
 from bot.functions import send_df_to_sql, execute_query
@@ -58,31 +59,49 @@ async def send_warning_loop(client: discord.Client):
 # task 2 - check for new mini leaders and post to discord
 @tasks.loop(seconds=60)
 async def post_new_mini_leaders(client: discord.Client, tree: discord.app_commands.CommandTree):
+    try:
+        # check for leader changes
+        guild_differences = await check_mini_leaders()
 
-    # check for leader changes
-    guild_differences = await check_mini_leaders()
+        # Filter guild_differences to include only connected guilds
+        connected_guilds = {guild.name for guild in client.guilds}
+        filtered_guild_differences = {guild_name: has_new_leader for guild_name, has_new_leader in guild_differences.items() if guild_name in connected_guilds}
 
-    # Filter guild_differences to include only connected guilds
-    connected_guilds = {guild.name for guild in client.guilds}
-    filtered_guild_differences = {guild_name: has_new_leader for guild_name, has_new_leader in guild_differences.items() if guild_name in connected_guilds}
+        for guild_name, has_new_leader in filtered_guild_differences.items():
 
-    for guild_name, has_new_leader in filtered_guild_differences.items():
+            if not has_new_leader:
+                continue
 
-        if not has_new_leader:
-            continue
+            # Get the default channel ID
+            channel_id = get_default_channel_id(guild_name)
+            if not channel_id:
+                continue
 
-        # Get the default channel ID
-        channel_id = get_default_channel_id(guild_name)
-        if not channel_id:
-            continue
-
-        basic_message = "There's a new mini leader!"
-        channel = client.get_channel(channel_id)
-        if channel:
-            await channel.send(basic_message)
-            leaderboards = Leaderboards(client, tree)
-            leaderboard = await leaderboards.show_leaderboard(game='mini')
-            await channel.send(leaderboard)
+            basic_message = "There's a new mini leader!"
+            channel = client.get_channel(channel_id)
+            if channel:
+                try:
+                    await channel.send(basic_message)
+                    # Create leaderboard and send as image file
+                    leaderboards = Leaderboards(client, tree)
+                    img_path = await leaderboards.show_leaderboard(game='mini')
+                    
+                    # Check if we got a valid file path (should end with .png and exist)
+                    if (img_path and isinstance(img_path, str) and 
+                        img_path.endswith('.png') and 
+                        os.path.exists(img_path)):
+                        await channel.send(file=discord.File(img_path))
+                    else:
+                        # Either got an error message or file doesn't exist
+                        error_msg = img_path if isinstance(img_path, str) else "Unknown error generating leaderboard"
+                        print(f"Failed to generate mini leaderboard for {guild_name}: {error_msg}")
+                        await channel.send("Error: Could not generate mini leaderboard image")
+                        
+                except Exception as e:
+                    print(f"Error posting mini leader update to {guild_name}: {e}")
+                    
+    except Exception as e:
+        print(f"Error in post_new_mini_leaders task: {e}")
 
 # task 3 - reset leaders when mini resets
 @tasks.loop(hours=1)
@@ -99,11 +118,71 @@ async def reset_mini_leaders(client: discord.Client):
     except Exception as e:
         print(f"Error in reset_mini_leaders: {e}")
 
+# task 4 - end of day mini summary and warnings
+@tasks.loop(hours=1)
+async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.CommandTree):
+    try:
+        now = datetime.now()
+        mini_reset_hour = 22 if now.weekday() >= 5 else 18  # 10pm weekends, 6pm weekdays
+        warning_hours = [mini_reset_hour - 2, mini_reset_hour - 1]  # 2 hours and 1 hour before
+        
+        # Send warning 2 hours and 1 hour before mini expires
+        if now.hour in warning_hours:
+            users_to_warn = await find_users_to_warn()
+            if users_to_warn:
+                connected_guilds = {guild.name for guild in client.guilds}
+                for guild_name in connected_guilds:
+                    channel_id = get_default_channel_id(guild_name)
+                    if channel_id:
+                        channel = client.get_channel(channel_id)
+                        if channel:
+                            hours_left = mini_reset_hour - now.hour
+                            warning_msg = f"⏰ **Mini reminder!** Only {hours_left} hour{'s' if hours_left > 1 else ''} left to complete today's mini crossword!"
+                            try:
+                                await channel.send(warning_msg)
+                                # Show current leaderboard
+                                leaderboards = Leaderboards(client, tree)
+                                img_path = await leaderboards.show_leaderboard(game='mini')
+                                if (img_path and isinstance(img_path, str) and 
+                                    img_path.endswith('.png') and 
+                                    os.path.exists(img_path)):
+                                    await channel.send(file=discord.File(img_path))
+                                else:
+                                    print(f"Failed to generate mini warning leaderboard for {guild_name}: {img_path}")
+                            except Exception as e:
+                                print(f"Error sending mini warning to {guild_name}: {e}")
+        
+        # Send end-of-day summary when mini resets
+        elif now.hour == mini_reset_hour and now.minute <= 5:  # 5 minute window
+            connected_guilds = {guild.name for guild in client.guilds}
+            for guild_name in connected_guilds:
+                channel_id = get_default_channel_id(guild_name)
+                if channel_id:
+                    channel = client.get_channel(channel_id)
+                    if channel:
+                        summary_msg = "🏁 **Final Mini Results for Today!**"
+                        try:
+                            await channel.send(summary_msg)
+                            # Show final leaderboard
+                            leaderboards = Leaderboards(client, tree)
+                            img_path = await leaderboards.show_leaderboard(game='mini')
+                            if (img_path and isinstance(img_path, str) and 
+                                img_path.endswith('.png') and 
+                                os.path.exists(img_path)):
+                                await channel.send(file=discord.File(img_path))
+                            else:
+                                print(f"Failed to generate daily mini summary leaderboard for {guild_name}: {img_path}")
+                        except Exception as e:
+                            print(f"Error sending daily mini summary to {guild_name}: {e}")
+                            
+    except Exception as e:
+        print(f"Error in daily_mini_summary task: {e}")
+
 def setup_tasks(client: discord.Client, tree: discord.app_commands.CommandTree):
-    # Disabled warning loop for now
-    # if send_warning_loop.is_running():
-    #     send_warning_loop.stop()
-    # send_warning_loop.start(client)
+    # Enable warning loop
+    if send_warning_loop.is_running():
+        send_warning_loop.stop()
+    send_warning_loop.start(client)
 
     # Restart post_new_mini_leaders if it's already running
     if post_new_mini_leaders.is_running():
@@ -114,3 +193,8 @@ def setup_tasks(client: discord.Client, tree: discord.app_commands.CommandTree):
     if reset_mini_leaders.is_running():
         reset_mini_leaders.stop()
     reset_mini_leaders.start(client)
+    
+    # Start daily mini summary task
+    if daily_mini_summary.is_running():
+        daily_mini_summary.stop()
+    daily_mini_summary.start(client, tree)
