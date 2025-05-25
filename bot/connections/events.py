@@ -392,8 +392,12 @@ async def setup_events(client, tree):
                 channel_name = f"#{message.channel.parent.name} > {message.channel.name}"
             elif isinstance(message.channel, discord.TextChannel):
                 channel_name = f"#{message.channel.name}"
+            elif isinstance(message.channel, discord.GroupChannel):
+                channel_name = f"Group DM: {message.channel.name or 'Unnamed'}"
+            elif isinstance(message.channel, discord.DMChannel):
+                channel_name = f"DM with {message.channel.recipient.name}"
             else:
-                channel_name = "DM"
+                channel_name = "Unknown Channel"
             
             first_line = message.content.split('\n')[0]
             message_preview = first_line[:16] + "..." if len(first_line) > 16 else first_line
@@ -423,13 +427,136 @@ async def setup_events(client, tree):
             game_config = games_config.get(score_result['game_name'], {})
 
             # Add reactions
-            await message.add_reaction(game_config.get('emoji', '✅'))
+            main_emoji = game_config.get('emoji', '✅')
+            success = await smart_emoji_reaction(message, main_emoji)
+            if not success:
+                # Fallback to green checkmark
+                try:
+                    await smart_emoji_reaction(message, '✅')
+                except Exception as e:
+                    print(f"Even fallback emoji failed: {e}")
             
             # Add bonus reactions if any
             if game_bonuses := score_result.get('game_bonuses'):
                 for bonus in game_bonuses.split(', '):
-                    if emoji := game_config.get('bonus_emojis', {}).get(bonus):
-                        await message.add_reaction(emoji)
+                    if emoji_config := game_config.get('bonus_emojis', {}).get(bonus):
+                        success = await smart_emoji_reaction_with_fallbacks(message, emoji_config)
+                        if not success:
+                            # Fallback to green checkmark for failed bonus emojis
+                            try:
+                                await smart_emoji_reaction(message, '✅')
+                            except Exception as e:
+                                print(f"Bonus emoji fallback failed: {e}")
             
         except Exception as e:
             print(f"events.py: Error processing game score: {str(e)}")
+
+async def smart_emoji_reaction(message, emoji_str):
+    """
+    Intelligently add emoji reaction with fallbacks.
+    Handles Unicode, custom emojis, and provides fallbacks.
+    """
+    try:
+        # Handle DMs (no guild)
+        if message.guild is None:
+            # In DMs, can only use Unicode emojis
+            if not (emoji_str.startswith('<:') or emoji_str.startswith(':')):
+                await message.add_reaction(emoji_str)
+                return True
+            else:
+                print(f"Cannot use custom emoji '{emoji_str}' in DM")
+                return False
+        
+        # Handle full custom Discord emoji format (<:name:id>)
+        if emoji_str.startswith('<:') and emoji_str.endswith('>'):
+            await message.add_reaction(emoji_str)
+            return True
+            
+        # Handle shorthand custom Discord emoji format (:name:)
+        elif emoji_str.startswith(':') and emoji_str.endswith(':') and len(emoji_str) > 2:
+            emoji_name = emoji_str[1:-1]  # Remove the colons
+            
+            # First try to find in guild
+            custom_emoji = discord.utils.get(message.guild.emojis, name=emoji_name)
+            if custom_emoji:
+                await message.add_reaction(custom_emoji)
+                return True
+                
+            # If not found, check guild config for available emojis
+            try:
+                guild_config_path = direct_path_finder('files', 'guilds', message.guild.name, 'config.json')
+                if os.path.exists(guild_config_path):
+                    with open(guild_config_path, 'r', encoding='utf-8') as f:
+                        config = json.load(f)
+                        custom_emojis = config.get('custom_emojis', {})
+                        if emoji_name in custom_emojis:
+                            emoji_data = custom_emojis[emoji_name]
+                            # Check if emoji is available
+                            if emoji_data.get('available', True):
+                                full_emoji = emoji_data['full_format']
+                                await message.add_reaction(full_emoji)
+                                return True
+                            else:
+                                print(f"Custom emoji '{emoji_name}' is not available in guild '{message.guild.name}'")
+                                return False
+            except Exception as e:
+                print(f"Error checking guild config for emoji: {e}")
+                
+            # Emoji not found in this guild
+            print(f"Custom emoji '{emoji_name}' not available in guild '{message.guild.name}'")
+            return False
+            
+        else:
+            # Regular Unicode emoji
+            await message.add_reaction(emoji_str)
+            return True
+            
+    except Exception as e:
+        print(f"Failed to add emoji reaction '{emoji_str}' in guild '{message.guild.name if message.guild else 'DM'}': {e}")
+        return False
+
+async def smart_emoji_reaction_with_fallbacks(message, emoji_config):
+    """
+    Enhanced emoji reaction with intelligent fallback system.
+    Supports both simple string emojis and complex fallback configurations.
+    """
+    try:
+        # Handle simple string emoji (backward compatibility)
+        if isinstance(emoji_config, str):
+            return await smart_emoji_reaction(message, emoji_config)
+        
+        # Handle complex fallback configuration
+        if isinstance(emoji_config, dict):
+            # Try primary emoji first
+            if 'primary' in emoji_config:
+                success = await smart_emoji_reaction(message, emoji_config['primary'])
+                if success:
+                    print(f"✓ Used primary emoji: {emoji_config['primary']}")
+                    return True
+                else:
+                    print(f"✗ Primary emoji failed: {emoji_config['primary']}")
+            
+            # Try fallback emoji
+            if 'fallback' in emoji_config:
+                success = await smart_emoji_reaction(message, emoji_config['fallback'])
+                if success:
+                    print(f"✓ Used fallback emoji: {emoji_config['fallback']}")
+                    return True
+                else:
+                    print(f"✗ Fallback emoji failed: {emoji_config['fallback']}")
+            
+            # Universal hardcoded backup - green checkmark
+            success = await smart_emoji_reaction(message, '✅')
+            if success:
+                print(f"✓ Used universal backup emoji: ✅")
+                return True
+            else:
+                print(f"✗ Even universal backup emoji failed: ✅")
+        
+        # If all else fails (this should be extremely rare)
+        print(f"✗ All emoji options failed for config: {emoji_config}")
+        return False
+        
+    except Exception as e:
+        print(f"Error in smart_emoji_reaction_with_fallbacks: {e}")
+        return False

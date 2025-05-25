@@ -87,7 +87,8 @@
         "scoring_type": "points",
         "emoji": "⏱️",
         "bonus_emojis": {
-            "over_40k": "🎯"
+            "over_40k": "🎯",
+            "under_30k": "🙄"
         }
     },
     "actorle": {
@@ -127,7 +128,10 @@
         "emoji": "🚑",
         "bonus_emojis": {
             "failed_any": "💀",
-            "bonus_9": ":chefs_kiss:"
+            "bonus_9": {
+                "primary": "<:chefs_kiss:756662773416460379>",
+                "fallback": "😘"
+            }
         }
     },
     "moviedle": {

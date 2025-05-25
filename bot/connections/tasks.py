@@ -16,6 +16,11 @@ from bot.functions.admin import direct_path_finder
 @tasks.loop(hours=1)
 async def send_warning_loop(client: discord.Client):
     
+    # Skip on startup - wait for first scheduled run
+    if send_warning_loop.current_loop == 0:
+        print("Skipping warning loop on startup - will run on schedule")
+        return
+    
     # see if anyone needs a warning
     users_to_warn = await find_users_to_warn()
     if len(users_to_warn) == 0:
@@ -123,36 +128,25 @@ async def reset_mini_leaders(client: discord.Client):
 async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.CommandTree):
     try:
         now = datetime.now()
-        mini_reset_hour = 22 if now.weekday() >= 5 else 18  # 10pm weekends, 6pm weekdays
-        warning_hours = [mini_reset_hour - 2, mini_reset_hour - 1]  # 2 hours and 1 hour before
+        mini_reset_hour = 18 if now.weekday() >= 5 else 22  # 6pm weekends, 10pm weekdays
+        warning_hour = mini_reset_hour - 2  # 2 hours before expiration
         
-        # Send warning 2 hours and 1 hour before mini expires
-        if now.hour in warning_hours:
+        # Send DM warnings 2 hours before mini expires (once per day)
+        if now.hour == warning_hour and now.minute <= 5:  # 5 minute window
             users_to_warn = await find_users_to_warn()
             if users_to_warn:
-                connected_guilds = {guild.name for guild in client.guilds}
-                for guild_name in connected_guilds:
-                    channel_id = get_default_channel_id(guild_name)
-                    if channel_id:
-                        channel = client.get_channel(channel_id)
-                        if channel:
-                            hours_left = mini_reset_hour - now.hour
-                            warning_msg = f"⏰ **Mini reminder!** Only {hours_left} hour{'s' if hours_left > 1 else ''} left to complete today's mini crossword!"
-                            try:
-                                await channel.send(warning_msg)
-                                # Show current leaderboard
-                                leaderboards = Leaderboards(client, tree)
-                                img_path = await leaderboards.show_leaderboard(game='mini')
-                                if (img_path and isinstance(img_path, str) and 
-                                    img_path.endswith('.png') and 
-                                    os.path.exists(img_path)):
-                                    await channel.send(file=discord.File(img_path))
-                                else:
-                                    print(f"Failed to generate mini warning leaderboard for {guild_name}: {img_path}")
-                            except Exception as e:
-                                print(f"Error sending mini warning to {guild_name}: {e}")
+                warning_text = "⏰ **Mini reminder!** Only 2 hours left to complete today's mini crossword!"
+                
+                for user in users_to_warn:
+                    try:
+                        # Get user by discord ID and send DM
+                        discord_user = await client.fetch_user(user['discord_id_nbr'])
+                        await discord_user.send(warning_text)
+                        print(f"Sent mini warning DM to {user['name']}")
+                    except Exception as e:
+                        print(f"Failed to send mini warning DM to {user['name']}: {e}")
         
-        # Send end-of-day summary when mini resets
+        # Send end-of-day summary to channels when mini resets
         elif now.hour == mini_reset_hour and now.minute <= 5:  # 5 minute window
             connected_guilds = {guild.name for guild in client.guilds}
             for guild_name in connected_guilds:
@@ -179,22 +173,19 @@ async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.
         print(f"Error in daily_mini_summary task: {e}")
 
 def setup_tasks(client: discord.Client, tree: discord.app_commands.CommandTree):
-    # Enable warning loop
-    if send_warning_loop.is_running():
-        send_warning_loop.stop()
-    send_warning_loop.start(client)
-
-    # Restart post_new_mini_leaders if it's already running
+    # Start the continuous monitoring task
     if post_new_mini_leaders.is_running():
         post_new_mini_leaders.stop()
     post_new_mini_leaders.start(client, tree)
 
-    # Restart reset_mini_leaders if it's already running
+    # Start time-based tasks (they have their own time checks)
     if reset_mini_leaders.is_running():
         reset_mini_leaders.stop()
     reset_mini_leaders.start(client)
     
-    # Start daily mini summary task
     if daily_mini_summary.is_running():
         daily_mini_summary.stop()
     daily_mini_summary.start(client, tree)
+    
+    # Note: send_warning_loop is redundant with daily_mini_summary DM warnings
+    # Removing it to avoid duplicate warning systems

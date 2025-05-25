@@ -40,7 +40,8 @@ async def save_guild_config(guild: discord.Guild):
         "guild_name": guild.name,
         "channels": [],
         "users": [],
-        "default_channel_id": None
+        "default_channel_id": None,
+        "custom_emojis": {}
     }
 
     # Gather channel information
@@ -67,6 +68,15 @@ async def save_guild_config(guild: discord.Guild):
             "joined_at": member.joined_at.isoformat() if member.joined_at else None
         }
         guild_info["users"].append(user_info)
+
+    # Gather custom emoji information
+    for emoji in guild.emojis:
+        guild_info["custom_emojis"][emoji.name] = {
+            "id": str(emoji.id),
+            "full_format": f"<:{emoji.name}:{emoji.id}>",
+            "animated": emoji.animated,
+            "available": emoji.available
+        }
 
     # Save to file
     config_file = direct_path_finder('files', 'guilds', guild.name, 'config.json')

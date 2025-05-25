@@ -81,19 +81,6 @@ def save_message_detail(message: discord.Message) -> None:
                 "display_name": message.interaction_metadata.user.display_name
             }
         }
-    # Fallback to old interaction attribute for compatibility
-    elif hasattr(message, 'interaction') and message.interaction:
-        message_type = "interaction_response"
-        interaction_info = {
-            "interaction_id": message.interaction.id,
-            "interaction_type": message.interaction.type.name if message.interaction.type else None,
-            "command_name": message.interaction.name,
-            "user": {
-                "id": message.interaction.user.id,
-                "name": message.interaction.user.name,
-                "display_name": message.interaction.user.display_name
-            }
-        }
     
     # Check if this is likely a command (starts with prefix or is from bot with empty content + attachments)
     elif message.content.startswith(('/', '!', '?')):
@@ -199,15 +186,14 @@ def save_message_detail(message: discord.Message) -> None:
         "game_info": game_info if is_score else None
     }
 
-    # Handle DM messages (no guild)
+    # Handle DM messages (no guild) - store in special DM folder
     if message.guild is None:
-        # For DM messages, we can either skip them or store them separately
-        # For now, let's skip DM messages since the bot structure expects guild-based storage
-        print(f"Skipping DM message from {message.author.name}: {message.content[:50]}...")
-        return
-
-    # set file path
-    file_path = direct_path_finder('files', 'guilds', message.guild.name, 'messages.json')
+        # For DM messages, create a special storage path
+        dm_folder_name = f"DM_{message.channel.id}"  # Use channel ID as folder name
+        file_path = direct_path_finder('files', 'dms', dm_folder_name, 'messages.json')
+    else:
+        # Regular guild messages
+        file_path = direct_path_finder('files', 'guilds', message.guild.name, 'messages.json')
 
     # read existing messages (if any)
     messages: Dict[str, Dict[str, Any]] = {}
