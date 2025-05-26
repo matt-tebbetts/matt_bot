@@ -4,7 +4,7 @@ import json
 import pandas as pd
 from datetime import datetime
 import pytz
-from bot.functions import send_df_to_sql
+from bot.functions import send_df_to_sql, execute_query
 from typing import Tuple
 from bot.functions.admin import direct_path_finder
 from bot.functions.save_messages import is_game_score
@@ -19,7 +19,7 @@ async def process_game_score(message, game_name=None, game_info=None):
             
     # send for processing
     try:
-        score_info = get_score_info(message.content, game_name, game_info)
+        score_info = await get_score_info(message.content, game_name, game_info)
     except Exception as e:
         return None
 
@@ -30,6 +30,15 @@ async def process_game_score(message, game_name=None, game_info=None):
         'game_name': game_name,
         'user_name': message.author.name
     }
+
+    # Check if the game processor wants to override the game_date (for octordle)
+    if 'override_game_date' in score_info:
+        print(f"[DEBUG] Overriding game_date from {basic_info['game_date']} to {score_info['override_game_date']}")
+        basic_info['game_date'] = score_info['override_game_date']
+        # Remove the override key from score_info so it doesn't get stored
+        del score_info['override_game_date']
+    else:
+        print(f"[DEBUG] No override_game_date found, using timestamp-based date: {basic_info['game_date']}")
 
     # combine basic info and score info
     game_score_to_add = {**basic_info, **score_info}
@@ -57,7 +66,7 @@ async def process_game_score(message, game_name=None, game_info=None):
     # send back for further processing
     return ordered_game_score
 
-def get_score_info(message, game_name, game_info):
+async def get_score_info(message, game_name, game_info):
     game_processors = {
         "connections": process_connections,
         "crosswordle": process_crosswordle,
@@ -77,7 +86,11 @@ def get_score_info(message, game_name, game_info):
     # Check if the game has a specific processor
     if game_name in game_processors:
         try:
-            return game_processors[game_name](message)
+            # Handle async octordle processors
+            if game_name in ["octordle", "octordle_rescue", "octordle_sequence"]:
+                return await game_processors[game_name](message)
+            else:
+                return game_processors[game_name](message)
         except Exception as e:
             raise
 
@@ -207,9 +220,33 @@ def process_travle(message):
     }
     return score_info
 
-def process_octordle(message):
+async def process_octordle(message):
     score = int(message.split('\n')[-1].split(' ')[1])
     game_detail = message.split('\n')[0]
+    
+    # Extract game number from game_detail (e.g., "Daily Octordle #1196" -> 1196)
+    game_nbr_match = re.search(r'#(\d+)', game_detail)
+    correct_game_date = None
+    
+    if game_nbr_match:
+        game_nbr = int(game_nbr_match.group(1))
+        print(f"[DEBUG] Octordle game number extracted: {game_nbr}")
+        try:
+            # Query the octordle_xref table to get the correct game_date
+            query = "SELECT game_date FROM games.octordle_xref WHERE game_nbr = %s"
+            print(f"[DEBUG] Executing query: {query} with game_nbr: {game_nbr}")
+            result = await execute_query(query, [game_nbr])
+            print(f"[DEBUG] Query result: {result}")
+            if result and len(result) > 0:
+                correct_game_date = result[0]['game_date']
+                print(f"[DEBUG] Found game_date: {correct_game_date}")
+                if isinstance(correct_game_date, datetime):
+                    correct_game_date = correct_game_date.strftime("%Y-%m-%d")
+                print(f"[DEBUG] Formatted game_date: {correct_game_date}")
+            else:
+                print(f"[DEBUG] No results found for game_nbr {game_nbr}")
+        except Exception as e:
+            print(f"Error looking up octordle game date for game #{game_nbr}: {e}")
     
     # Calculate bonuses based on game type
     wordles_failed = message.count('🟥')
@@ -234,6 +271,14 @@ def process_octordle(message):
         'game_detail': game_detail,
         'game_bonuses': bonuses
     }
+    
+    # Add the correct game_date if we found it
+    if correct_game_date:
+        score_info['override_game_date'] = correct_game_date
+        print(f"[DEBUG] Setting override_game_date to: {correct_game_date}")
+    else:
+        print(f"[DEBUG] No correct_game_date found, will use message timestamp")
+    
     return score_info
 
 def process_worldle(message):
