@@ -1,0 +1,30 @@
+[Unit]
+Description=NYT Crossword Data Collection Service
+After=network.target
+Wants=network.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+WorkingDirectory=/Users/matthewtebbetts/Documents/projects/matt_bot
+ExecStart=/usr/bin/python3 /Users/matthewtebbetts/Documents/projects/matt_bot/bot/services/nyt_service.py
+Environment=PYTHONPATH=/Users/matthewtebbetts/Documents/projects/matt_bot
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+
+# Logging
+StandardOutput=append:/var/log/nyt_service.log
+StandardError=append:/var/log/nyt_service.log
+
+# Security and resource limits
+PrivateTmp=true
+NoNewPrivileges=true
+MemoryMax=512M
+CPUQuota=25%
+
+# Restart policy
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target 

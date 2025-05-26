@@ -11,14 +11,14 @@ def print_tree(dir_path, indent="", file=None):
             sub_indent = "│   " if index != len(items) - 1 else "    "
             print_tree(item, indent + sub_indent, file)
 
-# Get the absolute path of the project root
-project_root = Path(__file__).parent.parent
+# Get the absolute path of the project root (now we're in bot/functions/)
+project_root = Path(__file__).parent.parent.parent
 
 # Define paths relative to the project root
-output_file_path = project_root / 'files' / 'tree.txt'
+output_file_path = project_root / 'files' / 'images' / 'tree.txt'
 
 # Ensure the output file is written to the "files" folder
 with open(output_file_path, "w", encoding="utf-8") as f:
-    print_tree(Path.cwd(), file=f)
+    print_tree(project_root, file=f)
 
 print(f"Directory structure written to {output_file_path}")
