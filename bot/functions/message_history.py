@@ -259,7 +259,7 @@ async def initialize_message_history(client, lookback_days: int = 7) -> None:
                 print(f"✓ Saved {total_scores} game scores to SQL")
         
     except Exception as e:
-        print(f"[ERROR] Error initializing message history: {str(e)}")
+        print(f"[ERROR] Error checking for missed messages: {str(e)}")
         print(f"[ERROR] Full error details: {str(e.__class__.__name__)}: {str(e)}")
         import traceback
         print(f"[ERROR] Traceback: {traceback.format_exc()}") 

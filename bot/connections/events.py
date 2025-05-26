@@ -327,7 +327,7 @@ async def setup_events(client, tree):
             print(f"[ERROR] Initial setup failed: {e}")
         
         # Initialize message history (can be time-consuming)
-        print("\nInitializing message history...")
+        print("\nChecking for missed messages...")
         try:
             await initialize_message_history(client, lookback_days=7)
         except Exception as e:

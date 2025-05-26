@@ -136,7 +136,7 @@ async def close_pool():
         await _pool.wait_closed()
         _pool = None
 
-async def send_df_to_sql(df, table_name, if_exists='append'):
+async def send_df_to_sql(df, table_name, if_exists='append', unique_key=None):
     if df.empty:
         print(f"[SQL] Warning: Attempting to insert empty DataFrame into {table_name}")
         return
@@ -153,7 +153,6 @@ async def send_df_to_sql(df, table_name, if_exists='append'):
                     # Prepare the data
                     columns = df.columns.tolist()
                     placeholders = ', '.join(['%s'] * len(columns))
-                    query = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
                     
                     # Convert DataFrame to list of tuples, handling lists by converting to strings
                     data_tuples = []
@@ -166,10 +165,23 @@ async def send_df_to_sql(df, table_name, if_exists='append'):
                                 processed_row.append(value)
                         data_tuples.append(tuple(processed_row))
                     
-                    # Execute the insert
-                    await cur.executemany(query, data_tuples)
+                    # Handle different insert modes
+                    if if_exists == 'upsert' and unique_key:
+                        # Use INSERT ... ON DUPLICATE KEY UPDATE for MySQL
+                        update_clauses = [f"{col} = VALUES({col})" for col in columns if col != unique_key]
+                        query = f"""
+                            INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})
+                            ON DUPLICATE KEY UPDATE {', '.join(update_clauses)}
+                        """
+                        await cur.executemany(query, data_tuples)
+                        print(f"✓ Upserted {len(data_tuples)} rows into {table_name} (key: {unique_key})")
+                    else:
+                        # Standard append mode
+                        query = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
+                        await cur.executemany(query, data_tuples)
+                        print(f"✓ Inserted {len(data_tuples)} rows into {table_name}")
+                    
                     await conn.commit()
-                    print(f"✓ Inserted {len(data_tuples)} rows into {table_name}")
 
     except Exception as e:
         print(f"[SQL] Failed to insert data into {table_name}: {str(e)}")

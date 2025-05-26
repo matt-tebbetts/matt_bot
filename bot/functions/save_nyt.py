@@ -11,7 +11,7 @@ from tqdm import tqdm
 import pandas as pd
 
 # Import our SQL helper
-from sql_helper import send_df_to_sql
+from sql_helper import send_df_to_sql, execute_query
 
 load_dotenv()
 
@@ -26,14 +26,14 @@ parser = argparse.ArgumentParser(description="Fetch NYT Crossword stats for mult
 # Define arguments in a clean data structure
 arguments = [
     (("-u", "--user"), {"help": "Specific user to fetch data for (by player_name). If not specified, fetches for all active users"}),
-    (("-s", "--start-date"), {"help": "The first date to pull from, inclusive (defaults to 2 days ago)", "default": datetime.strftime(datetime.now() - timedelta(days=2), DATE_FORMAT)}),
+    (("-s", "--start-date"), {"help": "The first date to pull from, inclusive (defaults to 7 days ago)", "default": datetime.strftime(datetime.now() - timedelta(days=7), DATE_FORMAT)}),
     (("-e", "--end-date"), {"help": "The last date to pull from, inclusive (defaults to today)", "default": datetime.strftime(datetime.now(), DATE_FORMAT)}),
-    (("-o", "--output-dir"), {"help": "The directory to write output files to", "default": "files/nyt_stats"}),
+
     (("-t", "--type"), {"help": 'The type of puzzle data to fetch. Valid values are "daily", "bonus", "mini", or "all" (defaults to all)', "default": "all"}),
     (("--config-file",), {"help": "Path to users config JSON file", "default": "files/config/users.json"}),
     (("--historical",), {"help": "Fetch all available historical data (overrides start-date)", "action": "store_true"}),
-    (("--sql",), {"help": "Save data to SQL database", "action": "store_true"}),
-    (("--json-only",), {"help": "Save JSON only (skip SQL)", "action": "store_true"})
+
+    (("--date-range",), {"help": "Use specific date range instead of incremental mode (for backfills)", "action": "store_true"})
 ]
 
 # Add arguments to parser
@@ -104,28 +104,53 @@ def extract_puzzle_fields(detail, player_name, print_date, puzzle_data):
         "opened_datetime": unix_to_eastern_datetime(firsts.get("opened", None)),
         "solved_datetime": unix_to_eastern_datetime(firsts.get("solved", None)),
         "min_guess_datetime": unix_to_eastern_datetime(detail.get("minGuessTime", None)),
+        "final_commit_datetime": unix_to_eastern_datetime(detail.get("timestamp", None)),
         
         # System tracking
-        "last_updated": datetime.now().isoformat(),
-        "added_ts": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        "bot_added_ts": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
     
     return essential_record
 
 
-def get_stats_summary(puzzles_list):
-    """Generate statistics summary from a list of puzzles"""
-    player_stats = {}
-    puzzle_type_stats = {}
-    
-    for puzzle in puzzles_list:
-        player = puzzle.get('player_name', 'Unknown')
-        ptype = puzzle.get('puzzle_type', 'Unknown')
+async def get_player_last_commit(player_name):
+    """Get the latest commit timestamp for a player from our database"""
+    try:
+        query = """
+            SELECT MAX(final_commit_datetime) as last_commit
+            FROM nyt_history 
+            WHERE player_name = %s 
+            AND final_commit_datetime IS NOT NULL
+            AND final_commit_datetime != '-'
+        """
+        results = await execute_query(query, (player_name,))
         
-        player_stats[player] = player_stats.get(player, 0) + 1
-        puzzle_type_stats[ptype] = puzzle_type_stats.get(ptype, 0) + 1
+        if results and results[0]['last_commit']:
+            return results[0]['last_commit']
+        return None
+    except Exception as e:
+        print(f"Warning: Could not fetch last commit for {player_name}: {e}")
+        return None
+
+
+def puzzle_modified_since_last_check(api_timestamp, last_commit_str):
+    """Check if puzzle was modified since player's last recorded commit"""
+    if not last_commit_str or not api_timestamp:
+        return True  # No baseline or API timestamp, update to be safe
     
-    return player_stats, puzzle_type_stats
+    try:
+        # Convert API timestamp to Eastern datetime string
+        api_datetime_str = unix_to_eastern_datetime(api_timestamp)
+        if not api_datetime_str:
+            return True  # Can't parse API timestamp, update to be safe
+            
+        # Compare timestamps - if API timestamp is newer than our last check, update
+        return api_datetime_str > last_commit_str
+    except Exception:
+        return True  # Any parsing error, update to be safe
+
+
+
 
 
 def get_v3_puzzle_overview(puzzle_type, start_date, end_date, cookie):
@@ -155,7 +180,7 @@ def get_v3_puzzle_detail(puzzle_id, cookie):
     return puzzle_detail
 
 
-def process_user_data(user, start_date, end_date, puzzle_type, output_dir, master_data=None):
+async def process_user_data(user, start_date, end_date, puzzle_type, master_data=None, use_date_range=False):
     """Process NYT crossword data for a single user"""
     print(f"\nProcessing data for {user['player_name']}...")
     
@@ -186,13 +211,39 @@ def process_user_data(user, start_date, end_date, puzzle_type, output_dir, maste
         batch_start = batch_start + timedelta(days=100)
         batch_end = batch_end + timedelta(days=100)
 
+    # Get baseline for incremental mode (default behavior)
+    last_commit_str = None
+    
+    if not use_date_range:
+        # Default incremental mode
+        print(f"Checking last commit for {user['player_name']}...")
+        last_commit_str = await get_player_last_commit(user['player_name'])
+        if last_commit_str:
+            print(f"Last recorded commit: {last_commit_str}")
+        else:
+            print("No previous commits found - will check all puzzles")
+    else:
+        print(f"Date range mode: checking all puzzles in range")
+
     print(f"\nGetting puzzle solve times for {user['player_name']}\n")
 
     # Convert puzzles to streamlined structure
     essential_puzzles = []
+    skipped_count = 0
+    
     for puzzle in tqdm(puzzle_overview, desc=f"{user['player_name']} - Puzzle details"):
         try:
+            # Get detail first to check timestamp
             detail = get_v3_puzzle_detail(puzzle_id=puzzle["puzzle_id"], cookie=cookie)
+            api_timestamp = detail.get("timestamp", None)
+            
+            # Check if we should skip this puzzle (incremental mode only)
+            if not use_date_range and last_commit_str:
+                # Skip if puzzle hasn't been modified since our last recorded commit
+                if not puzzle_modified_since_last_check(api_timestamp, last_commit_str):
+                    skipped_count += 1
+                    continue
+            
             # Extract essential fields only
             essential_record = extract_puzzle_fields(detail, user['player_name'], puzzle["print_date"], puzzle)
             essential_puzzles.append(essential_record)
@@ -203,6 +254,9 @@ def process_user_data(user, start_date, end_date, puzzle_type, output_dir, maste
             default_record = extract_puzzle_fields({}, user['player_name'], puzzle["print_date"], puzzle)
             essential_puzzles.append(default_record)
 
+    if not use_date_range and skipped_count > 0:
+        print(f"Incremental mode: skipped {skipped_count} unchanged puzzles, processed {len(essential_puzzles)} updates")
+
     # Add essential puzzles to the master collection
     if master_data is not None:
         master_data['puzzles'].extend(essential_puzzles)
@@ -211,71 +265,7 @@ def process_user_data(user, start_date, end_date, puzzle_type, output_dir, maste
     return len(essential_puzzles)
 
 
-def save_master_json(master_data, output_dir, puzzle_types_processed):
-    """Save the consolidated master JSON file with smart merging"""
-    os.makedirs(output_dir, exist_ok=True)
-    
-    master_file = os.path.join(output_dir, "nyt_crossword_data.json")
-    current_time = datetime.now().isoformat()
-    
-    # Load existing master data if it exists
-    existing_puzzles = []
-    if os.path.exists(master_file):
-        print(f"Loading existing master JSON for merge: {master_file}")
-        try:
-            with open(master_file, "r") as f:
-                existing_data = json.load(f)
-                # Handle both old format (with metadata) and new format (just array)
-                if isinstance(existing_data, dict) and "puzzles" in existing_data:
-                    existing_puzzles = existing_data["puzzles"]
-                elif isinstance(existing_data, list):
-                    existing_puzzles = existing_data
-                else:
-                    existing_puzzles = []
-        except (json.JSONDecodeError, KeyError) as e:
-            print(f"Warning: Could not load existing master JSON ({e}), creating new file")
-            existing_puzzles = []
-    else:
-        print(f"Creating new master JSON: {master_file}")
-    
-    # Merge logic: use the record_id as the unique key
-    merged_puzzles = {}
-    
-    # Add existing puzzles to dict
-    for puzzle in existing_puzzles:
-        key = puzzle.get('record_id', f"unknown_{puzzle.get('print_date', '')}")
-        merged_puzzles[key] = puzzle
-    
-    # Add/overwrite with new puzzles (newer data wins)
-    new_count = 0
-    updated_count = 0
-    for puzzle in master_data['puzzles']:
-        key = puzzle.get('record_id', f"unknown_{puzzle.get('print_date', '')}")
-        if key in merged_puzzles:
-            updated_count += 1
-        else:
-            new_count += 1
-        # Always use new data (it's more recent)
-        puzzle['last_updated'] = current_time
-        merged_puzzles[key] = puzzle
-    
-    # Convert back to list, sorted by date, puzzle_type, then player
-    final_puzzles = sorted(merged_puzzles.values(), 
-                          key=lambda x: (x.get('print_date', ''), x.get('puzzle_type', ''), x.get('player_name', '')))
-    
-    print(f"Master merge stats: {new_count} new puzzles, {updated_count} updated puzzles, {len(final_puzzles)} total")
-    
-    # Get stats using helper function
-    player_stats, puzzle_type_stats = get_stats_summary(final_puzzles)
-    
-    # Create streamlined master JSON structure (no metadata)
-    json_data = final_puzzles
-    
-    with open(master_file, "w") as f:
-        json.dump(json_data, f, indent=2)
-    
-    print(f"Master JSON saved: {master_file}")
-    return master_file
+
 
 
 async def save_to_sql(puzzles_data, table_name="nyt_history"):
@@ -290,8 +280,8 @@ async def save_to_sql(puzzles_data, table_name="nyt_history"):
             
         print(f"Preparing to save {len(df)} records to SQL table '{table_name}'")
         
-        # Use existing sql_helper function
-        await send_df_to_sql(df, table_name, if_exists='append')
+        # Use existing sql_helper function with UPSERT to avoid duplicates
+        await send_df_to_sql(df, table_name, if_exists='upsert', unique_key='record_id')
         
         print(f"✓ Successfully saved {len(df)} records to SQL table '{table_name}'")
         
@@ -317,13 +307,19 @@ async def main():
             print(f"User '{args.user}' not found in configuration!")
             exit(1)
     
-    # Handle historical option
+    # Handle date range options  
     if args.historical:
         # For historical backfill, start from 2014 when NYT crosswords went digital
         start_date = datetime(2014, 1, 1)
         print(f"Historical mode: fetching all data since {start_date.strftime(DATE_FORMAT)}")
-    else:
+    elif args.date_range:
+        # Use custom date range
         start_date = datetime.strptime(args.start_date, DATE_FORMAT)
+        print(f"Date range mode: {start_date.strftime(DATE_FORMAT)} to {args.end_date}")
+    else:
+        # Default: Incremental mode - use wide date range to catch any old puzzle modifications
+        start_date = datetime.now() - timedelta(days=365)  # Look back 1 year
+        print(f"Incremental mode (default): scanning last 365 days for any modified puzzles")
     
     end_date = datetime.strptime(args.end_date, DATE_FORMAT)
     
@@ -350,35 +346,29 @@ async def main():
         
         for user in users:
             try:
-                records = process_user_data(user, start_date, end_date, puzzle_type, args.output_dir, master_data)
+                records = await process_user_data(user, start_date, end_date, puzzle_type, master_data, args.date_range)
                 total_records += records
                 print(f"  → {records} {puzzle_type} records for {user['player_name']}")
             except Exception as e:
                 print(f"Error processing {puzzle_type} puzzles for user {user['player_name']}: {e}")
     
-    # Save outputs
+    # Save to SQL
     if master_data["puzzles"]:
-        # Always save JSON unless explicitly skipped
-        if not args.sql or args.json_only:
-            master_file = save_master_json(master_data, args.output_dir, puzzle_types_processed)
-            print(f"\nMaster JSON created: {master_file}")
-        
-        # Save to SQL if requested
-        if args.sql and not args.json_only:
-            print(f"\nSaving {len(master_data['puzzles'])} records to SQL...")
-            await save_to_sql(master_data['puzzles'])
-        
+        print(f"\nSaving {len(master_data['puzzles'])} records to SQL...")
+        await save_to_sql(master_data['puzzles'])
     else:
         print("\nNo puzzle data found to save.")
     
-    output_methods = []
-    if not args.sql or args.json_only:
-        output_methods.append("JSON")
-    if args.sql and not args.json_only:
-        output_methods.append("SQL")
+    # Show mode information
+    mode_info = ""
+    if args.historical:
+        mode_info = " (historical backfill)"
+    elif args.date_range:
+        mode_info = " (date range mode)"
+    else:
+        mode_info = " (incremental mode - only modified puzzles)"
     
-    print(f"\nComplete! Processed {total_records} total records across {len(puzzle_types_processed)} puzzle types for {len(users)} users.")
-    print(f"Output methods: {', '.join(output_methods) if output_methods else 'None'}")
+    print(f"\nComplete! Processed {total_records} total records across {len(puzzle_types_processed)} puzzle types for {len(users)} users{mode_info}.")
 
 
 if __name__ == "__main__":
