@@ -57,26 +57,69 @@ async def get_pool():
         print(f"✓ Connected to {db_config['host']}/{db_config['db']}")
     return _pool
 
-async def execute_query(query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
-    """Execute a SQL query and return the results with cleaned None values."""
-    pool = await get_pool()
-    async with pool.acquire() as conn:
-        async with conn.cursor(aiomysql.DictCursor) as cur:
-            await cur.execute(query, params or ())
-            results = await cur.fetchall()
+async def execute_query(query: str, params: Optional[tuple] = None, max_retries: int = 3) -> List[Dict[str, Any]]:
+    """Execute a SQL query and return the results with cleaned None values. Includes retry logic for connection issues."""
+    last_exception = None
+    
+    for attempt in range(max_retries):
+        try:
+            pool = await get_pool()
+            async with pool.acquire() as conn:
+                async with conn.cursor(aiomysql.DictCursor) as cur:
+                    await cur.execute(query, params or ())
+                    results = await cur.fetchall()
+                    
+                    # Clean None/NULL values and replace with "-"
+                    cleaned_results = []
+                    for row in results:
+                        cleaned_row = {}
+                        for key, value in row.items():
+                            if value is None:
+                                cleaned_row[key] = "-"
+                            else:
+                                cleaned_row[key] = value
+                        cleaned_results.append(cleaned_row)
+                    
+                    return cleaned_results
+                    
+        except (aiomysql.Error, ConnectionError, OSError) as e:
+            last_exception = e
+            error_code = getattr(e, 'args', [None])[0] if hasattr(e, 'args') and e.args else None
             
-            # Clean None/NULL values and replace with "-"
-            cleaned_results = []
-            for row in results:
-                cleaned_row = {}
-                for key, value in row.items():
-                    if value is None:
-                        cleaned_row[key] = "-"
-                    else:
-                        cleaned_row[key] = value
-                cleaned_results.append(cleaned_row)
+            # Check if it's a connection-related error worth retrying
+            connection_errors = [
+                2006,  # MySQL server has gone away
+                2013,  # Lost connection to MySQL server during query
+                2055,  # Lost connection to MySQL server at 'reading initial communication packet'
+            ]
             
-            return cleaned_results
+            is_connection_error = (
+                error_code in connection_errors or
+                "Lost connection" in str(e) or
+                "MySQL server has gone away" in str(e) or
+                "Connection reset by peer" in str(e)
+            )
+            
+            if is_connection_error and attempt < max_retries - 1:
+                # Reset the pool to force new connections
+                global _pool
+                if _pool:
+                    _pool.close()
+                    await _pool.wait_closed()
+                    _pool = None
+                
+                wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
+                print(f"[SQL] Connection error (attempt {attempt + 1}/{max_retries}): {e}")
+                print(f"[SQL] Retrying in {wait_time} seconds...")
+                await asyncio.sleep(wait_time)
+                continue
+            else:
+                # Not a connection error or max retries reached
+                raise e
+    
+    # If we get here, all retries failed
+    print(f"[SQL] All {max_retries} attempts failed. Last error: {last_exception}")
+    raise last_exception
 
 async def execute_many(query: str, params_list: List[tuple]) -> None:
     """Execute multiple SQL queries with different parameters."""

@@ -291,14 +291,18 @@ def process_factle(message):
     bonus = None
 
     if len(lines) > 3:
-        guesses_taken = len(lines) - 3
-        emoji_line = lines[-2].strip()
-        if emoji_line == "🐸" * 5:
+        # Get all emoji lines (skip the first 2 lines which are headers)
+        emoji_lines = [line.strip() for line in lines[2:] if line.strip() and any(emoji in line for emoji in ['🐸', '🐱', '⬜️'])]
+        guesses_taken = len(emoji_lines)
+        
+        # Check if any line has all 5 frogs (perfect score)
+        won = any('🐸' * 5 in line for line in emoji_lines)
+        
+        if won:
             score = f"{guesses_taken}/5"
-            print(f"Score: {score}")
             if guesses_taken == 1:
                 bonus = "perfect"
-            elif guesses_taken == 2:
+            elif guesses_taken <= 2:
                 bonus = "impressive"
         else:
             score = "X/5"
