@@ -155,7 +155,7 @@ async def collect_recent_messages(channel, latest_ts: str = None, lookback_days:
                             
                             if score_result:
                                 # Load games configuration for emoji reactions
-                                games_file_path = direct_path_finder('files', 'games.json')
+                                games_file_path = direct_path_finder('files', 'config', 'games.json')
                                 with open(games_file_path, 'r', encoding='utf-8') as f:
                                     games_config = json.load(f)
                                 game_config = games_config.get(game_name, {})

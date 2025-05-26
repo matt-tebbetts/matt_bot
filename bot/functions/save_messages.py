@@ -230,7 +230,7 @@ def is_game_score(message_content: str) -> Tuple[bool, str, Dict[str, Any]]:
         - dict: The game info if it is a score, None otherwise
     """
     # Load games configuration
-    games_file_path = direct_path_finder('files', 'games.json')
+    games_file_path = direct_path_finder('files', 'config', 'games.json')
     with open(games_file_path, 'r', encoding='utf-8') as file:
         games_data: Dict[str, Dict[str, Any]] = json.load(file)
 

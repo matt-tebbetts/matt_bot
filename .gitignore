@@ -20,6 +20,9 @@ Scripts/*
 # Generated images
 files/images/*
 
+# NYT crossword stats output
+files/nyt_stats/*
+
 # Python virtual environment
 .venv/
 venv/
@@ -34,6 +37,9 @@ ENV/
 # Environment variables
 .env
 .env.*
+
+# User configuration with sensitive cookies
+files/config/users.json
 
 # Logs
 *.log

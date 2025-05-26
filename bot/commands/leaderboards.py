@@ -23,7 +23,7 @@ class Leaderboards(commands.Cog):
 
     # this calls create_command for each game name in the games.json configuration
     def load_commands(self):
-        games_file_path = direct_path_finder('files', 'games.json')
+        games_file_path = direct_path_finder('files', 'config', 'games.json')
         with open(games_file_path, 'r', encoding='utf-8') as file:
             games_data = json.load(file)
             # print(f"Loaded games data: {games_data}")  # Commented out to reduce noise

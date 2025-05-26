@@ -64,6 +64,11 @@ bot/
     └── config.py             # Configuration settings
 
 files/
+├── config/
+│   ├── games.json           # Game configuration and settings
+│   ├── gpt_models.json      # Model costs and configuration
+│   ├── sms_carriers.json    # SMS carrier configurations
+│   └── users.json           # NYT crossword user configurations
 ├── gpt/
 │   ├── system_prompt.txt     # Main system prompt template
 │   ├── analysis_prompt.txt   # Prompt analysis template
@@ -74,7 +79,8 @@ files/
 │   └── [guild_name]/
 │       ├── messages.json    # Discord message history
 │       └── config.json      # Guild configuration
-└── gpt_models.json          # Model costs and configuration
+└── nyt_stats/
+    └── nyt_crossword_data.json # NYT crossword statistics
 ```
 
 ## Key Classes and Methods

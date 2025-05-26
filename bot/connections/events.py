@@ -422,7 +422,8 @@ async def setup_events(client, tree):
                 return
 
             # Load games configuration
-            with open('files/games.json', 'r', encoding='utf-8') as f:
+            games_file_path = direct_path_finder('files', 'config', 'games.json')
+            with open(games_file_path, 'r', encoding='utf-8') as f:
                 games_config = json.load(f)
             game_config = games_config.get(score_result['game_name'], {})
 

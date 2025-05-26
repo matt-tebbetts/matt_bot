@@ -28,7 +28,7 @@ class GPT:
     def _load_model_costs(self) -> Dict:
         """Load model costs from gpt_models.json."""
         try:
-            cost_file = direct_path_finder('files', 'gpt_models.json')
+            cost_file = direct_path_finder('files', 'config', 'gpt_models.json')
             with open(cost_file, 'r', encoding='utf-8') as f:
                 return json.load(f)['models']
         except Exception as e:

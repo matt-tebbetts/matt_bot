@@ -75,7 +75,7 @@ async def update_guild_config(guild: discord.Guild):
     
     # Update games (if not already present)
     if "games" not in config:
-        games_file = direct_path_finder('files', 'games.json')
+        games_file = direct_path_finder('files', 'config', 'games.json')
         if os.path.exists(games_file):
             with open(games_file, 'r', encoding='utf-8') as f:
                 games_data = json.load(f)
@@ -115,7 +115,7 @@ async def save_guild_config(guild: discord.Guild):
     
     # Update games (if not already present)
     if "games" not in config:
-        games_file = direct_path_finder('files', 'games.json')
+        games_file = direct_path_finder('files', 'config', 'games.json')
         if os.path.exists(games_file):
             with open(games_file, 'r', encoding='utf-8') as f:
                 games_data = json.load(f)
