@@ -150,13 +150,22 @@ async def send_df_to_sql(df, table_name, if_exists='append', unique_key=None):
                         await cur.execute(f"DELETE FROM {table_name}")
                         print(f"✓ Cleared existing data from {table_name}")
 
+                    # Clean DataFrame: replace NaN values with None (which becomes SQL NULL)
+                    df_cleaned = df.copy()
+                    
+                    # Replace pandas NaN values with None
+                    df_cleaned = df_cleaned.where(pd.notnull(df_cleaned), None)
+                    
+                    # Also replace string representations of nan/null with None
+                    df_cleaned = df_cleaned.replace(['nan', 'NaN', 'null', 'NULL', 'None'], None)
+
                     # Prepare the data
-                    columns = df.columns.tolist()
+                    columns = df_cleaned.columns.tolist()
                     placeholders = ', '.join(['%s'] * len(columns))
                     
                     # Convert DataFrame to list of tuples, handling lists by converting to strings
                     data_tuples = []
-                    for row in df.values:
+                    for row in df_cleaned.values:
                         processed_row = []
                         for value in row:
                             if isinstance(value, list):

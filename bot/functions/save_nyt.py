@@ -33,7 +33,8 @@ arguments = [
     (("--config-file",), {"help": "Path to users config JSON file", "default": "files/config/users.json"}),
     (("--historical",), {"help": "Fetch all available historical data (overrides start-date)", "action": "store_true"}),
 
-    (("--date-range",), {"help": "Use specific date range instead of incremental mode (for backfills)", "action": "store_true"})
+    (("--date-range",), {"help": "Use specific date range instead of incremental mode (for backfills)", "action": "store_true"}),
+    (("--csv-backup",), {"help": "Save CSV backups of each user's data as it's processed", "action": "store_true"})
 ]
 
 # Add arguments to parser
@@ -180,8 +181,8 @@ def get_v3_puzzle_detail(puzzle_id, cookie):
     return puzzle_detail
 
 
-async def process_user_data(user, start_date, end_date, puzzle_type, master_data=None, use_date_range=False):
-    """Process NYT crossword data for a single user"""
+async def process_user_data(user, start_date, end_date, puzzle_type, use_date_range=False):
+    """Process NYT crossword data for a single user and return the results"""
     print(f"\nProcessing data for {user['player_name']}...")
     
     cookie = user['nyt_s_cookie']
@@ -221,7 +222,7 @@ async def process_user_data(user, start_date, end_date, puzzle_type, master_data
         if last_commit_str:
             print(f"Last recorded commit: {last_commit_str}")
         else:
-            print("No previous commits found - will check all puzzles")
+            print("No previous commits found for this user")
     else:
         print(f"Date range mode: checking all puzzles in range")
 
@@ -257,15 +258,37 @@ async def process_user_data(user, start_date, end_date, puzzle_type, master_data
     if not use_date_range and skipped_count > 0:
         print(f"Incremental mode: skipped {skipped_count} unchanged puzzles, processed {len(essential_puzzles)} updates")
 
-    # Add essential puzzles to the master collection
-    if master_data is not None:
-        master_data['puzzles'].extend(essential_puzzles)
-    
     print(f"{len(essential_puzzles)} records processed for {user['player_name']}")
-    return len(essential_puzzles)
+    return essential_puzzles
 
 
 
+
+
+def save_csv_backup(puzzles_data, user_name, puzzle_type, backup_dir="files/nyt_backups"):
+    """Save puzzle data to CSV as backup"""
+    try:
+        if not puzzles_data:
+            return None
+            
+        # Create backup directory if it doesn't exist
+        os.makedirs(backup_dir, exist_ok=True)
+        
+        # Create filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"nyt_{user_name}_{puzzle_type}_{timestamp}.csv"
+        filepath = os.path.join(backup_dir, filename)
+        
+        # Save to CSV
+        df = pd.DataFrame(puzzles_data)
+        df.to_csv(filepath, index=False)
+        
+        print(f"✓ CSV backup saved: {filepath}")
+        return filepath
+        
+    except Exception as e:
+        print(f"Warning: Could not save CSV backup: {e}")
+        return None
 
 
 async def save_to_sql(puzzles_data, table_name="nyt_history"):
@@ -317,13 +340,27 @@ async def main():
         start_date = datetime.strptime(args.start_date, DATE_FORMAT)
         print(f"Date range mode: {start_date.strftime(DATE_FORMAT)} to {args.end_date}")
     else:
-        # Default: Incremental mode - use wide date range to catch any old puzzle modifications
-        start_date = datetime.now() - timedelta(days=365)  # Look back 1 year
-        print(f"Incremental mode (default): scanning last 365 days for any modified puzzles")
+        # Default: Incremental mode - check if any users have existing data
+        print("Incremental mode (default): checking for existing data...")
+        
+        # Check if any users have previous commits
+        any_existing_data = False
+        for user in users:
+            last_commit = await get_player_last_commit(user['player_name'])
+            if last_commit:
+                any_existing_data = True
+                break
+        
+        if any_existing_data:
+            # Some users have data, use 365-day window to catch any old modifications
+            start_date = datetime.now() - timedelta(days=365)
+            print(f"Found existing data - scanning last 365 days for modifications")
+        else:
+            # No previous data found, do full historical backfill
+            start_date = datetime(2014, 1, 1)
+            print(f"No existing data found - doing full historical backfill from {start_date.strftime(DATE_FORMAT)}")
     
     end_date = datetime.strptime(args.end_date, DATE_FORMAT)
-    
-    total_records = 0
     
     # Determine which puzzle types to fetch
     if args.type == "all":
@@ -333,31 +370,68 @@ async def main():
         puzzle_types_to_fetch = [args.type]
         print(f"Fetching {args.type} puzzles only")
     
-    # Collect all data first
-    master_data = {"puzzles": []}
-    puzzle_types_processed = []
+    # Track progress
+    total_records = 0
+    completed_tasks = []
+    failed_tasks = []
     
+    # Process each puzzle type and user combination
     for puzzle_type in puzzle_types_to_fetch:
         print(f"\n{'='*50}")
         print(f"PROCESSING {puzzle_type.upper()} PUZZLES")
         print(f"{'='*50}")
         
-        puzzle_types_processed.append(puzzle_type)
-        
         for user in users:
+            task_name = f"{user['player_name']} - {puzzle_type}"
+            
             try:
-                records = await process_user_data(user, start_date, end_date, puzzle_type, master_data, args.date_range)
-                total_records += records
-                print(f"  → {records} {puzzle_type} records for {user['player_name']}")
+                print(f"\n[{task_name}] Starting...")
+                
+                # Process user data
+                puzzles_data = await process_user_data(user, start_date, end_date, puzzle_type, args.date_range)
+                
+                if puzzles_data:
+                    # Save CSV backup if requested
+                    if args.csv_backup:
+                        save_csv_backup(puzzles_data, user['player_name'], puzzle_type)
+                    
+                    # Save to SQL immediately
+                    print(f"[{task_name}] Saving {len(puzzles_data)} records to SQL...")
+                    await save_to_sql(puzzles_data)
+                    
+                    total_records += len(puzzles_data)
+                    completed_tasks.append(f"{task_name}: {len(puzzles_data)} records")
+                    print(f"✓ [{task_name}] Complete - {len(puzzles_data)} records saved")
+                else:
+                    completed_tasks.append(f"{task_name}: 0 records (no new data)")
+                    print(f"✓ [{task_name}] Complete - no new data to save")
+                    
             except Exception as e:
-                print(f"Error processing {puzzle_type} puzzles for user {user['player_name']}: {e}")
+                error_msg = f"{task_name}: {str(e)}"
+                failed_tasks.append(error_msg)
+                print(f"✗ [{task_name}] FAILED: {e}")
+                print(f"   Continuing with other users...")
     
-    # Save to SQL
-    if master_data["puzzles"]:
-        print(f"\nSaving {len(master_data['puzzles'])} records to SQL...")
-        await save_to_sql(master_data['puzzles'])
-    else:
-        print("\nNo puzzle data found to save.")
+    # Show final summary
+    print(f"\n{'='*60}")
+    print("PROCESSING COMPLETE")
+    print(f"{'='*60}")
+    
+    print(f"\n📊 SUMMARY:")
+    print(f"  • Total records processed: {total_records}")
+    print(f"  • Completed tasks: {len(completed_tasks)}")
+    print(f"  • Failed tasks: {len(failed_tasks)}")
+    
+    if completed_tasks:
+        print(f"\n✓ COMPLETED:")
+        for task in completed_tasks:
+            print(f"  • {task}")
+    
+    if failed_tasks:
+        print(f"\n✗ FAILED:")
+        for task in failed_tasks:
+            print(f"  • {task}")
+        print(f"\nNote: Failed tasks did not prevent other users from being processed.")
     
     # Show mode information
     mode_info = ""
@@ -368,7 +442,9 @@ async def main():
     else:
         mode_info = " (incremental mode - only modified puzzles)"
     
-    print(f"\nComplete! Processed {total_records} total records across {len(puzzle_types_processed)} puzzle types for {len(users)} users{mode_info}.")
+    backup_info = " with CSV backups" if args.csv_backup else ""
+    
+    print(f"\n🎯 RESULT: Processed {total_records} total records across {len(puzzle_types_to_fetch)} puzzle types for {len(users)} users{mode_info}{backup_info}.")
 
 
 if __name__ == "__main__":

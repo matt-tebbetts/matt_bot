@@ -23,6 +23,9 @@ files/images/*
 # NYT crossword stats output
 files/nyt_stats/*
 
+# NYT backup CSV files
+files/nyt_backups/*
+
 # Python virtual environment
 .venv/
 venv/
