@@ -12,16 +12,15 @@ CREATE TABLE IF NOT EXISTS nyt_history (
     percent_filled INT,
     eligible BOOLEAN,
     star VARCHAR(20),
+    checks_used INT,
+    reveals_used INT,
+    clean_solve BOOLEAN,
     opened_datetime VARCHAR(30),
     solved_datetime VARCHAR(30),
     min_guess_datetime VARCHAR(30),
-    last_updated VARCHAR(30),
-    added_ts DATETIME NOT NULL,
-    
-    -- Indexes for common queries (only the useful ones)
+    final_commit_datetime VARCHAR(30),
+    bot_added_ts DATETIME NOT NULL,
     INDEX idx_player_date (player_name, print_date),
     INDEX idx_puzzle_type (puzzle_type)
 );
-
--- Show the table structure
 DESCRIBE nyt_history; 

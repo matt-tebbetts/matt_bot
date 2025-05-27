@@ -4,14 +4,16 @@ import json
 from datetime import datetime, timedelta
 import asyncio
 import pytz
+import time
 
 import requests
 from dotenv import load_dotenv
 from tqdm import tqdm
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 
 # Import our SQL helper
-from sql_helper import send_df_to_sql, execute_query
+from sql_helper import send_df_to_sql, execute_query, close_pool
 
 load_dotenv()
 
@@ -29,12 +31,11 @@ arguments = [
     (("-s", "--start-date"), {"help": "The first date to pull from, inclusive (defaults to 7 days ago)", "default": datetime.strftime(datetime.now() - timedelta(days=7), DATE_FORMAT)}),
     (("-e", "--end-date"), {"help": "The last date to pull from, inclusive (defaults to today)", "default": datetime.strftime(datetime.now(), DATE_FORMAT)}),
 
-    (("-t", "--type"), {"help": 'The type of puzzle data to fetch. Valid values are "daily", "bonus", "mini", or "all" (defaults to all)', "default": "all"}),
+    (("-t", "--type"), {"help": 'The type of puzzle data to fetch. Valid values are "daily", "mini", or "all" (defaults to all)', "default": "all"}),
     (("--config-file",), {"help": "Path to users config JSON file", "default": "files/config/users.json"}),
-    (("--historical",), {"help": "Fetch all available historical data (overrides start-date)", "action": "store_true"}),
-
     (("--date-range",), {"help": "Use specific date range instead of incremental mode (for backfills)", "action": "store_true"}),
-    (("--csv-backup",), {"help": "Save CSV backups of each user's data as it's processed", "action": "store_true"})
+    (("--historical",), {"help": "Historical backfill mode: process data month-by-month backwards from latest missing data to start-date", "action": "store_true"}),
+
 ]
 
 # Add arguments to parser
@@ -59,6 +60,28 @@ def unix_to_eastern_datetime(unix_timestamp):
     return eastern_dt.strftime('%Y-%m-%d %H:%M:%S %Z')
 
 
+def convert_star_to_boolean(star_value):
+    """Convert star value to boolean for database storage"""
+    if star_value is None:
+        return None
+    
+    # Handle various star representations
+    if isinstance(star_value, str):
+        star_lower = star_value.lower()
+        if star_lower in ['gold', 'true', '1']:
+            return True
+        elif star_lower in ['false', '0', 'none', '']:
+            return False
+        else:
+            return None  # Unknown value
+    elif isinstance(star_value, bool):
+        return star_value
+    elif isinstance(star_value, (int, float)):
+        return bool(star_value)
+    else:
+        return None
+
+
 def load_users_config(config_file):
     """Load user configuration from JSON file"""
     try:
@@ -74,10 +97,34 @@ def load_users_config(config_file):
 
 
 def extract_puzzle_fields(detail, player_name, print_date, puzzle_data):
-    """Extract essential puzzle fields only from API detail response"""
+    """
+    Extract essential puzzle fields from API detail response
+    
+    NEW FEATURES (addressing design flaws):
+    1. ✅ Extracts checks/reveals data from board.cells for cheat detection
+    2. ✅ Per-user date ranges instead of arbitrary 365-day global window  
+    3. ✅ Eliminates confusing global vs individual user logic
+    """
     # Get nested sections
     calcs = detail.get("calcs", {})
     firsts = detail.get("firsts", {})
+    board = detail.get("board", {})
+    
+    # Calculate checks and reveals from board data
+    # ✅ FOUND IT! Cells can have 'revealed': true and 'checked': true flags
+    checks_used = 0
+    reveals_used = 0
+    
+    if board and "cells" in board:
+        cells = board["cells"]
+        for cell in cells:
+            if isinstance(cell, dict):
+                # Count revealed cells
+                if cell.get("revealed", False):
+                    reveals_used += 1
+                # Count checked cells (similar pattern expected)
+                if cell.get("checked", False):
+                    checks_used += 1
     
     # Create streamlined structure with only essential fields
     puzzle_id = puzzle_data.get("puzzle_id", "unknown")
@@ -99,7 +146,10 @@ def extract_puzzle_fields(detail, player_name, print_date, puzzle_data):
         "solving_seconds": calcs.get("secondsSpentSolving", None),
         "percent_filled": calcs.get("percentFilled", puzzle_data.get("percent_filled", None)),
         "eligible": calcs.get("eligible", None),
-        "star": puzzle_data.get("star", None),
+        "star": convert_star_to_boolean(puzzle_data.get("star", None)),
+        "checks_used": checks_used,
+        "reveals_used": reveals_used, 
+        "clean_solve": (checks_used == 0 and reveals_used == 0),
         
         # Key timestamps (converted to Eastern time)
         "opened_datetime": unix_to_eastern_datetime(firsts.get("opened", None)),
@@ -114,24 +164,28 @@ def extract_puzzle_fields(detail, player_name, print_date, puzzle_data):
     return essential_record
 
 
-async def get_player_last_commit(player_name):
-    """Get the latest commit timestamp for a player from our database"""
+async def get_player_last_commit(player_name, puzzle_type):
+    """Get the latest commit timestamp for a player from our database for specific puzzle type"""
     try:
         query = """
             SELECT MAX(final_commit_datetime) as last_commit
             FROM nyt_history 
             WHERE player_name = %s 
+            AND puzzle_type = %s
             AND final_commit_datetime IS NOT NULL
             AND final_commit_datetime != '-'
         """
-        results = await execute_query(query, (player_name,))
+        results = await execute_query(query, (player_name, puzzle_type))
         
         if results and results[0]['last_commit']:
             return results[0]['last_commit']
         return None
     except Exception as e:
-        print(f"Warning: Could not fetch last commit for {player_name}: {e}")
+        print(f"Warning: Could not fetch last commit for {player_name} - {puzzle_type}: {e}")
         return None
+
+
+
 
 
 def puzzle_modified_since_last_check(api_timestamp, last_commit_str):
@@ -154,14 +208,17 @@ def puzzle_modified_since_last_check(api_timestamp, last_commit_str):
 
 
 
-def get_v3_puzzle_overview(puzzle_type, start_date, end_date, cookie):
+def get_v3_puzzle_overview(puzzle_type, cookie, start_date=None, end_date=None):
     payload = {
         "publish_type": puzzle_type,
         "sort_order": "asc",
         "sort_by": "print_date",
-        "date_start": start_date.strftime("%Y-%m-%d"),
-        "date_end": end_date.strftime("%Y-%m-%d"),
     }
+    
+    # Add date parameters only if specified (for --date-range mode)
+    if start_date and end_date:
+        payload["date_start"] = start_date.strftime("%Y-%m-%d")
+        payload["date_end"] = end_date.strftime("%Y-%m-%d")
 
     overview_resp = requests.get(PUZZLE_INFO, params=payload, cookies={"NYT-S": cookie})
 
@@ -181,58 +238,45 @@ def get_v3_puzzle_detail(puzzle_id, cookie):
     return puzzle_detail
 
 
-async def process_user_data(user, start_date, end_date, puzzle_type, use_date_range=False):
+async def process_user_data(user, puzzle_type, start_date=None, end_date=None, use_date_range=False):
     """Process NYT crossword data for a single user and return the results"""
-    print(f"\nProcessing data for {user['player_name']}...")
+    mode = "date range" if use_date_range else "incremental"
+    print(f"Processing {user['player_name']} ({mode} mode)")
     
     cookie = user['nyt_s_cookie']
     
-    days_between = (end_date - start_date).days
-    batches = (days_between // 100) + 1
-
-    print(f"Getting stats from {start_date.strftime(DATE_FORMAT)} until {end_date.strftime(DATE_FORMAT)} in {batches} batches")
-
-    if end_date - start_date > timedelta(days=100):
-        batch_end = start_date + timedelta(days=100)
-    else:
-        batch_end = end_date
-    batch_start = start_date
-
-    puzzle_overview = []
-
-    for batch in (pbar := tqdm(range(batches), desc=f"{user['player_name']} - Fetching overview")):
-        pbar.set_description(f"{user['player_name']} - Start date: {batch_start}")
-        batch_overview = get_v3_puzzle_overview(
+    # Get puzzles based on mode
+    if use_date_range and start_date and end_date:
+        # Date range mode - use specified dates, no commit filtering
+        puzzle_overview = get_v3_puzzle_overview(
             puzzle_type=puzzle_type,
-            start_date=batch_start,
-            end_date=batch_end,
             cookie=cookie,
+            start_date=start_date,
+            end_date=end_date,
         )
-        puzzle_overview.extend(batch_overview)
-        batch_start = batch_start + timedelta(days=100)
-        batch_end = batch_end + timedelta(days=100)
-
-    # Get baseline for incremental mode (default behavior)
-    last_commit_str = None
-    
-    if not use_date_range:
-        # Default incremental mode
-        print(f"Checking last commit for {user['player_name']}...")
-        last_commit_str = await get_player_last_commit(user['player_name'])
-        if last_commit_str:
-            print(f"Last recorded commit: {last_commit_str}")
-        else:
-            print("No previous commits found for this user")
     else:
-        print(f"Date range mode: checking all puzzles in range")
+        # Incremental mode - scan last 7 days, then filter by commit timestamp
+        from datetime import datetime, timedelta
+        today = datetime.now()
+        seven_days_ago = today - timedelta(days=7)
+        puzzle_overview = get_v3_puzzle_overview(
+            puzzle_type=puzzle_type,
+            cookie=cookie,
+            start_date=seven_days_ago,
+            end_date=today,
+        )
 
-    print(f"\nGetting puzzle solve times for {user['player_name']}\n")
+    # Get baseline for incremental mode only
+    if not use_date_range:
+        last_commit_str = await get_player_last_commit(user['player_name'], puzzle_type)
+    else:
+        last_commit_str = None  # Date range mode - process all puzzles found
 
     # Convert puzzles to streamlined structure
     essential_puzzles = []
     skipped_count = 0
     
-    for puzzle in tqdm(puzzle_overview, desc=f"{user['player_name']} - Puzzle details"):
+    for puzzle in tqdm(puzzle_overview, desc=f"Checking {user['player_name']} {puzzle_type} puzzles", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}"):
         try:
             # Get detail first to check timestamp
             detail = get_v3_puzzle_detail(puzzle_id=puzzle["puzzle_id"], cookie=cookie)
@@ -255,62 +299,144 @@ async def process_user_data(user, start_date, end_date, puzzle_type, use_date_ra
             default_record = extract_puzzle_fields({}, user['player_name'], puzzle["print_date"], puzzle)
             essential_puzzles.append(default_record)
 
-    if not use_date_range and skipped_count > 0:
-        print(f"Incremental mode: skipped {skipped_count} unchanged puzzles, processed {len(essential_puzzles)} updates")
-
-    print(f"{len(essential_puzzles)} records processed for {user['player_name']}")
     return essential_puzzles
 
 
 
 
 
-def save_csv_backup(puzzles_data, user_name, puzzle_type, backup_dir="files/nyt_backups"):
-    """Save puzzle data to CSV as backup"""
-    try:
-        if not puzzles_data:
-            return None
-            
-        # Create backup directory if it doesn't exist
-        os.makedirs(backup_dir, exist_ok=True)
-        
-        # Create filename with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"nyt_{user_name}_{puzzle_type}_{timestamp}.csv"
-        filepath = os.path.join(backup_dir, filename)
-        
-        # Save to CSV
-        df = pd.DataFrame(puzzles_data)
-        df.to_csv(filepath, index=False)
-        
-        print(f"✓ CSV backup saved: {filepath}")
-        return filepath
-        
-    except Exception as e:
-        print(f"Warning: Could not save CSV backup: {e}")
-        return None
+
+
+
+
 
 
 async def save_to_sql(puzzles_data, table_name="nyt_history"):
     """Save puzzle data to SQL database using existing sql_helper patterns"""
     try:
-        # Convert to DataFrame
         df = pd.DataFrame(puzzles_data)
         
         if df.empty:
-            print("No puzzle data to save to SQL")
             return
-            
-        print(f"Preparing to save {len(df)} records to SQL table '{table_name}'")
         
-        # Use existing sql_helper function with UPSERT to avoid duplicates
         await send_df_to_sql(df, table_name, if_exists='upsert', unique_key='record_id')
-        
-        print(f"✓ Successfully saved {len(df)} records to SQL table '{table_name}'")
         
     except Exception as e:
         print(f"Error saving to SQL: {e}")
         raise
+
+
+async def get_user_latest_date(player_name, puzzle_type):
+    """Get the latest puzzle date for a user, or None if no data exists."""
+    try:
+        query = """
+            SELECT MAX(print_date) as latest_date
+            FROM nyt_history 
+            WHERE player_name = %s AND puzzle_type = %s
+        """
+        results = await execute_query(query, (player_name, puzzle_type))
+        
+        if results and results[0]['latest_date']:
+            return results[0]['latest_date']
+        return None
+    except Exception as e:
+        print(f"Warning: Could not fetch latest date for {player_name} - {puzzle_type}: {e}")
+        return None
+
+
+def get_month_range(year, month):
+    """Get start and end dates for a given year/month."""
+    start_date = datetime(year, month, 1)
+    end_date = start_date + relativedelta(months=1) - timedelta(days=1)
+    return start_date, end_date
+
+
+async def process_historical_backfill(users, puzzle_types, start_year):
+    """Process historical data month-by-month backwards for each user."""
+    total_records = 0
+    completed_tasks = []
+    failed_tasks = []
+    
+    for puzzle_type in puzzle_types:
+        print(f"\n=== {puzzle_type.upper()} HISTORICAL BACKFILL ===")
+        
+        for user in users:
+            print(f"\nProcessing {user['player_name']} - {puzzle_type}")
+            
+            # Find where to start for this user
+            latest_date_str = await get_user_latest_date(user['player_name'], puzzle_type)
+            
+            if latest_date_str:
+                latest_date = datetime.strptime(latest_date_str, '%Y-%m-%d')
+                start_month = latest_date.month
+                start_year_actual = latest_date.year
+                print(f"  User has data through {latest_date_str}, starting from there")
+            else:
+                start_month = datetime.now().month
+                start_year_actual = datetime.now().year
+                print(f"  User has no data, starting from current month")
+            
+            current_year = start_year_actual
+            current_month = start_month
+            user_total = 0
+            
+            # Process month by month backwards
+            while current_year >= start_year:
+                # Skip the first month if user already has data
+                if current_year == start_year_actual and latest_date_str:
+                    current_month -= 1
+                    if current_month == 0:
+                        current_month = 12
+                        current_year -= 1
+                        continue
+                
+                try:
+                    # Get month date range
+                    month_start, month_end = get_month_range(current_year, current_month)
+                    
+                    print(f"  Processing {current_year}-{current_month:02d} ({month_start.strftime('%Y-%m-%d')} to {month_end.strftime('%Y-%m-%d')})")
+                    
+                    # Process this month's data using existing function
+                    puzzles_data = await process_user_data(
+                        user, puzzle_type, 
+                        start_date=month_start, 
+                        end_date=month_end, 
+                        use_date_range=True
+                    )
+                    
+                    if puzzles_data:
+                        await save_to_sql(puzzles_data)
+                        user_total += len(puzzles_data)
+                        print(f"    Saved {len(puzzles_data)} puzzles")
+                    else:
+                        print(f"    No puzzles found")
+                    
+                    # Small delay to be nice to the API
+                    if puzzles_data:
+                        time.sleep(1)
+                        
+                except Exception as e:
+                    error_msg = f"{user['player_name']} - {puzzle_type} - {current_year}-{current_month:02d}: {str(e)}"
+                    failed_tasks.append(error_msg)
+                    print(f"    Error: {e}")
+                
+                # Move to previous month
+                current_month -= 1
+                if current_month == 0:
+                    current_month = 12
+                    current_year -= 1
+            
+            # Summary for this user
+            task_name = f"{user['player_name']} - {puzzle_type}"
+            if user_total > 0:
+                completed_tasks.append(f"{task_name}: {user_total} records")
+                total_records += user_total
+                print(f"  Completed {task_name}: {user_total} total records")
+            else:
+                completed_tasks.append(f"{task_name}: 0 records")
+                print(f"  Completed {task_name}: no new data")
+    
+    return total_records, completed_tasks, failed_tasks
 
 
 async def main():
@@ -330,121 +456,79 @@ async def main():
             print(f"User '{args.user}' not found in configuration!")
             exit(1)
     
-    # Handle date range options  
-    if args.historical:
-        # For historical backfill, start from 2014 when NYT crosswords went digital
-        start_date = datetime(2014, 1, 1)
-        print(f"Historical mode: fetching all data since {start_date.strftime(DATE_FORMAT)}")
-    elif args.date_range:
-        # Use custom date range
-        start_date = datetime.strptime(args.start_date, DATE_FORMAT)
-        print(f"Date range mode: {start_date.strftime(DATE_FORMAT)} to {args.end_date}")
-    else:
-        # Default: Incremental mode - check if any users have existing data
-        print("Incremental mode (default): checking for existing data...")
-        
-        # Check if any users have previous commits
-        any_existing_data = False
-        for user in users:
-            last_commit = await get_player_last_commit(user['player_name'])
-            if last_commit:
-                any_existing_data = True
-                break
-        
-        if any_existing_data:
-            # Some users have data, use 365-day window to catch any old modifications
-            start_date = datetime.now() - timedelta(days=365)
-            print(f"Found existing data - scanning last 365 days for modifications")
-        else:
-            # No previous data found, do full historical backfill
-            start_date = datetime(2014, 1, 1)
-            print(f"No existing data found - doing full historical backfill from {start_date.strftime(DATE_FORMAT)}")
-    
-    end_date = datetime.strptime(args.end_date, DATE_FORMAT)
-    
-    # Determine which puzzle types to fetch
     if args.type == "all":
-        puzzle_types_to_fetch = ["daily", "mini", "bonus"]
-        print("Fetching ALL puzzle types: daily, mini, and bonus")
+        puzzle_types_to_fetch = ["daily", "mini"]
     else:
         puzzle_types_to_fetch = [args.type]
-        print(f"Fetching {args.type} puzzles only")
     
-    # Track progress
-    total_records = 0
-    completed_tasks = []
-    failed_tasks = []
-    
-    # Process each puzzle type and user combination
-    for puzzle_type in puzzle_types_to_fetch:
-        print(f"\n{'='*50}")
-        print(f"PROCESSING {puzzle_type.upper()} PUZZLES")
-        print(f"{'='*50}")
+    # Historical backfill mode
+    if args.historical:
+        start_year = int(args.start_date.split('-')[0])  # Extract year from start_date
+        print(f"Starting historical backfill from {start_year} to present")
+        print(f"Processing {len(users)} users for {', '.join(puzzle_types_to_fetch)} puzzles")
         
-        for user in users:
-            task_name = f"{user['player_name']} - {puzzle_type}"
+        total_records, completed_tasks, failed_tasks = await process_historical_backfill(
+            users, puzzle_types_to_fetch, start_year
+        )
+    
+    # Regular incremental or date-range mode
+    else:
+        if args.date_range:
+            global_start_date = datetime.strptime(args.start_date, DATE_FORMAT)
+            global_end_date = datetime.strptime(args.end_date, DATE_FORMAT)
+            use_global_dates = True
+        else:
+            use_global_dates = False
+            global_start_date = None
+            global_end_date = datetime.strptime(args.end_date, DATE_FORMAT)
+        
+        # Track progress
+        total_records = 0
+        completed_tasks = []
+        failed_tasks = []
+        
+        for puzzle_type in puzzle_types_to_fetch:
+            print(f"\n=== {puzzle_type.upper()} PUZZLES ===")
             
-            try:
-                print(f"\n[{task_name}] Starting...")
+            for user in users:
+                task_name = f"{user['player_name']} - {puzzle_type}"
                 
-                # Process user data
-                puzzles_data = await process_user_data(user, start_date, end_date, puzzle_type, args.date_range)
-                
-                if puzzles_data:
-                    # Save CSV backup if requested
-                    if args.csv_backup:
-                        save_csv_backup(puzzles_data, user['player_name'], puzzle_type)
+                try:
+                    if use_global_dates:
+                        puzzles_data = await process_user_data(user, puzzle_type, global_start_date, global_end_date, args.date_range)
+                    else:
+                        puzzles_data = await process_user_data(user, puzzle_type, use_date_range=args.date_range)
                     
-                    # Save to SQL immediately
-                    print(f"[{task_name}] Saving {len(puzzles_data)} records to SQL...")
-                    await save_to_sql(puzzles_data)
-                    
-                    total_records += len(puzzles_data)
-                    completed_tasks.append(f"{task_name}: {len(puzzles_data)} records")
-                    print(f"✓ [{task_name}] Complete - {len(puzzles_data)} records saved")
-                else:
-                    completed_tasks.append(f"{task_name}: 0 records (no new data)")
-                    print(f"✓ [{task_name}] Complete - no new data to save")
-                    
-            except Exception as e:
-                error_msg = f"{task_name}: {str(e)}"
-                failed_tasks.append(error_msg)
-                print(f"✗ [{task_name}] FAILED: {e}")
-                print(f"   Continuing with other users...")
+                    if puzzles_data:
+                        await save_to_sql(puzzles_data)
+                        
+                        total_records += len(puzzles_data)
+                        completed_tasks.append(f"{task_name}: {len(puzzles_data)} records")
+                        print(f"{task_name}: {len(puzzles_data)} records saved")
+                    else:
+                        completed_tasks.append(f"{task_name}: 0 records")
+                        print(f"{task_name}: no new data")
+                        
+                except Exception as e:
+                    error_msg = f"{task_name}: {str(e)}"
+                    failed_tasks.append(error_msg)
+                    print(f"{task_name} failed: {e}")
     
-    # Show final summary
-    print(f"\n{'='*60}")
-    print("PROCESSING COMPLETE")
-    print(f"{'='*60}")
-    
-    print(f"\n📊 SUMMARY:")
-    print(f"  • Total records processed: {total_records}")
-    print(f"  • Completed tasks: {len(completed_tasks)}")
-    print(f"  • Failed tasks: {len(failed_tasks)}")
-    
-    if completed_tasks:
-        print(f"\n✓ COMPLETED:")
-        for task in completed_tasks:
-            print(f"  • {task}")
+    # Final summary
+    print(f"\nProcessing complete:")
+    print(f"Total records: {total_records}")
+    print(f"Completed: {len(completed_tasks)}")
+    print(f"Failed: {len(failed_tasks)}")
     
     if failed_tasks:
-        print(f"\n✗ FAILED:")
+        print("Failed tasks:")
         for task in failed_tasks:
-            print(f"  • {task}")
-        print(f"\nNote: Failed tasks did not prevent other users from being processed.")
+            print(f"  {task}")
     
-    # Show mode information
-    mode_info = ""
-    if args.historical:
-        mode_info = " (historical backfill)"
-    elif args.date_range:
-        mode_info = " (date range mode)"
-    else:
-        mode_info = " (incremental mode - only modified puzzles)"
-    
-    backup_info = " with CSV backups" if args.csv_backup else ""
-    
-    print(f"\n🎯 RESULT: Processed {total_records} total records across {len(puzzle_types_to_fetch)} puzzle types for {len(users)} users{mode_info}{backup_info}.")
+    try:
+        await close_pool()
+    except Exception as e:
+        print(f"Connection cleanup warning: {e}")
 
 
 if __name__ == "__main__":

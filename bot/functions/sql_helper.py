@@ -54,7 +54,7 @@ async def get_pool():
     if _pool is None:
         db_config = await get_db_config()
         _pool = await aiomysql.create_pool(**db_config)
-        print(f"✓ Connected to {db_config['host']}/{db_config['db']}")
+        print(f"Connected to {db_config['host']}/{db_config['db']}")
     return _pool
 
 async def execute_query(query: str, params: Optional[tuple] = None, max_retries: int = 3) -> List[Dict[str, Any]]:
@@ -138,7 +138,6 @@ async def close_pool():
 
 async def send_df_to_sql(df, table_name, if_exists='append', unique_key=None):
     if df.empty:
-        print(f"[SQL] Warning: Attempting to insert empty DataFrame into {table_name}")
         return
 
     try:
@@ -148,7 +147,6 @@ async def send_df_to_sql(df, table_name, if_exists='append', unique_key=None):
                 async with conn.cursor() as cur:
                     if if_exists == 'replace':
                         await cur.execute(f"DELETE FROM {table_name}")
-                        print(f"✓ Cleared existing data from {table_name}")
 
                     # Clean DataFrame: replace NaN values with None (which becomes SQL NULL)
                     df_cleaned = df.copy()
@@ -158,6 +156,10 @@ async def send_df_to_sql(df, table_name, if_exists='append', unique_key=None):
                     
                     # Also replace string representations of nan/null with None
                     df_cleaned = df_cleaned.replace(['nan', 'NaN', 'null', 'NULL', 'None'], None)
+                    
+                    # Replace numpy nan and float('nan') with None
+                    import numpy as np
+                    df_cleaned = df_cleaned.replace([np.nan, float('nan')], None)
 
                     # Prepare the data
                     columns = df_cleaned.columns.tolist()
@@ -171,24 +173,40 @@ async def send_df_to_sql(df, table_name, if_exists='append', unique_key=None):
                             if isinstance(value, list):
                                 processed_row.append(', '.join(str(x) for x in value))
                             else:
-                                processed_row.append(value)
+                                # Additional NaN cleaning at the individual value level
+                                if pd.isna(value):
+                                    processed_row.append(None)
+                                elif str(value).lower() in ['nan', 'none', 'null']:
+                                    processed_row.append(None)
+                                else:
+                                    processed_row.append(value)
                         data_tuples.append(tuple(processed_row))
+                    
+                    # Final cleanup: ensure no remaining NaN values
+                    cleaned_tuples = []
+                    for row in data_tuples:
+                        cleaned_row = []
+                        for value in row:
+                            if pd.isna(value) or (isinstance(value, float) and str(value).lower() == 'nan'):
+                                cleaned_row.append(None)
+                            else:
+                                cleaned_row.append(value)
+                        cleaned_tuples.append(tuple(cleaned_row))
+                    data_tuples = cleaned_tuples
                     
                     # Handle different insert modes
                     if if_exists == 'upsert' and unique_key:
-                        # Use INSERT ... ON DUPLICATE KEY UPDATE for MySQL
-                        update_clauses = [f"{col} = VALUES({col})" for col in columns if col != unique_key]
+                        # Use INSERT ... ON DUPLICATE KEY UPDATE for MySQL with alias syntax
+                        update_clauses = [f"{col} = new_values.{col}" for col in columns if col != unique_key]
                         query = f"""
-                            INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})
+                            INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders}) AS new_values
                             ON DUPLICATE KEY UPDATE {', '.join(update_clauses)}
                         """
                         await cur.executemany(query, data_tuples)
-                        print(f"✓ Upserted {len(data_tuples)} rows into {table_name} (key: {unique_key})")
                     else:
                         # Standard append mode
                         query = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
                         await cur.executemany(query, data_tuples)
-                        print(f"✓ Inserted {len(data_tuples)} rows into {table_name}")
                     
                     await conn.commit()
 
