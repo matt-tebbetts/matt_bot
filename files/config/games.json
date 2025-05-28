@@ -3,6 +3,10 @@
         "game_name": "mini",
         "scoring_type": "timed"
     },
+    "daily": {
+        "game_name": "daily",
+        "scoring_type": "timed"
+    },
     "wordle": {
         "game_name": "wordle",
         "prefix": "Wordle",
