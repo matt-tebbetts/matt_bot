@@ -29,7 +29,7 @@ parser = argparse.ArgumentParser(description="Fetch NYT Crossword stats for mult
 arguments = [
     (("-u", "--user"), {"help": "Specific user to fetch data for (by player_name). If not specified, fetches for all active users"}),
     (("-s", "--start-date"), {"help": "The first date to pull from, inclusive (defaults to 7 days ago)", "default": datetime.strftime(datetime.now() - timedelta(days=7), DATE_FORMAT)}),
-    (("-e", "--end-date"), {"help": "The last date to pull from, inclusive (defaults to today)", "default": datetime.strftime(datetime.now(), DATE_FORMAT)}),
+    (("-e", "--end-date"), {"help": "The last date to pull from, inclusive (defaults to tomorrow)", "default": datetime.strftime(datetime.now() + timedelta(days=1), DATE_FORMAT)}),
 
     (("-t", "--type"), {"help": 'The type of puzzle data to fetch. Valid values are "daily", "mini", or "all" (defaults to all)', "default": "all"}),
     (("--config-file",), {"help": "Path to users config JSON file", "default": "files/config/users.json"}),
@@ -289,14 +289,34 @@ def get_v3_puzzle_overview(puzzle_type, cookie, start_date=None, end_date=None):
 
 
 def get_v3_puzzle_detail(puzzle_id, cookie):
-    puzzle_resp = requests.get(
-        f"{PUZZLE_DETAIL}/{puzzle_id}.json", cookies={"NYT-S": cookie}
-    )
+    """Get detailed puzzle data from NYT API with clear error handling"""
+    try:
+        puzzle_resp = requests.get(
+            f"{PUZZLE_DETAIL}/{puzzle_id}.json", cookies={"NYT-S": cookie}
+        )
 
-    puzzle_resp.raise_for_status()
-    puzzle_detail = puzzle_resp.json()  # Return full response, not just calcs
-
-    return puzzle_detail
+        puzzle_resp.raise_for_status()
+        
+        # Check if response is empty or invalid
+        if not puzzle_resp.text or puzzle_resp.text.strip() == '':
+            raise ValueError(f"NYT API returned empty response for puzzle {puzzle_id} - user may not have access to this puzzle")
+        
+        try:
+            puzzle_detail = puzzle_resp.json()
+        except json.JSONDecodeError as e:
+            raise ValueError(f"NYT API returned invalid JSON for puzzle {puzzle_id} - response was: '{puzzle_resp.text[:100]}...'")
+        
+        return puzzle_detail
+        
+    except requests.exceptions.HTTPError as e:
+        if puzzle_resp.status_code == 404:
+            raise ValueError(f"Puzzle {puzzle_id} not found - may not exist or user doesn't have access")
+        elif puzzle_resp.status_code == 403:
+            raise ValueError(f"Access denied to puzzle {puzzle_id} - user subscription may have expired")
+        else:
+            raise ValueError(f"HTTP {puzzle_resp.status_code} error accessing puzzle {puzzle_id}: {e}")
+    except requests.exceptions.RequestException as e:
+        raise ValueError(f"Network error accessing puzzle {puzzle_id}: {e}")
 
 
 async def process_user_data(user, puzzle_type, start_date=None, end_date=None, use_date_range=False, silent=False):
@@ -374,7 +394,21 @@ async def process_user_data(user, puzzle_type, start_date=None, end_date=None, u
             essential_puzzles.append(essential_record)
             
         except Exception as e:
-            print(f"Error processing puzzle {puzzle['puzzle_id']}: {e}")
+            # Provide clearer error messages based on the type of error
+            puzzle_date = puzzle.get("print_date", "unknown date")
+            puzzle_type_name = puzzle_type.title()
+            
+            if "NYT API returned empty response" in str(e):
+                print(f"  ⚠️  {user['player_name']} {puzzle_type_name} ({puzzle_date}): User doesn't have access to this puzzle")
+            elif "Access denied" in str(e) or "subscription may have expired" in str(e):
+                print(f"  ❌ {user['player_name']} {puzzle_type_name} ({puzzle_date}): Subscription access issue - {e}")
+            elif "not found" in str(e):
+                print(f"  ❓ {user['player_name']} {puzzle_type_name} ({puzzle_date}): Puzzle not available - {e}")
+            elif "Network error" in str(e):
+                print(f"  🌐 {user['player_name']} {puzzle_type_name} ({puzzle_date}): Network issue - {e}")
+            else:
+                print(f"  ⚠️  {user['player_name']} {puzzle_type_name} ({puzzle_date}): {e}")
+            
             # Set defaults for error cases using helper function - but only if overview shows engagement
             if has_puzzle_engagement_from_overview(puzzle):
                 default_record = extract_puzzle_fields({}, user['player_name'], puzzle["print_date"], puzzle)
