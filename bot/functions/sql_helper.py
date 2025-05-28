@@ -38,12 +38,15 @@ async def get_db_config():
         'user': SQL_USER,
         'password': SQL_PASS,
         'db': SQL_DATA,
-        'connect_timeout': 10,  # 10 second connection timeout
-        'autocommit': True,     # Enable autocommit
-        'pool_recycle': 3600,   # Recycle connections after 1 hour
-        'echo': False,          # Disable SQL query logging
-        'minsize': 1,           # Minimum pool size
-        'maxsize': 10           # Maximum pool size
+        'charset': 'utf8mb4',              # Explicitly set charset
+        'use_unicode': True,               # Enable Unicode support
+        'connect_timeout': 10,             # 10 second connection timeout
+        'autocommit': True,                # Enable autocommit
+        'pool_recycle': 3600,              # Recycle connections after 1 hour
+        'echo': False,                     # Disable SQL query logging
+        'minsize': 1,                      # Minimum pool size
+        'maxsize': 10,                     # Maximum pool size
+        'init_command': "SET collation_connection = 'utf8mb4_0900_ai_ci'"  # Set connection collation to match database
     }
 
     return db_config

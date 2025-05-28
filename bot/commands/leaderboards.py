@@ -185,7 +185,7 @@ class Leaderboards(commands.Cog):
             # Determine if we need daily scores or aggregate stats for other games
             elif timeframe.lower() in ["today", "yesterday"] or start_date == end_date:
                 # Use daily scores query for single days
-                sql_file = "game_daily_scores.sql"
+                sql_file = "daily_games.sql"
                 params = [start_date, game]
             else:
                 # Use aggregate stats query for date ranges
