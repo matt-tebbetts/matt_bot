@@ -8,7 +8,7 @@ select
   	game_score,
     points
 from
-    matt.game_view
+    games.game_view
 where guild_id = 'global'
 and game_date = curdate()
 order by

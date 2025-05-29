@@ -6,7 +6,7 @@ SELECT
     game_detail,
     game_rank,
     seconds
-FROM game_view
+FROM games.game_view
 WHERE game_date = CURRENT_DATE
     AND game_name = %s
 ORDER BY 

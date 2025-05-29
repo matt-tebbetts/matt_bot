@@ -11,7 +11,7 @@ select
 	max(case when game_name = 'moviedle' then game_score end) as moviedle,
 	max(case when game_name = 'worldle' then game_score end) as worldle,
 	max(case when game_name = 'travle' then game_score end) as travle
-from matt.game_view
+from games.game_view
 where guild_id = 'global'
 and game_date = curdate()
 group by 1
@@ -20,7 +20,7 @@ order by 1;
 select
 	game_name,
 	count(distinct player_Name) as unique_players
-from matt.game_view
+from games.game_view
 where game_date >= '2025-01-01'
 group by 1 order by 2 desc;
 
@@ -29,7 +29,7 @@ select
 	player_name,
 	count(distinct game_name) as games,
 	sum(1) as entries
-from matt.game_view
+from games.game_view
 where game_date >= '2025-01-01'
 and guild_id = 'global'
 group by 1 order by 2 desc;
@@ -57,7 +57,7 @@ SELECT
 	max(case when player_name = 'Jim' then game_score end) as Jim,
 	max(case when player_name = 'Evan' then game_score end) as Evan,
 	max(case when player_name = 'Bob' then game_score end) as Bob
-from matt.game_view
+from games.game_view
 where guild_id = 'global'
 and game_date = curdate()
 group by 1

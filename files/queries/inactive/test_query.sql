@@ -6,7 +6,7 @@ select
 	max(case when player_name = 'ryan' then game_rank end) as ryan,
 	max(case when player_name = 'mickey' then game_rank end) as mickey,
 	max(case when player_name = 'brice' then game_rank end) as brice
-from matt.game_view
+from games.game_view
 where game_name = 'octordle'
 and game_date >= '2024-12-01'
 and guild_id = 'global'

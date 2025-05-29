@@ -20,7 +20,7 @@ daily_games as (
         			THEN TRUE 
         			ELSE FALSE 
 	 	END as is_prev_month
-    from matt.game_view
+    from games.game_view
     where guild_id = 'global'
     -- and game_name in ('octordle', 'mini')
 ),

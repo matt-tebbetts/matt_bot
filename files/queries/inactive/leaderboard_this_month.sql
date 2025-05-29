@@ -17,7 +17,7 @@ SELECT
     game_detail,
     game_rank,
     seconds
-FROM game_view
+FROM games.game_view
 WHERE game_date >= DATE_TRUNC('month', CURRENT_DATE)
     AND game_date < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
     AND game_name = %s

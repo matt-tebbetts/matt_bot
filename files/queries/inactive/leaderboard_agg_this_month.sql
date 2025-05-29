@@ -6,7 +6,7 @@ WITH monthly_stats AS (
         AVG(seconds) as avg_seconds,
         MIN(seconds) as best_time,
         COUNT(CASE WHEN game_rank = 1 THEN 1 END) as wins
-    FROM game_view
+    FROM games.game_view
     WHERE game_date >= DATE_TRUNC('month', CURRENT_DATE)
         AND game_date < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
         AND game_name = %s
