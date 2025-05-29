@@ -1,7 +1,7 @@
 SELECT
-    game_rank,
-    player_name,
-    game_score,
+    game_rank as rnk,
+    player_name as player,
+    game_score as score,
     points,
     game_detail
 FROM games.game_view

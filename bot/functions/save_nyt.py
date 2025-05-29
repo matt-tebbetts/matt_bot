@@ -288,6 +288,12 @@ def get_v3_puzzle_overview(puzzle_type, cookie, start_date=None, end_date=None):
     return puzzle_info
 
 
+async def get_v3_puzzle_overview_async(puzzle_type, cookie, start_date=None, end_date=None):
+    """Async wrapper for get_v3_puzzle_overview"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, get_v3_puzzle_overview, puzzle_type, cookie, start_date, end_date)
+
+
 def get_v3_puzzle_detail(puzzle_id, cookie):
     """Get detailed puzzle data from NYT API with clear error handling"""
     try:
@@ -319,7 +325,13 @@ def get_v3_puzzle_detail(puzzle_id, cookie):
         raise ValueError(f"Network error accessing puzzle {puzzle_id}: {e}")
 
 
-async def process_user_data(user, puzzle_type, start_date=None, end_date=None, use_date_range=False, silent=False):
+async def get_v3_puzzle_detail_async(puzzle_id, cookie):
+    """Async wrapper for get_v3_puzzle_detail"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, get_v3_puzzle_detail, puzzle_id, cookie)
+
+
+async def process_user_data(user, puzzle_type, start_date=None, end_date=None, use_date_range=False, silent=False, fast_mode=False):
     """Process NYT crossword data for a single user and return the results"""
     mode = "date range" if use_date_range else "incremental"
     if not silent:
@@ -330,7 +342,7 @@ async def process_user_data(user, puzzle_type, start_date=None, end_date=None, u
     # Get puzzles based on mode
     if use_date_range and start_date and end_date:
         # Date range mode - use specified dates, no commit filtering
-        puzzle_overview = get_v3_puzzle_overview(
+        puzzle_overview = await get_v3_puzzle_overview_async(
             puzzle_type=puzzle_type,
             cookie=cookie,
             start_date=start_date,
@@ -341,18 +353,18 @@ async def process_user_data(user, puzzle_type, start_date=None, end_date=None, u
         from datetime import datetime, timedelta
         today = datetime.now()
         seven_days_ago = today - timedelta(days=7)
-        puzzle_overview = get_v3_puzzle_overview(
+        puzzle_overview = await get_v3_puzzle_overview_async(
             puzzle_type=puzzle_type,
             cookie=cookie,
             start_date=seven_days_ago,
             end_date=today,
         )
 
-    # Get baseline for incremental mode only
-    if not use_date_range:
+    # Get baseline for incremental mode only (skip for fast_mode since we're only looking at today)
+    if not use_date_range and not fast_mode:
         last_commit_str = await get_player_last_commit(user['player_name'], puzzle_type)
     else:
-        last_commit_str = None  # Date range mode - process all puzzles found
+        last_commit_str = None  # Date range mode or fast mode - process all puzzles found
 
     # Convert puzzles to streamlined structure
     essential_puzzles = []
@@ -370,11 +382,12 @@ async def process_user_data(user, puzzle_type, start_date=None, end_date=None, u
                 continue
             
             # ONLY make detail API call if overview shows engagement
-            detail = get_v3_puzzle_detail(puzzle_id=puzzle["puzzle_id"], cookie=cookie)
+            detail = await get_v3_puzzle_detail_async(puzzle_id=puzzle["puzzle_id"], cookie=cookie)
             api_timestamp = detail.get("timestamp", None)
             
-            # Small delay between individual puzzle API calls to be nice to NYT
-            time.sleep(0.1)
+            # Small delay between individual puzzle API calls to be nice to NYT (skip in fast mode)
+            if not fast_mode:
+                time.sleep(0.1)
             
             # Check if we should skip this puzzle (incremental mode only)
             if not use_date_range and last_commit_str:
@@ -733,6 +746,7 @@ async def process_historical_backfill_old(users, puzzle_types, start_year):
 
 
 async def main():
+    start_time = time.time()  # Start timing
     args = parser.parse_args()
     
     # Load user configuration
@@ -759,15 +773,17 @@ async def main():
         current_puzzle_date = get_current_puzzle_date()
         
         print(f"Live Mini mode - {current_puzzle_date}")
+        print(f"Processing {len(users)} users concurrently...")
         
         # Track progress
         total_records = 0
         completed_tasks = []
         failed_tasks = []
         
-        for user in users:
-            task_name = f"{user['player_name']} - mini"
-            
+        # OPTIMIZATION: Process all users concurrently instead of sequentially
+        async def process_user_fast(user):
+            """Fast processing for a single user in live mini mode"""
+            user_start = time.time()
             try:
                 # Force date-range mode for the specific date, silent processing
                 puzzles_data = await process_user_data(
@@ -776,22 +792,69 @@ async def main():
                     start_date=current_puzzle_date, 
                     end_date=current_puzzle_date, 
                     use_date_range=True,
-                    silent=True
+                    silent=True,
+                    fast_mode=True
                 )
                 
-                if puzzles_data:
-                    await save_to_sql(puzzles_data)
-                    total_records += len(puzzles_data)
-                    completed_tasks.append(f"{task_name}: {len(puzzles_data)} records")
-                    print(f"{user['player_name']}: updated")
-                else:
-                    completed_tasks.append(f"{task_name}: 0 records")
-                    print(f"{user['player_name']}: no data")
+                user_end = time.time()
+                print(f"  {user['player_name']}: {user_end - user_start:.2f}s")
+                
+                # Return the data instead of writing to database
+                return (user['player_name'], puzzles_data, None)
                     
             except Exception as e:
-                error_msg = f"{task_name}: {str(e)}"
-                failed_tasks.append(error_msg)
-                print(f"{user['player_name']}: error")
+                user_end = time.time()
+                print(f"  {user['player_name']}: {user_end - user_start:.2f}s (ERROR)")
+                return (user['player_name'], [], str(e))
+        
+        # Process all users concurrently with limited concurrency to avoid overwhelming the API
+        semaphore = asyncio.Semaphore(7)  # Allow all users to run concurrently
+        
+        async def process_user_with_semaphore(user):
+            async with semaphore:
+                return await process_user_fast(user)
+        
+        print("Making API calls...")
+        api_start = time.time()
+        user_tasks = [process_user_with_semaphore(user) for user in users]
+        results = await asyncio.gather(*user_tasks, return_exceptions=True)
+        api_end = time.time()
+        print(f"API calls completed in {api_end - api_start:.2f} seconds")
+        
+        print("Processing results...")
+        process_start = time.time()
+        # Collect all puzzle data and process results
+        all_puzzles_data = []
+        for result in results:
+            if isinstance(result, Exception):
+                failed_tasks.append(f"Unknown user: {str(result)}")
+                print(f"Unknown user: error")
+            else:
+                user_name, puzzles_data, error = result
+                if error:
+                    failed_tasks.append(f"{user_name} - mini: {error}")
+                    print(f"{user_name}: error")
+                else:
+                    record_count = len(puzzles_data)
+                    if record_count > 0:
+                        all_puzzles_data.extend(puzzles_data)  # Add to master list
+                        completed_tasks.append(f"{user_name} - mini: {record_count} records")
+                        print(f"{user_name}: updated")
+                    else:
+                        completed_tasks.append(f"{user_name} - mini: 0 records")
+                        print(f"{user_name}: no data")
+        
+        process_end = time.time()
+        print(f"Results processed in {process_end - process_start:.2f} seconds")
+        
+        # Single database write for all users
+        if all_puzzles_data:
+            print(f"Saving {len(all_puzzles_data)} records to database...")
+            db_start = time.time()
+            await save_to_sql(all_puzzles_data)
+            db_end = time.time()
+            print(f"Database save completed in {db_end - db_start:.2f} seconds")
+            total_records = len(all_puzzles_data)
     
     # Historical backfill mode
     elif args.historical:
@@ -877,6 +940,10 @@ async def main():
         await close_pool()
     except Exception as e:
         print(f"Connection cleanup warning: {e}")
+
+    end_time = time.time()  # End timing
+    execution_time = end_time - start_time
+    print(f"Total processing time: {execution_time:.2f} seconds")
 
 
 if __name__ == "__main__":
