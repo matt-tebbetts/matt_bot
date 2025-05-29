@@ -18,18 +18,16 @@ from bot.functions.admin import direct_path_finder
 @tasks.loop(seconds=60)
 async def post_new_mini_leaders(client: discord.Client, tree: discord.app_commands.CommandTree):
     try:
-        # check for leader changes
-        guild_differences = await check_mini_leaders()
+        # check for global leader changes (returns True/False instead of guild dict)
+        has_new_leader = await check_mini_leaders()
 
-        # Filter guild_differences to include only connected guilds
+        if not has_new_leader:
+            return
+
+        # Post to ALL connected guilds since mini leaderboard is now global
         connected_guilds = {guild.name for guild in client.guilds}
-        filtered_guild_differences = {guild_name: has_new_leader for guild_name, has_new_leader in guild_differences.items() if guild_name in connected_guilds}
-
-        for guild_name, has_new_leader in filtered_guild_differences.items():
-
-            if not has_new_leader:
-                continue
-
+        
+        for guild_name in connected_guilds:
             # Get the default channel ID
             channel_id = get_default_channel_id(guild_name)
             if not channel_id:
@@ -69,9 +67,10 @@ async def reset_mini_leaders(client: discord.Client):
         mini_reset_hour = 22 if now.weekday() >= 5 else 18
         
         if now.hour == mini_reset_hour and now.minute <= 1:  # reset window
-            for guild in client.guilds:
-                leader_filepath = direct_path_finder('files', 'guilds', guild.name, 'leaders.json')
-                write_json(leader_filepath, [])  # makes it an empty list
+            # Reset global mini leaders file (not per-guild anymore)
+            leader_filepath = direct_path_finder('files', 'config', 'global_mini_leaders.json')
+            write_json(leader_filepath, [])  # makes it an empty list
+            print(f"Reset global mini leaders at {now}")
 
     except Exception as e:
         print(f"Error in reset_mini_leaders: {e}")

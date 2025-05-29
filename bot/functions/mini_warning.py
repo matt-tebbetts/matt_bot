@@ -22,16 +22,15 @@ async def find_users_to_warn():
 
 # check mini leaders
 async def check_mini_leaders():
-
-    # get latest leaders
+    # get latest global leaders - now checking global leaderboard instead of per-guild
     query = """
         select 
-            guild_nm,
             player_name,
             game_time
         from matt.mini_view
         where game_date = (select max(game_date) from matt.mini_view)
         and game_rank = 1
+        and guild_nm = 'Global'
     """
     result = await execute_query(query)
     
@@ -41,30 +40,21 @@ async def check_mini_leaders():
     # Check if we have any data
     if df.empty:
         print("No mini leaders found for today")
-        return {}
+        return False
 
-    # get leaders by guild
-    aggregated_df = df.groupby('guild_nm')['player_name'].apply(list).reset_index()
-    new_leaders = aggregated_df.to_dict(orient='records')
+    # get current leaders (global list)
+    new_leaders = sorted(df['player_name'].tolist())
 
-    # loop through guilds and check for differences
-    guild_differences = {}
-    for guild in new_leaders:
-        guild_name = guild['guild_nm']
-        
-        # skip global
-        if guild_name == "Global":
-            continue
-
-        # get list of previous leaders
-        leader_filepath = direct_path_finder('files', 'guilds', guild_name, 'leaders.json')
-        previous_leaders = read_json(leader_filepath)
-
-        # check if new leaders are different
-        if set(guild['player_name']) != set(previous_leaders):
-            write_json(leader_filepath, guild['player_name'])
-            guild_differences[guild_name] = True
-        else:
-            guild_differences[guild_name] = False
+    # get list of previous global leaders
+    leader_filepath = direct_path_finder('files', 'config', 'global_mini_leaders.json')
+    previous_leaders = read_json(leader_filepath)
+    if previous_leaders is None:
+        previous_leaders = []
     
-    return guild_differences
+    # check if new leaders are different
+    if new_leaders != sorted(previous_leaders):
+        write_json(leader_filepath, new_leaders)
+        print(f"New mini leaders detected: {new_leaders} (was: {previous_leaders})")
+        return True
+    else:
+        return False
