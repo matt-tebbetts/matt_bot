@@ -364,7 +364,6 @@ async def setup_events(client, tree):
             print(f"[ERROR] Module loading or command sync failed: {e}")
         
         # Start background tasks
-        print("\nStarting background tasks...")
         try:
             setup_tasks(client, tree)
             print("✓ Background tasks started")
