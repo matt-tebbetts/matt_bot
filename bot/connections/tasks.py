@@ -101,7 +101,7 @@ async def after_post_new_mini_leaders():
         mini_leaders_logger.error("Mini leaders monitoring task stopped unexpectedly")
 
 # task 2 - reset leaders when mini resets
-@tasks.loop(hours=1)
+@tasks.loop(minutes=10)
 async def reset_mini_leaders(client: discord.Client):
     try:
         now = datetime.now()
@@ -134,7 +134,7 @@ async def after_reset_mini_leaders():
         reset_leaders_logger.error("Mini leaders reset task stopped unexpectedly")
 
 # task 3 - end of day mini summary and warnings
-@tasks.loop(hours=1)
+@tasks.loop(minutes=10)
 async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.CommandTree):
     try:
         now = datetime.now()
@@ -235,14 +235,14 @@ def setup_tasks(client: discord.Client, tree: discord.app_commands.CommandTree):
             reset_mini_leaders.stop()
             
         reset_mini_leaders.start(client)
-        setup_logger.info("✓ Started reset_mini_leaders task (hourly)")
+        setup_logger.info("✓ Started reset_mini_leaders task (every 10 minutes)")
         
         if daily_mini_summary.is_running():
             setup_logger.warning("daily_mini_summary already running, stopping first")
             daily_mini_summary.stop()
             
         daily_mini_summary.start(client, tree)
-        setup_logger.info("✓ Started daily_mini_summary task (hourly)")
+        setup_logger.info("✓ Started daily_mini_summary task (every 10 minutes)")
         
         setup_logger.info("="*40)
         setup_logger.info("ALL BACKGROUND TASKS STARTED SUCCESSFULLY")
