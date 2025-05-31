@@ -16,3 +16,8 @@ openai
 
 # Utilities
 pytz
+
+# Web Scraping
+requests
+beautifulsoup4
+selenium
