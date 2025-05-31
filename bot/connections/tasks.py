@@ -91,9 +91,7 @@ async def post_new_mini_leaders(client: discord.Client, tree: discord.app_comman
 
 @post_new_mini_leaders.before_loop
 async def before_post_new_mini_leaders():
-    mini_leaders_logger.info("Waiting for bot to be ready before starting mini leaders monitoring...")
-    await client.wait_until_ready()
-    mini_leaders_logger.info("Bot ready, starting mini leaders monitoring")
+    mini_leaders_logger.info("Mini leaders monitoring task starting...")
 
 @post_new_mini_leaders.after_loop
 async def after_post_new_mini_leaders():
