@@ -5,12 +5,70 @@ import os
 from dotenv import load_dotenv
 import traceback
 from typing import List, Dict, Any, Optional
+import weakref
+import atexit
+import signal
 
 lock = asyncio.Lock()
 _pools = {}
 
 # Global connection pool
 _pool = None
+_pool_refs = weakref.WeakSet()  # Track pool references for cleanup
+
+# Register cleanup function to run at exit
+def _cleanup_on_exit():
+    """Cleanup function called at program exit"""
+    import asyncio
+    try:
+        if _pool is not None:
+            # Create a new event loop if none exists
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_closed():
+                    raise RuntimeError("Loop is closed")
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    loop.run_until_complete(_force_close_pool())
+                finally:
+                    loop.close()
+            else:
+                # We have a running loop
+                if loop.is_running():
+                    # Schedule the cleanup
+                    loop.create_task(_force_close_pool())
+                else:
+                    loop.run_until_complete(_force_close_pool())
+    except Exception:
+        pass  # Ignore cleanup errors during exit
+
+def _signal_handler(signum, frame):
+    """Handle termination signals"""
+    try:
+        _cleanup_on_exit()
+    except Exception:
+        pass
+    # Call the default handler
+    signal.default_int_handler(signum, frame)
+
+# Register cleanup handlers
+atexit.register(_cleanup_on_exit)
+signal.signal(signal.SIGINT, _signal_handler)
+signal.signal(signal.SIGTERM, _signal_handler)
+
+async def _force_close_pool():
+    """Force close the connection pool"""
+    global _pool
+    if _pool is not None:
+        try:
+            _pool.close()
+            await _pool.wait_closed()
+        except Exception:
+            pass  # Ignore errors during forced cleanup
+        finally:
+            _pool = None
 
 # get sql config
 async def get_db_config():
@@ -133,9 +191,14 @@ async def close_pool():
     """Close the connection pool."""
     global _pool
     if _pool is not None:
-        _pool.close()
-        await _pool.wait_closed()
-        _pool = None
+        try:
+            _pool.close()
+            await _pool.wait_closed()
+        except Exception as e:
+            # Log but don't raise to avoid blocking cleanup
+            print(f"[SQL] Warning during pool closure: {e}")
+        finally:
+            _pool = None
 
 async def send_df_to_sql(df, table_name, if_exists='append', unique_key=None):
     if df.empty:
@@ -214,3 +277,62 @@ async def send_df_to_sql(df, table_name, if_exists='append', unique_key=None):
     except Exception as e:
         print(f"[SQL] Failed to insert data into {table_name}: {str(e)}")
         raise 
+
+class DatabaseManager:
+    """Context manager for database operations that ensures proper cleanup"""
+    
+    def __init__(self):
+        self.pool = None
+        self.local_loop = None
+        self.created_loop = False
+        
+    async def __aenter__(self):
+        self.pool = await get_pool()
+        return self
+        
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        # Don't close the global pool here, just ensure any local resources are cleaned
+        pass
+    
+    def __enter__(self):
+        # Synchronous context manager entry
+        try:
+            loop = asyncio.get_running_loop()
+            self.local_loop = loop
+        except RuntimeError:
+            # No running loop, create one
+            self.local_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.local_loop)
+            self.created_loop = True
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # Clean up if we created the loop
+        if self.created_loop and self.local_loop:
+            try:
+                # Ensure pool is closed before closing loop
+                self.local_loop.run_until_complete(close_pool())
+            except Exception:
+                pass  # Ignore cleanup errors
+            finally:
+                try:
+                    self.local_loop.close()
+                except Exception:
+                    pass
+                self.local_loop = None
+    
+    async def execute_query(self, query: str, params: Optional[tuple] = None, max_retries: int = 3):
+        """Execute query within this context"""
+        return await execute_query(query, params, max_retries)
+    
+    async def send_df_to_sql(self, df, table_name, if_exists='append', unique_key=None):
+        """Send DataFrame to SQL within this context"""
+        return await send_df_to_sql(df, table_name, if_exists, unique_key)
+    
+    def run_async(self, coro):
+        """Run an async operation within this context"""
+        if self.local_loop and not self.local_loop.is_running():
+            return self.local_loop.run_until_complete(coro)
+        else:
+            # If loop is already running, we can't use run_until_complete
+            raise RuntimeError("Cannot run async operation in already running loop context") 

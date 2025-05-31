@@ -1,66 +1,118 @@
-# Actorle Movie Scraper
+# 🎭 Actorle Analysis
 
-A simple Selenium-based scraper for extracting daily movie data from actorle.com.
+A comprehensive scraper and analyzer for the daily Actorle game at [actorle.com](https://actorle.com/).
 
-## Overview
+## 📁 Centralized Organization
 
-Extracts movie data from the JavaScript-heavy Actorle game website and provides clean CSV output with the hidden movie collection for each daily puzzle.
+This directory contains the unified Actorle functionality:
 
-## Files
+- **`actorle_scraper.py`** - Main unified scraper with both Discord bot integration and standalone analysis
+- **`summary.txt`** - Latest actor identification analysis (always overwrites)
+- **`create_table.sql`** - Database schema for the actorle_detail table
+- **Backup files** - CSV fallbacks when SQL is unavailable
 
-- **`parse_movie_table.py`** - Main scraper using Selenium
-- **`parsed_movies_*.csv`** - Extracted movie data (timestamped files)
-- **`README.md`** - This file
+## 🚀 Usage
 
-## Quick Start
+### For Discord Bot Integration
 
-1. **Install dependencies:**
-   ```bash
-   pip install selenium pandas
-   ```
-   
-2. **Run the scraper:**
-   ```bash
-   python parse_movie_table.py
-   ```
+The scraper is automatically imported by the bot and provides these functions:
 
-## Output
+```python
+from actorle_scraper import get_actorle_game_info, format_actorle_info
 
-Each run generates a timestamped CSV file: `parsed_movies_YYYYMMDD_HHMMSS.csv`
+# Get game stats for Discord
+game_data = get_actorle_game_info()
+formatted_message = format_actorle_info(game_data)
+```
 
-**Data Structure:**
-- `year` - Movie release year
-- `title` - Puzzle representation (e.g., "× ×××× ××× ×××××××")
-- `genres` - Semicolon-separated genres (e.g., "SCIENCE FICTION; ACTION; ADVENTURE")  
-- `rating` - IMDB rating (1-10 scale)
+### For Standalone Analysis
 
-## Sample Results
+Run the scraper directly for comprehensive analysis:
 
-53 movies extracted from recent game with:
-- Year range: 1967-2025
-- Rating range: 5.3-8.7
-- Properly parsed genres and censored titles
+```bash
+# From the actorle_analysis directory
+python actorle_scraper.py
+```
 
-## Technical Notes
+This will:
+- Scrape the current Actorle game
+- Extract all movie data (title, year, genres, ratings)
+- **Save to SQL database** (`actorle_detail` table) with `game_date` column
+- Create/overwrite `summary.txt` with actor identification analysis
 
-- Uses Selenium WebDriver for JavaScript-rendered content
-- Automatically waits for dynamic content loading
-- Handles concatenated genre parsing
-- Extracts censored titles showing puzzle structure
-- Requires Chrome browser
+## 📊 Features
 
-## Output Files
+### 🎯 Discord Bot Integration
+- Quick game stats (movie count, year range, top genres, average rating)
+- Game number detection
+- Formatted messages for Discord
 
-Each run generates timestamped files:
-- `parsed_movies_YYYYMMDD_HHMMSS.csv` - Raw extraction
-- `clean_movie_summary_YYYYMMDD_HHMMSS.csv` - Processed analysis
+### 🔍 Detailed Analysis
+- **Movie Data Storage**: Saves to SQL database with game date tracking
+- **Actor Identification Summary**: Comprehensive analysis in `summary.txt` including:
+  - Career overview and statistics
+  - Top-rated movies (most recognizable)
+  - Career breakdown by decade
+  - Genre analysis and specialties
+  - Key identification clues
 
-## Analysis Features
+### 🛠️ Technical Features
+- **SQL Database Integration** - Stores data in `actorle_detail` table
+- **CSV Fallback** - Automatic backup when SQL unavailable
+- **Fixed Summary File** - Always overwrites `summary.txt` (no date clutter)
+- **Selenium-based scraping** - Handles JavaScript-heavy content
+- **Intelligent parsing** - Extracts structured data from unstructured text
+- **Error handling** - Graceful fallbacks and logging
+- **Bot compatibility** - Works with or without bot infrastructure
 
-- Decade-based movie distribution
-- Genre frequency analysis  
-- Rating distribution and statistics
-- Notable movie identification (highest/lowest rated)
-- Clean CSV export for further analysis
+## 🗄️ Database Schema
 
-The scraper successfully handles Actorle's dynamic JavaScript content and provides comprehensive movie data extraction for puzzle analysis. 
+The scraper saves data to the `actorle_detail` table:
+
+```sql
+CREATE TABLE actorle_detail (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    game_date DATE NOT NULL,        -- When the game was played
+    year INT NOT NULL,              -- Movie release year
+    title TEXT,                     -- Censored movie title (××× format)
+    genres TEXT,                    -- Semicolon-separated genres
+    rating DECIMAL(3,1),            -- IMDB rating (1.0-10.0)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## 📈 Output Files
+
+- **SQL Database**: All movie data stored in `actorle_detail` table
+- **`summary.txt`** - Current actor analysis (always overwrites)
+- **`actorle_movies_backup.csv`** - Backup when SQL unavailable
+
+## 🔧 Dependencies
+
+- `selenium` - Web scraping
+- `pandas` - Data processing
+- `aiomysql` - Database connectivity
+- `python-dateutil` - Date handling
+
+## 🏗️ Architecture
+
+The `ActorleScraper` class provides a unified interface:
+
+1. **`scrape_page()`** - Gets raw HTML content
+2. **`extract_movie_table_data()`** - Parses movie information
+3. **`get_summary_stats()`** - Generates Discord-friendly stats
+4. **`save_to_sql()`** - Saves to database with game_date
+5. **`generate_summary()`** - Creates fixed `summary.txt` file
+
+### Data Flow
+
+```
+Actorle.com → Selenium → Movie Parser → SQL Database
+                                    ↘ summary.txt (fixed filename)
+```
+
+This design:
+- **Eliminates file clutter** - No more dated CSV files
+- **Centralizes data** - All historical games in one SQL table
+- **Provides fallbacks** - CSV backup when SQL unavailable
+- **Maintains bot compatibility** - Works in all contexts 

@@ -6,4 +6,5 @@ from .mini_warning import check_mini_leaders
 from .admin import read_json
 from .admin import write_json
 from .admin import get_default_channel_id
-from .actorle_scraper import get_actorle_game_info
+import sys
+import os
