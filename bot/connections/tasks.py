@@ -18,26 +18,40 @@ from bot.functions.admin import direct_path_finder
 @tasks.loop(seconds=60)
 async def post_new_mini_leaders(client: discord.Client, tree: discord.app_commands.CommandTree):
     try:
+        print(f"[DEBUG] Running post_new_mini_leaders task at {datetime.now()}")
+        
         # check for global leader changes (returns True/False instead of guild dict)
         has_new_leader = await check_mini_leaders()
+        print(f"[DEBUG] check_mini_leaders returned: {has_new_leader}")
 
         if not has_new_leader:
+            print(f"[DEBUG] No new leader, exiting task")
             return
 
         # Post to ALL connected guilds since mini leaderboard is now global
         connected_guilds = {guild.name for guild in client.guilds}
+        print(f"[DEBUG] Connected guilds: {connected_guilds}")
         
         for guild_name in connected_guilds:
+            print(f"[DEBUG] Processing guild: {guild_name}")
+            
             # Get the default channel ID
             channel_id = get_default_channel_id(guild_name)
+            print(f"[DEBUG] Default channel ID for {guild_name}: {channel_id}")
+            
             if not channel_id:
+                print(f"[DEBUG] No default channel ID found for {guild_name}, skipping")
                 continue
 
             basic_message = "There's a new mini leader!"
             channel = client.get_channel(channel_id)
+            print(f"[DEBUG] Got channel object: {channel}")
+            
             if channel:
                 try:
+                    print(f"[DEBUG] Sending message to {guild_name} in #{channel.name}")
                     await channel.send(basic_message)
+                    
                     # Create leaderboard and send as image file
                     leaderboards = Leaderboards(client, tree)
                     img_path = await leaderboards.show_leaderboard(game='mini')
@@ -46,18 +60,21 @@ async def post_new_mini_leaders(client: discord.Client, tree: discord.app_comman
                     if (img_path and isinstance(img_path, str) and 
                         img_path.endswith('.png') and 
                         os.path.exists(img_path)):
+                        print(f"[DEBUG] Sending leaderboard image: {img_path}")
                         await channel.send(file=discord.File(img_path))
                     else:
                         # Either got an error message or file doesn't exist
                         error_msg = img_path if isinstance(img_path, str) else "Unknown error generating leaderboard"
-                        print(f"Failed to generate mini leaderboard for {guild_name}: {error_msg}")
+                        print(f"[DEBUG] Failed to generate mini leaderboard for {guild_name}: {error_msg}")
                         await channel.send("Error: Could not generate mini leaderboard image")
                         
                 except Exception as e:
-                    print(f"Error posting mini leader update to {guild_name}: {e}")
+                    print(f"[DEBUG] Error posting mini leader update to {guild_name}: {e}")
+            else:
+                print(f"[DEBUG] Could not get channel object for channel ID {channel_id} in {guild_name}")
                     
     except Exception as e:
-        print(f"Error in post_new_mini_leaders task: {e}")
+        print(f"[DEBUG] Error in post_new_mini_leaders task: {e}")
 
 # task 2 - reset leaders when mini resets
 @tasks.loop(hours=1)
@@ -132,19 +149,24 @@ async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.
         print(f"Error in daily_mini_summary task: {e}")
 
 def setup_tasks(client: discord.Client, tree: discord.app_commands.CommandTree):
+    print(f"[DEBUG] Setting up tasks...")
+    
     # Start the continuous monitoring task
     if post_new_mini_leaders.is_running():
         post_new_mini_leaders.stop()
     post_new_mini_leaders.start(client, tree)
+    print(f"[DEBUG] Started post_new_mini_leaders task")
 
     # Start time-based tasks (they have their own time checks)
     if reset_mini_leaders.is_running():
         reset_mini_leaders.stop()
     reset_mini_leaders.start(client)
+    print(f"[DEBUG] Started reset_mini_leaders task")
     
     if daily_mini_summary.is_running():
         daily_mini_summary.stop()
     daily_mini_summary.start(client, tree)
+    print(f"[DEBUG] Started daily_mini_summary task")
     
     # Note: send_warning_loop is redundant with daily_mini_summary DM warnings
     # Removing it to avoid duplicate warning systems

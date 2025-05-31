@@ -1,0 +1,35 @@
+[Unit]
+Description=Matt Bot - Discord Bot Service
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%PROJECT_DIR%
+ExecStart=%PROJECT_DIR%/.venv/bin/python bot.py
+Environment=PYTHONPATH=%PROJECT_DIR%
+Environment=PATH=%PROJECT_DIR%/.venv/bin:/usr/local/bin:/usr/bin:/bin
+User=root
+Group=root
+
+# Logging - both to systemd journal and console
+StandardOutput=journal+console
+StandardError=journal+console
+
+# Security and resource limits
+PrivateTmp=true
+NoNewPrivileges=true
+MemoryMax=512M
+CPUQuota=25%
+
+# Restart policy - keep the bot running
+Restart=always
+RestartSec=10
+StartLimitInterval=60
+StartLimitBurst=3
+
+# Health monitoring
+WatchdogSec=30
+
+[Install]
+WantedBy=multi-user.target 

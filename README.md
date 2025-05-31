@@ -67,20 +67,17 @@ files/
 ├── config/
 │   ├── games.json           # Game configuration and settings
 │   ├── gpt_models.json      # Model costs and configuration
-│   ├── sms_carriers.json    # SMS carrier configurations
-│   └── users.json           # NYT crossword user configurations
+│   └── sms_carriers.json    # SMS carrier configurations
 ├── gpt/
 │   ├── system_prompt.txt     # Main system prompt template
 │   ├── analysis_prompt.txt   # Prompt analysis template
 │   ├── analysis_system_prompt.txt
 │   ├── gpt_history.json     # Usage logs and history
 │   └── prompts/             # Debug prompt logs
-├── guilds/
-│   └── [guild_name]/
-│       ├── messages.json    # Discord message history
-│       └── config.json      # Guild configuration
-└── nyt_stats/
-    └── nyt_crossword_data.json # NYT crossword statistics
+└── guilds/
+    └── [guild_name]/
+        ├── messages.json    # Discord message history
+        └── config.json      # Guild configuration
 ```
 
 ## Key Classes and Methods
@@ -110,7 +107,7 @@ Discord messages are formatted for ChatGPT as:
 
 Example:
 ```
-[crossword-corner] 2024-01-15 10:30:15 acowinthecrowd: This puzzle is really hard today!
+[general] 2024-01-15 10:30:15 acowinthecrowd: This is a great discussion!
 [things-we-watch] 2024-01-15 10:35:22 Matt: Just watched Dune, visuals were amazing
 ```
 
@@ -139,7 +136,7 @@ Example:
 
 ```
 /gpt summarize what acowinthecrowd says and describe his personality
-/gpt what happened in #crossword-corner today?
+/gpt what happened in #general today?
 /gpt what movies are people talking about?
 /gpt who's been most active in discussions?
 ```
@@ -163,4 +160,4 @@ Example:
 **Last Updated**: After multiple iterations fixing the "no access to messages" issue:
 - Updated system prompts to be more forceful and explicit
 - Added clear headers to message data to mark it as "REAL MESSAGES"  
-- Used directive language like "YOU HAVE BEEN PROVIDED" and "DO NOT say you lack access" 
+- Used directive language like "YOU HAVE BEEN PROVIDED" and "DO NOT say you lack access"

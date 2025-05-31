@@ -22,6 +22,8 @@ async def find_users_to_warn():
 
 # check mini leaders
 async def check_mini_leaders():
+    print(f"[DEBUG] Checking for mini leaders...")
+    
     # get latest global leaders - now checking global leaderboard instead of per-guild
     query = """
         select 
@@ -32,18 +34,22 @@ async def check_mini_leaders():
         and game_rank = 1
         and guild_nm = 'Global'
     """
+    
+    print(f"[DEBUG] Executing query: {query}")
     result = await execute_query(query)
+    print(f"[DEBUG] Query result: {result}")
     
     # Convert result to DataFrame
     df = pd.DataFrame(result)
     
     # Check if we have any data
     if df.empty:
-        print("No mini leaders found for today")
+        print("[DEBUG] No mini leaders found for today")
         return False
 
     # get current leaders (global list)
     new_leaders = sorted(df['player_name'].tolist())
+    print(f"[DEBUG] New leaders from database: {new_leaders}")
 
     # get list of previous global leaders
     leader_filepath = direct_path_finder('files', 'config', 'global_mini_leaders.json')
@@ -51,10 +57,13 @@ async def check_mini_leaders():
     if previous_leaders is None:
         previous_leaders = []
     
+    print(f"[DEBUG] Previous leaders from file: {previous_leaders}")
+    
     # check if new leaders are different
     if new_leaders != sorted(previous_leaders):
         write_json(leader_filepath, new_leaders)
-        print(f"New mini leaders detected: {new_leaders} (was: {previous_leaders})")
+        print(f"[DEBUG] NEW MINI LEADERS DETECTED: {new_leaders} (was: {previous_leaders})")
         return True
     else:
+        print(f"[DEBUG] No change in leaders: {new_leaders}")
         return False

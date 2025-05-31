@@ -1,0 +1,21 @@
+{
+  "remote_server": {
+    "host": "199.19.75.180",
+    "username": "root",
+    "description": "Matt Bot production server where systemd services run",
+    "project_path": "/root/projects/matt_bot",
+    "ssh_connection": "root@199.19.75.180",
+    "notes": "Server runs systemd service for Discord bot operations"
+  },
+  "database_server": {
+    "host": "52.144.45.121",
+    "description": "MySQL database server (referenced in SQL connections)",
+    "notes": "Separate from the application server"
+  },
+  "deployment": {
+    "environment": "production",
+    "auto_restart": true,
+    "monitoring": true,
+    "email_notifications": true
+  }
+} 

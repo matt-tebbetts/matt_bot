@@ -6,6 +6,7 @@ tiktoken
 # Database
 aiomysql
 pandas
+numpy
 
 # Image Processing
 Pillow
