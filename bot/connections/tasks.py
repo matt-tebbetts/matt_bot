@@ -139,18 +139,18 @@ async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.
     try:
         now = datetime.now()
         mini_reset_hour = 18 if now.weekday() >= 5 else 22  # 6pm weekends, 10pm weekdays
-        warning_hour = mini_reset_hour - 2  # 2 hours before expiration
+        warning_hour = mini_reset_hour - 4  # 4 hours before expiration (changed from 2)
         
         daily_summary_logger.debug(f"Daily summary check at {now} - warning: {warning_hour}, reset: {mini_reset_hour}")
         
-        # Send DM warnings 2 hours before mini expires (once per day)
+        # Send DM warnings 4 hours before mini expires (once per day)
         if now.hour == warning_hour and now.minute <= 5:  # 5 minute window
             daily_summary_logger.info(f"MINI WARNING TIME! Sending DM warnings at {now}")
             
             users_to_warn = await find_users_to_warn()
             if users_to_warn:
                 daily_summary_logger.info(f"Found {len(users_to_warn)} users to warn")
-                warning_text = "⏰ **Mini reminder!** Only 2 hours left to complete today's mini crossword!"
+                warning_text = "⏰ **Mini reminder!** Only 4 hours left to complete today's mini crossword!"
                 
                 # Check which users are in connected guilds to avoid unnecessary API calls
                 guild_member_ids = {member.id for guild in client.guilds for member in guild.members}
