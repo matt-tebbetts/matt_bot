@@ -16,6 +16,12 @@ from bot.connections.config import save_all_guild_configs
 from bot.functions.message_history import initialize_message_history
 from bot.functions.sql_helper import get_pool
 from bot.functions.admin import direct_path_finder
+from bot.connections.logging_config import get_logger, log_exception, log_asyncio_context
+
+# Get loggers for different components
+startup_logger = get_logger('startup')
+events_logger = get_logger('events')
+message_logger = get_logger('messages')
 
 async def analyze_guild_token_estimates(client):
     """Analyze message data and create token estimates for each guild and channel."""
@@ -285,9 +291,9 @@ async def analyze_guild_token_estimates(client):
                 json.dump(analysis_result, f, indent=2)
         
     except Exception as e:
-        print(f"[ERROR] Token analysis failed: {e}")
+        log_exception(startup_logger, e, "token analysis")
         import traceback
-        print(f"[ERROR] Traceback: {traceback.format_exc()}")
+        log_exception(startup_logger, traceback.format_exc(), "traceback")
 
 # load cogs commands
 async def load_cogs(client, tree):
@@ -299,6 +305,7 @@ async def load_cogs(client, tree):
         module = importlib.import_module(module_name)
         if hasattr(module, 'setup'):
             await module.setup(client, tree)
+        log_asyncio_context()
         print(f"✓ Loaded {module_name}")
 
 # Register event listeners
@@ -307,47 +314,65 @@ async def setup_events(client, tree):
     # on ready
     @client.event
     async def on_ready():
-        print("\n=== Bot Startup Sequence ===")
-        print(f"Logged in as {client.user.name} (ID: {client.user.id})")
-        print(f"Connected to {len(client.guilds)} servers:")
+        startup_logger.info("="*60)
+        startup_logger.info("BOT STARTUP SEQUENCE INITIATED")
+        startup_logger.info("="*60)
+        startup_logger.info(f"Logged in as {client.user.name} (ID: {client.user.id})")
+        startup_logger.info(f"Connected to {len(client.guilds)} servers:")
         for guild in client.guilds:
-            print(f"- {guild.name} (ID: {guild.id})")
+            startup_logger.info(f"  └─ {guild.name} (ID: {guild.id}, {len(guild.members)} members)")
+        
+        log_asyncio_context()
         
         # Run initial setup tasks in parallel
-        print("\nRunning initial setup...")
+        startup_logger.info("Running initial setup tasks...")
         try:
             import asyncio
-            await asyncio.gather(
+            results = await asyncio.gather(
                 save_all_guild_configs(client),
                 get_pool(),  # Start database connection early
                 return_exceptions=True
             )
-            print("✓ Initial setup completed")
+            
+            # Check results
+            for i, result in enumerate(results):
+                if isinstance(result, Exception):
+                    startup_logger.error(f"Initial setup task {i} failed: {result}")
+                else:
+                    startup_logger.debug(f"Initial setup task {i} completed successfully")
+                    
+            startup_logger.info("✓ Initial setup completed")
         except Exception as e:
-            print(f"[ERROR] Initial setup failed: {e}")
+            log_exception(startup_logger, e, "initial setup")
         
         # Initialize message history (can be time-consuming)
-        print("\nChecking for missed messages...")
+        startup_logger.info("Checking for missed messages...")
         try:
             await initialize_message_history(client, lookback_days=7)
+            startup_logger.info("✓ Message history initialization completed")
         except Exception as e:
-            print(f"[ERROR] Message history initialization failed: {e}")
+            log_exception(startup_logger, e, "message history initialization")
         
         # Analyze token estimates for all guilds
+        startup_logger.info("Analyzing token estimates...")
         try:
             await analyze_guild_token_estimates(client)
+            startup_logger.info("✓ Token analysis completed")
         except Exception as e:
-            print(f"[ERROR] Token analysis failed: {e}")
+            log_exception(startup_logger, e, "token analysis")
         
         # Load cogs and sync commands in parallel
-        print("\nLoading modules and syncing commands...")
+        startup_logger.info("Loading modules and syncing commands...")
         try:
             import asyncio
             # Define sync task
             async def sync_commands():
+                startup_logger.debug("Starting global command sync...")
                 await tree.sync(guild=None)  # Global sync
+                startup_logger.debug("Starting guild-specific command syncs...")
                 for guild in client.guilds:
                     await tree.sync(guild=guild)
+                    startup_logger.debug(f"Synced commands for {guild.name}")
                 return len(client.guilds)
             
             # Run in parallel
@@ -357,20 +382,30 @@ async def setup_events(client, tree):
                 return_exceptions=True
             )
             
-            if not isinstance(results[1], Exception):
-                print(f"✓ Commands synced to {results[1]} servers")
+            if isinstance(results[0], Exception):
+                log_exception(startup_logger, results[0], "loading cogs")
+            else:
+                startup_logger.info("✓ Modules loaded successfully")
+                
+            if isinstance(results[1], Exception):
+                log_exception(startup_logger, results[1], "syncing commands")
+            else:
+                startup_logger.info(f"✓ Commands synced to {results[1]} servers")
                 
         except Exception as e:
-            print(f"[ERROR] Module loading or command sync failed: {e}")
+            log_exception(startup_logger, e, "module loading or command sync")
         
         # Start background tasks
+        startup_logger.info("Starting background tasks...")
         try:
             setup_tasks(client, tree)
-            print("✓ Background tasks started")
+            startup_logger.info("✓ Background tasks started successfully")
         except Exception as e:
-            print(f"[ERROR] Background task setup failed: {e}")
+            log_exception(startup_logger, e, "background task setup")
         
-        print("\n=== Bot is ready! ===")
+        startup_logger.info("="*60)
+        startup_logger.info("🚀 BOT IS READY AND OPERATIONAL! 🚀")
+        startup_logger.info("="*60)
 
     # on message
     @client.event
@@ -382,7 +417,7 @@ async def setup_events(client, tree):
         try:
             is_score, game_name, game_info = is_game_score(message.content)
         except Exception as e:
-            print(f"events.py: error checking game score: {e}")
+            log_exception(message_logger, e, "checking if message is game score")
             is_score, game_name, game_info = False, None, None
 
         # log message
@@ -401,24 +436,34 @@ async def setup_events(client, tree):
             first_line = message.content.split('\n')[0]
             message_preview = first_line[:16] + "..." if len(first_line) > 16 else first_line
             game_info_text = f" [{game_name}]" if is_score else ""
-            print(f"User {message.author.name} posted in {channel_name}: {message_preview}{game_info_text}")
+            
+            # Use different log levels for different message types
+            if is_score:
+                message_logger.info(f"🎮 {message.author.name} posted {game_name} score in {channel_name}: {message_preview}")
+            else:
+                message_logger.debug(f"💬 {message.author.name} posted in {channel_name}: {message_preview}")
+                
         except Exception as e:
-            print(f"events.py: error logging message: {e}")
+            log_exception(message_logger, e, "logging message details")
 
         # save message (with game score flag)
         try:
             save_message_detail(message)
         except Exception as e:
-            print(f"events.py: error saving message detail: {e}")
+            log_exception(message_logger, e, "saving message detail")
 
         # process game score if it is one
         if not is_score:
             return
 
         try:
+            message_logger.debug(f"Processing {game_name} score for {message.author.name}")
             score_result = await process_game_score(message, game_name, game_info)
             if not score_result:
+                message_logger.debug(f"No score result returned for {game_name}")
                 return
+
+            message_logger.debug(f"Score processed successfully: {score_result}")
 
             # Load games configuration
             games_file_path = direct_path_finder('files', 'config', 'games.json')
@@ -433,11 +478,15 @@ async def setup_events(client, tree):
                 # Fallback to green checkmark
                 try:
                     await smart_emoji_reaction(message, '✅')
+                    message_logger.debug(f"Used fallback emoji for {game_name}")
                 except Exception as e:
-                    print(f"Even fallback emoji failed: {e}")
+                    log_exception(message_logger, e, "adding fallback emoji reaction")
+            else:
+                message_logger.debug(f"Added main emoji {main_emoji} for {game_name}")
             
             # Add bonus reactions if any
             if game_bonuses := score_result.get('game_bonuses'):
+                message_logger.debug(f"Processing bonuses: {game_bonuses}")
                 for bonus in game_bonuses.split(', '):
                     if emoji_config := game_config.get('bonus_emojis', {}).get(bonus):
                         success = await smart_emoji_reaction_with_fallbacks(message, emoji_config)
@@ -445,11 +494,14 @@ async def setup_events(client, tree):
                             # Fallback to green checkmark for failed bonus emojis
                             try:
                                 await smart_emoji_reaction(message, '✅')
+                                message_logger.debug(f"Used fallback emoji for bonus {bonus}")
                             except Exception as e:
-                                print(f"Bonus emoji fallback failed: {e}")
+                                log_exception(message_logger, e, f"adding fallback emoji for bonus {bonus}")
+                        else:
+                            message_logger.debug(f"Added bonus emoji for {bonus}")
             
         except Exception as e:
-            print(f"events.py: Error processing game score: {str(e)}")
+            log_exception(message_logger, e, f"processing {game_name} game score")
 
 async def smart_emoji_reaction(message, emoji_str):
     """

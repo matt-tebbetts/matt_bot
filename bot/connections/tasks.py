@@ -11,6 +11,13 @@ from bot.functions import write_json
 from bot.commands import Leaderboards
 from bot.functions.admin import get_default_channel_id
 from bot.functions.admin import direct_path_finder
+from bot.connections.logging_config import get_task_logger, log_exception, log_asyncio_context
+
+# Get task-specific loggers
+mini_leaders_logger = get_task_logger('post_new_mini_leaders')
+reset_leaders_logger = get_task_logger('reset_mini_leaders')
+daily_summary_logger = get_task_logger('daily_mini_summary')
+setup_logger = get_task_logger('setup_tasks')
 
 # Removed redundant send_warning_loop - functionality moved to daily_mini_summary task
 
@@ -18,41 +25,46 @@ from bot.functions.admin import direct_path_finder
 @tasks.loop(seconds=60)
 async def post_new_mini_leaders(client: discord.Client, tree: discord.app_commands.CommandTree):
     try:
-        print(f"[DEBUG] Running post_new_mini_leaders task at {datetime.now()}")
+        mini_leaders_logger.debug(f"Running mini leaders check at {datetime.now()}")
+        log_asyncio_context()
         
         # check for global leader changes (returns True/False instead of guild dict)
+        mini_leaders_logger.debug("Calling check_mini_leaders()...")
         has_new_leader = await check_mini_leaders()
-        print(f"[DEBUG] check_mini_leaders returned: {has_new_leader}")
+        mini_leaders_logger.debug(f"check_mini_leaders returned: {has_new_leader}")
 
         if not has_new_leader:
-            print(f"[DEBUG] No new leader, exiting task")
+            mini_leaders_logger.debug("No new leader detected, task complete")
             return
+
+        mini_leaders_logger.info("NEW MINI LEADER DETECTED! Processing announcement...")
 
         # Post to ALL connected guilds since mini leaderboard is now global
         connected_guilds = {guild.name for guild in client.guilds}
-        print(f"[DEBUG] Connected guilds: {connected_guilds}")
+        mini_leaders_logger.info(f"Connected guilds: {connected_guilds}")
         
         for guild_name in connected_guilds:
-            print(f"[DEBUG] Processing guild: {guild_name}")
+            mini_leaders_logger.debug(f"Processing guild: {guild_name}")
             
             # Get the default channel ID
             channel_id = get_default_channel_id(guild_name)
-            print(f"[DEBUG] Default channel ID for {guild_name}: {channel_id}")
+            mini_leaders_logger.debug(f"Default channel ID for {guild_name}: {channel_id}")
             
             if not channel_id:
-                print(f"[DEBUG] No default channel ID found for {guild_name}, skipping")
+                mini_leaders_logger.warning(f"No default channel ID found for {guild_name}, skipping")
                 continue
 
             basic_message = "There's a new mini leader!"
             channel = client.get_channel(channel_id)
-            print(f"[DEBUG] Got channel object: {channel}")
+            mini_leaders_logger.debug(f"Got channel object for {guild_name}: {channel}")
             
             if channel:
                 try:
-                    print(f"[DEBUG] Sending message to {guild_name} in #{channel.name}")
+                    mini_leaders_logger.info(f"Sending announcement to {guild_name} in #{channel.name}")
                     await channel.send(basic_message)
                     
                     # Create leaderboard and send as image file
+                    mini_leaders_logger.debug("Creating leaderboard image...")
                     leaderboards = Leaderboards(client, tree)
                     img_path = await leaderboards.show_leaderboard(game='mini')
                     
@@ -60,21 +72,35 @@ async def post_new_mini_leaders(client: discord.Client, tree: discord.app_comman
                     if (img_path and isinstance(img_path, str) and 
                         img_path.endswith('.png') and 
                         os.path.exists(img_path)):
-                        print(f"[DEBUG] Sending leaderboard image: {img_path}")
+                        mini_leaders_logger.info(f"Sending leaderboard image to {guild_name}: {img_path}")
                         await channel.send(file=discord.File(img_path))
+                        mini_leaders_logger.info(f"Successfully posted mini leader announcement to {guild_name}")
                     else:
                         # Either got an error message or file doesn't exist
                         error_msg = img_path if isinstance(img_path, str) else "Unknown error generating leaderboard"
-                        print(f"[DEBUG] Failed to generate mini leaderboard for {guild_name}: {error_msg}")
+                        mini_leaders_logger.error(f"Failed to generate mini leaderboard for {guild_name}: {error_msg}")
                         await channel.send("Error: Could not generate mini leaderboard image")
                         
                 except Exception as e:
-                    print(f"[DEBUG] Error posting mini leader update to {guild_name}: {e}")
+                    log_exception(mini_leaders_logger, e, f"posting mini leader update to {guild_name}")
             else:
-                print(f"[DEBUG] Could not get channel object for channel ID {channel_id} in {guild_name}")
+                mini_leaders_logger.error(f"Could not get channel object for channel ID {channel_id} in {guild_name}")
                     
     except Exception as e:
-        print(f"[DEBUG] Error in post_new_mini_leaders task: {e}")
+        log_exception(mini_leaders_logger, e, "post_new_mini_leaders task execution")
+
+@post_new_mini_leaders.before_loop
+async def before_post_new_mini_leaders():
+    mini_leaders_logger.info("Waiting for bot to be ready before starting mini leaders monitoring...")
+    await client.wait_until_ready()
+    mini_leaders_logger.info("Bot ready, starting mini leaders monitoring")
+
+@post_new_mini_leaders.after_loop
+async def after_post_new_mini_leaders():
+    if post_new_mini_leaders.is_being_cancelled():
+        mini_leaders_logger.warning("Mini leaders monitoring task was cancelled")
+    else:
+        mini_leaders_logger.error("Mini leaders monitoring task stopped unexpectedly")
 
 # task 2 - reset leaders when mini resets
 @tasks.loop(hours=1)
@@ -83,14 +109,31 @@ async def reset_mini_leaders(client: discord.Client):
         now = datetime.now()
         mini_reset_hour = 22 if now.weekday() >= 5 else 18
         
+        reset_leaders_logger.debug(f"Reset check at {now} - reset hour is {mini_reset_hour}")
+        
         if now.hour == mini_reset_hour and now.minute <= 1:  # reset window
+            reset_leaders_logger.info(f"MINI RESET TIME! Resetting global mini leaders at {now}")
+            
             # Reset global mini leaders file (not per-guild anymore)
             leader_filepath = direct_path_finder('files', 'config', 'global_mini_leaders.json')
             write_json(leader_filepath, [])  # makes it an empty list
-            print(f"Reset global mini leaders at {now}")
+            reset_leaders_logger.info(f"Successfully reset global mini leaders file: {leader_filepath}")
+        else:
+            reset_leaders_logger.debug(f"Not reset time - current: {now.hour}:{now.minute:02d}, reset: {mini_reset_hour}:00-01")
 
     except Exception as e:
-        print(f"Error in reset_mini_leaders: {e}")
+        log_exception(reset_leaders_logger, e, "reset_mini_leaders task execution")
+
+@reset_mini_leaders.before_loop
+async def before_reset_mini_leaders():
+    reset_leaders_logger.info("Mini leaders reset task starting...")
+    
+@reset_mini_leaders.after_loop
+async def after_reset_mini_leaders():
+    if reset_mini_leaders.is_being_cancelled():
+        reset_leaders_logger.warning("Mini leaders reset task was cancelled")
+    else:
+        reset_leaders_logger.error("Mini leaders reset task stopped unexpectedly")
 
 # task 3 - end of day mini summary and warnings
 @tasks.loop(hours=1)
@@ -100,10 +143,15 @@ async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.
         mini_reset_hour = 18 if now.weekday() >= 5 else 22  # 6pm weekends, 10pm weekdays
         warning_hour = mini_reset_hour - 2  # 2 hours before expiration
         
+        daily_summary_logger.debug(f"Daily summary check at {now} - warning: {warning_hour}, reset: {mini_reset_hour}")
+        
         # Send DM warnings 2 hours before mini expires (once per day)
         if now.hour == warning_hour and now.minute <= 5:  # 5 minute window
+            daily_summary_logger.info(f"MINI WARNING TIME! Sending DM warnings at {now}")
+            
             users_to_warn = await find_users_to_warn()
             if users_to_warn:
+                daily_summary_logger.info(f"Found {len(users_to_warn)} users to warn")
                 warning_text = "⏰ **Mini reminder!** Only 2 hours left to complete today's mini crossword!"
                 
                 # Check which users are in connected guilds to avoid unnecessary API calls
@@ -111,19 +159,23 @@ async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.
                 
                 for user in users_to_warn:
                     if user['discord_id_nbr'] not in guild_member_ids:
-                        print(f"Skipping DM to {user['name']} - not in any connected guilds")
+                        daily_summary_logger.debug(f"Skipping DM to {user['name']} - not in any connected guilds")
                         continue
                         
                     try:
                         # Get user by discord ID and send DM
                         discord_user = await client.fetch_user(user['discord_id_nbr'])
                         await discord_user.send(warning_text)
-                        print(f"Sent mini warning DM to {user['name']}")
+                        daily_summary_logger.info(f"Sent mini warning DM to {user['name']} ({user['discord_id_nbr']})")
                     except Exception as e:
-                        print(f"Failed to send mini warning DM to {user['name']}: {e}")
+                        log_exception(daily_summary_logger, e, f"sending DM to {user['name']}")
+            else:
+                daily_summary_logger.info("No users found to warn")
         
         # Send end-of-day summary to channels when mini resets
         elif now.hour == mini_reset_hour and now.minute <= 5:  # 5 minute window
+            daily_summary_logger.info(f"MINI SUMMARY TIME! Sending end-of-day summaries at {now}")
+            
             connected_guilds = {guild.name for guild in client.guilds}
             for guild_name in connected_guilds:
                 channel_id = get_default_channel_id(guild_name)
@@ -132,6 +184,7 @@ async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.
                     if channel:
                         summary_msg = "🏁 **Final Mini Results for Today!**"
                         try:
+                            daily_summary_logger.info(f"Sending daily summary to {guild_name}")
                             await channel.send(summary_msg)
                             # Show final leaderboard
                             leaderboards = Leaderboards(client, tree)
@@ -140,33 +193,64 @@ async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.
                                 img_path.endswith('.png') and 
                                 os.path.exists(img_path)):
                                 await channel.send(file=discord.File(img_path))
+                                daily_summary_logger.info(f"Successfully sent daily summary to {guild_name}")
                             else:
-                                print(f"Failed to generate daily mini summary leaderboard for {guild_name}: {img_path}")
+                                daily_summary_logger.error(f"Failed to generate daily mini summary leaderboard for {guild_name}: {img_path}")
                         except Exception as e:
-                            print(f"Error sending daily mini summary to {guild_name}: {e}")
+                            log_exception(daily_summary_logger, e, f"sending daily mini summary to {guild_name}")
+                else:
+                    daily_summary_logger.warning(f"No default channel ID for {guild_name}")
+        else:
+            daily_summary_logger.debug(f"Not warning/summary time - current: {now.hour}:{now.minute:02d}")
                             
     except Exception as e:
-        print(f"Error in daily_mini_summary task: {e}")
+        log_exception(daily_summary_logger, e, "daily_mini_summary task execution")
+
+@daily_mini_summary.before_loop
+async def before_daily_mini_summary():
+    daily_summary_logger.info("Daily mini summary task starting...")
+    
+@daily_mini_summary.after_loop
+async def after_daily_mini_summary():
+    if daily_mini_summary.is_being_cancelled():
+        daily_summary_logger.warning("Daily mini summary task was cancelled")
+    else:
+        daily_summary_logger.error("Daily mini summary task stopped unexpectedly")
 
 def setup_tasks(client: discord.Client, tree: discord.app_commands.CommandTree):
-    print(f"[DEBUG] Setting up tasks...")
+    setup_logger.info("="*40)
+    setup_logger.info("SETTING UP BACKGROUND TASKS")
+    setup_logger.info("="*40)
     
-    # Start the continuous monitoring task
-    if post_new_mini_leaders.is_running():
-        post_new_mini_leaders.stop()
-    post_new_mini_leaders.start(client, tree)
-    print(f"[DEBUG] Started post_new_mini_leaders task")
+    try:
+        # Start the continuous monitoring task
+        if post_new_mini_leaders.is_running():
+            setup_logger.warning("post_new_mini_leaders already running, stopping first")
+            post_new_mini_leaders.stop()
+        
+        post_new_mini_leaders.start(client, tree)
+        setup_logger.info("✓ Started post_new_mini_leaders task (60 second interval)")
 
-    # Start time-based tasks (they have their own time checks)
-    if reset_mini_leaders.is_running():
-        reset_mini_leaders.stop()
-    reset_mini_leaders.start(client)
-    print(f"[DEBUG] Started reset_mini_leaders task")
-    
-    if daily_mini_summary.is_running():
-        daily_mini_summary.stop()
-    daily_mini_summary.start(client, tree)
-    print(f"[DEBUG] Started daily_mini_summary task")
-    
-    # Note: send_warning_loop is redundant with daily_mini_summary DM warnings
-    # Removing it to avoid duplicate warning systems
+        # Start time-based tasks (they have their own time checks)
+        if reset_mini_leaders.is_running():
+            setup_logger.warning("reset_mini_leaders already running, stopping first")
+            reset_mini_leaders.stop()
+            
+        reset_mini_leaders.start(client)
+        setup_logger.info("✓ Started reset_mini_leaders task (hourly)")
+        
+        if daily_mini_summary.is_running():
+            setup_logger.warning("daily_mini_summary already running, stopping first")
+            daily_mini_summary.stop()
+            
+        daily_mini_summary.start(client, tree)
+        setup_logger.info("✓ Started daily_mini_summary task (hourly)")
+        
+        setup_logger.info("="*40)
+        setup_logger.info("ALL BACKGROUND TASKS STARTED SUCCESSFULLY")
+        setup_logger.info("="*40)
+        
+    except Exception as e:
+        log_exception(setup_logger, e, "setting up background tasks")
+        setup_logger.critical("FAILED TO START BACKGROUND TASKS!")
+        raise
