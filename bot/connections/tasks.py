@@ -11,6 +11,7 @@ from bot.functions import write_json
 from bot.commands import Leaderboards
 from bot.functions.admin import get_default_channel_id
 from bot.functions.admin import direct_path_finder
+from bot.functions.timezone_warnings import get_users_to_warn_by_timezone
 from bot.connections.logging_config import get_task_logger, log_exception, log_asyncio_context
 
 # Get task-specific loggers
@@ -133,45 +134,41 @@ async def after_reset_mini_leaders():
     else:
         reset_leaders_logger.error("Mini leaders reset task stopped unexpectedly")
 
-# task 3 - end of day mini summary and warnings
+# task 3 - end of day mini summary and timezone-based warnings
 @tasks.loop(minutes=10)
 async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.CommandTree):
     try:
         now = datetime.now()
         mini_reset_hour = 18 if now.weekday() >= 5 else 22  # 6pm weekends, 10pm weekdays
-        warning_hour = mini_reset_hour - 4  # 4 hours before expiration (changed from 2)
         
-        daily_summary_logger.debug(f"Daily summary check at {now} - warning: {warning_hour}, reset: {mini_reset_hour}")
+        daily_summary_logger.debug(f"Daily summary check at {now} - reset: {mini_reset_hour}")
         
-        # Send DM warnings 4 hours before mini expires (once per day)
-        if now.hour == warning_hour and now.minute <= 5:  # 5 minute window
-            daily_summary_logger.info(f"MINI WARNING TIME! Sending DM warnings at {now}")
+        # Check for users who need timezone-based warnings (12PM in their local time)
+        users_to_warn = await get_users_to_warn_by_timezone(target_hour=12)
+        if users_to_warn:
+            daily_summary_logger.info(f"TIMEZONE WARNINGS! Found {len(users_to_warn)} users to warn at their local 12PM")
             
-            users_to_warn = await find_users_to_warn()
-            if users_to_warn:
-                daily_summary_logger.info(f"Found {len(users_to_warn)} users to warn")
-                warning_text = "⏰ **Mini reminder!** Only 4 hours left to complete today's mini crossword!"
-                
-                # Check which users are in connected guilds to avoid unnecessary API calls
-                guild_member_ids = {member.id for guild in client.guilds for member in guild.members}
-                
-                for user in users_to_warn:
-                    if user['discord_id_nbr'] not in guild_member_ids:
-                        daily_summary_logger.debug(f"Skipping DM to {user['name']} - not in any connected guilds")
-                        continue
-                        
-                    try:
-                        # Get user by discord ID and send DM
-                        discord_user = await client.fetch_user(user['discord_id_nbr'])
-                        await discord_user.send(warning_text)
-                        daily_summary_logger.info(f"Sent mini warning DM to {user['name']} ({user['discord_id_nbr']})")
-                    except Exception as e:
-                        log_exception(daily_summary_logger, e, f"sending DM to {user['name']}")
-            else:
-                daily_summary_logger.info("No users found to warn")
+            # Check which users are in connected guilds to avoid unnecessary API calls
+            guild_member_ids = {member.id for guild in client.guilds for member in guild.members}
+            
+            for user_data, user_timezone in users_to_warn:
+                user = user_data
+                if user['discord_id_nbr'] not in guild_member_ids:
+                    daily_summary_logger.debug(f"Skipping DM to {user['name']} - not in any connected guilds")
+                    continue
+                    
+                try:
+                    # Get user by discord ID and send personalized DM
+                    discord_user = await client.fetch_user(user['discord_id_nbr'])
+                    warning_text = f"🕛 **Mini reminder!** It's 12:00 PM in your timezone ({user_timezone}) - time to do today's mini crossword!"
+                    
+                    await discord_user.send(warning_text)
+                    daily_summary_logger.info(f"Sent timezone-based mini warning DM to {user['name']} ({user['discord_id_nbr']}) in {user_timezone}")
+                except Exception as e:
+                    log_exception(daily_summary_logger, e, f"sending timezone-based DM to {user['name']}")
         
         # Send end-of-day summary to channels when mini resets
-        elif now.hour == mini_reset_hour and now.minute <= 5:  # 5 minute window
+        if now.hour == mini_reset_hour and now.minute <= 5:  # 5 minute window
             daily_summary_logger.info(f"MINI SUMMARY TIME! Sending end-of-day summaries at {now}")
             
             connected_guilds = {guild.name for guild in client.guilds}
@@ -199,7 +196,7 @@ async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.
                 else:
                     daily_summary_logger.warning(f"No default channel ID for {guild_name}")
         else:
-            daily_summary_logger.debug(f"Not warning/summary time - current: {now.hour}:{now.minute:02d}")
+            daily_summary_logger.debug(f"Not summary time - current: {now.hour}:{now.minute:02d}")
                             
     except Exception as e:
         log_exception(daily_summary_logger, e, "daily_mini_summary task execution")
