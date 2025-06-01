@@ -3,15 +3,17 @@ from discord.ext import tasks
 from datetime import datetime
 import pandas as pd
 import os
+import json
+import pytz
 
 from bot.functions import find_users_to_warn
 from bot.functions import send_df_to_sql, execute_query
 from bot.functions import check_mini_leaders
+from bot.functions import track_warning_attempt
 from bot.functions import write_json
 from bot.commands import Leaderboards
 from bot.functions.admin import get_default_channel_id
 from bot.functions.admin import direct_path_finder
-from bot.functions.timezone_warnings import get_users_to_warn_by_timezone
 from bot.connections.logging_config import get_task_logger, log_exception, log_asyncio_context
 
 # Get task-specific loggers
@@ -134,7 +136,7 @@ async def after_reset_mini_leaders():
     else:
         reset_leaders_logger.error("Mini leaders reset task stopped unexpectedly")
 
-# task 3 - end of day mini summary and timezone-based warnings
+# task 3 - end of day mini summary and simple warning system
 @tasks.loop(minutes=10)
 async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.CommandTree):
     try:
@@ -143,29 +145,93 @@ async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.
         
         daily_summary_logger.debug(f"Daily summary check at {now} - reset: {mini_reset_hour}")
         
-        # Check for users who need timezone-based warnings (12PM in their local time)
-        users_to_warn = await get_users_to_warn_by_timezone(target_hour=12)
-        if users_to_warn:
-            daily_summary_logger.info(f"TIMEZONE WARNINGS! Found {len(users_to_warn)} users to warn at their local 12PM")
+        # Send personalized warnings based on user timezone preferences
+        # Load user timezone preferences
+        users_file_path = direct_path_finder('files', 'config', 'users.json')
+        users_data = {}
+        if os.path.exists(users_file_path):
+            with open(users_file_path, 'r', encoding='utf-8') as f:
+                users_data = json.load(f)
+        
+        # Check each user's timezone to see if it's their warning time
+        users_to_warn_now = []
+        for user_id, user_data in users_data.items():
+            try:
+                user_tz = pytz.timezone(user_data.get('timezone', 'US/Eastern'))
+                user_warning_hour = user_data.get('warning_hour', 12)
+                
+                # Convert current UTC time to user's timezone
+                utc_now = datetime.now(pytz.utc)
+                user_local_time = utc_now.astimezone(user_tz)
+                
+                # Check if it's their warning time (within 10 minute window)
+                if user_local_time.hour == user_warning_hour and user_local_time.minute <= 9:
+                    users_to_warn_now.append({
+                        'discord_id_nbr': int(user_id),
+                        'name': user_data.get('display_name', user_data.get('name', 'Unknown')),
+                        'timezone': user_data.get('timezone', 'US/Eastern'),
+                        'warning_hour': user_warning_hour
+                    })
+                    
+            except Exception as e:
+                daily_summary_logger.error(f"Error processing timezone for user {user_id}: {e}")
+                continue
+        
+        # Send warnings to users whose time has come
+        if users_to_warn_now:
+            daily_summary_logger.info(f"PERSONALIZED WARNING TIME! Sending warnings to {len(users_to_warn_now)} users")
+            
+            # Get users who haven't completed the mini
+            users_needing_warnings = await find_users_to_warn()
+            users_needing_warnings_dict = {u['discord_id_nbr']: u for u in users_needing_warnings}
             
             # Check which users are in connected guilds to avoid unnecessary API calls
             guild_member_ids = {member.id for guild in client.guilds for member in guild.members}
             
-            for user_data, user_timezone in users_to_warn:
-                user = user_data
-                if user['discord_id_nbr'] not in guild_member_ids:
+            for user in users_to_warn_now:
+                user_id = user['discord_id_nbr']
+                
+                # Only warn if they haven't completed the mini
+                if user_id not in users_needing_warnings_dict:
+                    daily_summary_logger.debug(f"Skipping warning for {user['name']} - already completed mini")
+                    continue
+                
+                if user_id not in guild_member_ids:
                     daily_summary_logger.debug(f"Skipping DM to {user['name']} - not in any connected guilds")
+                    # Track the skipped attempt
+                    await track_warning_attempt(
+                        player_name=user['name'],
+                        discord_id_nbr=user_id,
+                        success=False,
+                        error_message="User not in any connected guilds"
+                    )
                     continue
                     
                 try:
-                    # Get user by discord ID and send personalized DM
-                    discord_user = await client.fetch_user(user['discord_id_nbr'])
-                    warning_text = f"🕛 **Mini reminder!** It's 12:00 PM in your timezone ({user_timezone}) - time to do today's mini crossword!"
+                    # Get user by discord ID and send DM
+                    discord_user = await client.fetch_user(user_id)
+                    warning_text = f"🕛 **Mini reminder!** Don't forget to do today's mini crossword!"
                     
                     await discord_user.send(warning_text)
-                    daily_summary_logger.info(f"Sent timezone-based mini warning DM to {user['name']} ({user['discord_id_nbr']}) in {user_timezone}")
+                    daily_summary_logger.info(f"Sent personalized mini warning DM to {user['name']} ({user_id}) at their preferred time in {user['timezone']}")
+                    
+                    # Track successful warning
+                    await track_warning_attempt(
+                        player_name=user['name'],
+                        discord_id_nbr=user_id,
+                        success=True
+                    )
+                    
                 except Exception as e:
-                    log_exception(daily_summary_logger, e, f"sending timezone-based DM to {user['name']}")
+                    log_exception(daily_summary_logger, e, f"sending DM to {user['name']}")
+                    
+                    # Track failed warning
+                    await track_warning_attempt(
+                        player_name=user['name'],
+                        discord_id_nbr=user_id,
+                        success=False,
+                        error_message=str(e)
+                    )
         
         # Send end-of-day summary to channels when mini resets
         if now.hour == mini_reset_hour and now.minute <= 5:  # 5 minute window

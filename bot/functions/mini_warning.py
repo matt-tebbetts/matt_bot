@@ -1,5 +1,6 @@
 import discord
 import pandas as pd
+from datetime import datetime
 from bot.functions import execute_query
 from bot.functions.admin import read_json, write_json
 from bot.functions.admin import direct_path_finder
@@ -32,6 +33,47 @@ async def find_users_to_warn():
     except Exception as e:
         log_exception(mini_warning_logger, e, "finding users to warn")
         return []
+
+async def track_warning_attempt(player_name: str, discord_id_nbr: int, success: bool, error_message: str = None, warning_type: str = 'daily_reminder'):
+    """
+    Track a warning attempt in the mini_warning_history table.
+    
+    Args:
+        player_name: The player's display name
+        discord_id_nbr: The Discord user ID
+        success: Whether the warning was sent successfully
+        error_message: Error message if the warning failed
+        warning_type: Type of warning (default: 'daily_reminder')
+    """
+    try:
+        warning_date = datetime.now().strftime('%Y-%m-%d')
+        
+        # Insert or update warning attempt
+        query = """
+        INSERT INTO games.mini_warning_history 
+        (warning_date, player_name, discord_id_nbr, warning_sent, success, error_message, warning_type)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+        warning_timestamp = CURRENT_TIMESTAMP,
+        warning_sent = VALUES(warning_sent),
+        success = VALUES(success),
+        error_message = VALUES(error_message)
+        """
+        
+        await execute_query(query, (
+            warning_date,
+            player_name,
+            discord_id_nbr,
+            True,  # warning_sent = True (we attempted it)
+            success,
+            error_message,
+            warning_type
+        ))
+        
+        mini_warning_logger.debug(f"Tracked warning attempt for {player_name} ({discord_id_nbr}): success={success}")
+        
+    except Exception as e:
+        log_exception(mini_warning_logger, e, f"tracking warning attempt for {player_name}")
 
 # check mini leaders
 async def check_mini_leaders():
@@ -74,17 +116,20 @@ async def check_mini_leaders():
             previous_leaders = []
         
         mini_warning_logger.info(f"Previous leaders from file: {previous_leaders}")
-        
-        # check if new leaders are different
-        if new_leaders != sorted(previous_leaders):
-            mini_warning_logger.info(f"🏆 NEW MINI LEADERS DETECTED! {new_leaders} (was: {previous_leaders})")
-            write_json(leader_filepath, new_leaders)
-            mini_warning_logger.debug(f"Updated leaders file: {leader_filepath}")
-            return True
-        else:
-            mini_warning_logger.debug(f"No change in leaders: {new_leaders}")
-            return False
+
+        # compare lists (order matters!)
+        if sorted(new_leaders) != sorted(previous_leaders):
+            mini_warning_logger.info(f"LEADER CHANGE DETECTED! Old: {previous_leaders}, New: {new_leaders}")
             
+            # Save the new leaders to file
+            write_json(leader_filepath, new_leaders)
+            mini_warning_logger.info(f"Updated global leaders file with: {new_leaders}")
+            
+            return True  # Signal that there's a new leader
+        else:
+            mini_warning_logger.debug("No leader change detected")
+            return False  # No change
+
     except Exception as e:
         log_exception(mini_warning_logger, e, "checking mini leaders")
         return False
