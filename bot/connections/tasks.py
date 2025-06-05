@@ -141,128 +141,125 @@ async def after_reset_mini_leaders():
 async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.CommandTree):
     try:
         now = datetime.now()
-        mini_reset_hour = 18 if now.weekday() >= 5 else 22  # Fixed: 6pm weekends, 10pm weekdays
+        mini_reset_hour = 18 if now.weekday() >= 5 else 22  # 6pm weekends, 10pm weekdays
         
-        daily_summary_logger.info(f"Daily summary check at {now} - reset: {mini_reset_hour}")
+        daily_summary_logger.info(f"Daily summary check at {now} - mini expires at {mini_reset_hour}:00")
         
-        # Send personalized warnings based on user timezone preferences
-        # Load user timezone preferences
-        users_file_path = direct_path_finder('files', 'config', 'users.json')
-        users_data = {}
-        if os.path.exists(users_file_path):
-            with open(users_file_path, 'r', encoding='utf-8') as f:
-                users_data = json.load(f)
-        
-        # Check each user's timezone to see if it's their warning time
-        users_to_warn_now = []
-        for user_id, user_data in users_data.items():
+        # Check if it's mini expiration time (within 10 minute window)
+        if now.hour == mini_reset_hour and now.minute <= 9:
+            daily_summary_logger.info(f"MINI EXPIRATION TIME! Processing warnings and leaderboard at {now}")
+            
+            # 1. Send warnings to users who haven't completed the mini
             try:
-                user_tz = pytz.timezone(user_data.get('timezone', 'US/Eastern'))
-                user_warning_hour = user_data.get('warning_hour', 12)
+                users_needing_warnings = await find_users_to_warn()
+                daily_summary_logger.info(f"Found {len(users_needing_warnings)} users who need warnings")
                 
-                # Convert current UTC time to user's timezone
-                utc_now = datetime.now(pytz.utc)
-                user_local_time = utc_now.astimezone(user_tz)
+                # Get users who have already been warned today to avoid duplicates
+                today = datetime.now().strftime('%Y-%m-%d')
+                already_warned_query = """
+                    SELECT DISTINCT discord_id_nbr 
+                    FROM games.mini_warning_history 
+                    WHERE warning_date = %s AND success = 1
+                """
+                already_warned_result = await execute_query(already_warned_query, (today,))
+                already_warned_ids = {row['discord_id_nbr'] for row in already_warned_result}
+                daily_summary_logger.info(f"Found {len(already_warned_ids)} users already warned today")
                 
-                # Check if it's their warning time (within 10 minute window)
-                if user_local_time.hour == user_warning_hour and user_local_time.minute <= 9:
-                    users_to_warn_now.append({
-                        'discord_id_nbr': int(user_id),
-                        'name': user_data.get('display_name', user_data.get('name', 'Unknown')),
-                        'timezone': user_data.get('timezone', 'US/Eastern'),
-                        'warning_hour': user_warning_hour
-                    })
+                # Get all guild member IDs to check if users are in connected guilds
+                guild_member_ids = {member.id for guild in client.guilds for member in guild.members}
+                
+                for user in users_needing_warnings:
+                    user_id = user['discord_id_nbr']
+                    user_name = user.get('name', 'Unknown')
                     
+                    # Skip if already warned today
+                    if user_id in already_warned_ids:
+                        daily_summary_logger.debug(f"Skipping {user_name} - already warned today")
+                        continue
+                    
+                    # Only send DM if user is in a connected guild
+                    if user_id not in guild_member_ids:
+                        daily_summary_logger.debug(f"Skipping DM to {user_name} - not in any connected guilds")
+                        await track_warning_attempt(
+                            player_name=user_name,
+                            discord_id_nbr=user_id,
+                            success=False,
+                            error_message="User not in any connected guilds"
+                        )
+                        continue
+                    
+                    try:
+                        # Send DM warning
+                        discord_user = await client.fetch_user(user_id)
+                        warning_text = f"🕛 **Mini reminder!** The mini crossword expires soon and you haven't completed it yet!"
+                        
+                        await discord_user.send(warning_text)
+                        daily_summary_logger.info(f"Sent mini warning DM to {user_name} ({user_id})")
+                        
+                        # Track successful warning
+                        await track_warning_attempt(
+                            player_name=user_name,
+                            discord_id_nbr=user_id,
+                            success=True
+                        )
+                        
+                    except Exception as e:
+                        log_exception(daily_summary_logger, e, f"sending DM to {user_name}")
+                        
+                        # Track failed warning
+                        await track_warning_attempt(
+                            player_name=user_name,
+                            discord_id_nbr=user_id,
+                            success=False,
+                            error_message=str(e)
+                        )
+                        
             except Exception as e:
-                daily_summary_logger.error(f"Error processing timezone for user {user_id}: {e}")
-                continue
-        
-        # Send warnings to users whose time has come
-        if users_to_warn_now:
-            daily_summary_logger.info(f"PERSONALIZED WARNING TIME! Sending warnings to {len(users_to_warn_now)} users")
+                log_exception(daily_summary_logger, e, "processing mini warnings")
             
-            # Get users who haven't completed the mini
-            users_needing_warnings = await find_users_to_warn()
-            users_needing_warnings_dict = {u['discord_id_nbr']: u for u in users_needing_warnings}
-            
-            # Check which users are in connected guilds to avoid unnecessary API calls
-            guild_member_ids = {member.id for guild in client.guilds for member in guild.members}
-            
-            for user in users_to_warn_now:
-                user_id = user['discord_id_nbr']
+            # 2. Post final mini leaderboard to all connected guilds
+            try:
+                connected_guilds = {guild.name for guild in client.guilds}
+                daily_summary_logger.info(f"Posting final mini leaderboard to {len(connected_guilds)} guilds")
                 
-                # Only warn if they haven't completed the mini
-                if user_id not in users_needing_warnings_dict:
-                    daily_summary_logger.debug(f"Skipping warning for {user['name']} - already completed mini")
-                    continue
-                
-                if user_id not in guild_member_ids:
-                    daily_summary_logger.debug(f"Skipping DM to {user['name']} - not in any connected guilds")
-                    # Track the skipped attempt
-                    await track_warning_attempt(
-                        player_name=user['name'],
-                        discord_id_nbr=user_id,
-                        success=False,
-                        error_message="User not in any connected guilds"
-                    )
-                    continue
+                for guild_name in connected_guilds:
+                    channel_id = get_default_channel_id(guild_name)
+                    if not channel_id:
+                        daily_summary_logger.warning(f"No default channel ID for {guild_name}")
+                        continue
                     
-                try:
-                    # Get user by discord ID and send DM
-                    discord_user = await client.fetch_user(user_id)
-                    warning_text = f"🕛 **Mini reminder!** Don't forget to do today's mini crossword!"
-                    
-                    await discord_user.send(warning_text)
-                    daily_summary_logger.info(f"Sent personalized mini warning DM to {user['name']} ({user_id}) at their preferred time in {user['timezone']}")
-                    
-                    # Track successful warning
-                    await track_warning_attempt(
-                        player_name=user['name'],
-                        discord_id_nbr=user_id,
-                        success=True
-                    )
-                    
-                except Exception as e:
-                    log_exception(daily_summary_logger, e, f"sending DM to {user['name']}")
-                    
-                    # Track failed warning
-                    await track_warning_attempt(
-                        player_name=user['name'],
-                        discord_id_nbr=user_id,
-                        success=False,
-                        error_message=str(e)
-                    )
-        
-        # Send end-of-day summary to channels when mini resets
-        if now.hour == mini_reset_hour and now.minute <= 5:  # 5 minute window
-            daily_summary_logger.info(f"MINI SUMMARY TIME! Sending end-of-day summaries at {now}")
-            
-            connected_guilds = {guild.name for guild in client.guilds}
-            for guild_name in connected_guilds:
-                channel_id = get_default_channel_id(guild_name)
-                if channel_id:
                     channel = client.get_channel(channel_id)
-                    if channel:
+                    if not channel:
+                        daily_summary_logger.error(f"Could not get channel object for channel ID {channel_id} in {guild_name}")
+                        continue
+                    
+                    try:
+                        # Send final results message
                         summary_msg = "🏁 **Final Mini Results for Today!**"
-                        try:
-                            daily_summary_logger.info(f"Sending daily summary to {guild_name}")
-                            await channel.send(summary_msg)
-                            # Show final leaderboard
-                            leaderboards = Leaderboards(client, tree)
-                            img_path = await leaderboards.show_leaderboard(game='mini')
-                            if (img_path and isinstance(img_path, str) and 
-                                img_path.endswith('.png') and 
-                                os.path.exists(img_path)):
-                                await channel.send(file=discord.File(img_path))
-                                daily_summary_logger.info(f"Successfully sent daily summary to {guild_name}")
-                            else:
-                                daily_summary_logger.error(f"Failed to generate daily mini summary leaderboard for {guild_name}: {img_path}")
-                        except Exception as e:
-                            log_exception(daily_summary_logger, e, f"sending daily mini summary to {guild_name}")
-                else:
-                    daily_summary_logger.warning(f"No default channel ID for {guild_name}")
+                        await channel.send(summary_msg)
+                        
+                        # Generate and send leaderboard image
+                        leaderboards = Leaderboards(client, tree)
+                        img_path = await leaderboards.show_leaderboard(game='mini')
+                        
+                        if (img_path and isinstance(img_path, str) and 
+                            img_path.endswith('.png') and 
+                            os.path.exists(img_path)):
+                            await channel.send(file=discord.File(img_path))
+                            daily_summary_logger.info(f"Successfully posted final mini leaderboard to {guild_name}")
+                        else:
+                            error_msg = img_path if isinstance(img_path, str) else "Unknown error"
+                            daily_summary_logger.error(f"Failed to generate leaderboard for {guild_name}: {error_msg}")
+                            await channel.send("Error: Could not generate mini leaderboard image")
+                            
+                    except Exception as e:
+                        log_exception(daily_summary_logger, e, f"posting final mini leaderboard to {guild_name}")
+                        
+            except Exception as e:
+                log_exception(daily_summary_logger, e, "posting final mini leaderboards")
+                
         else:
-            daily_summary_logger.info(f"Not summary time - current: {now.hour}:{now.minute:02d}")
+            daily_summary_logger.debug(f"Not mini expiration time - current: {now.hour}:{now.minute:02d}, expires at: {mini_reset_hour}:00")
                             
     except Exception as e:
         log_exception(daily_summary_logger, e, "daily_mini_summary task execution")
