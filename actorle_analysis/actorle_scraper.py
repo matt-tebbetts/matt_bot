@@ -18,6 +18,7 @@ import logging
 from typing import Dict, List, Optional, Tuple
 import os
 import sys
+import json
 
 # Add parent directory to path for bot imports when running standalone
 if __name__ == "__main__":
@@ -70,6 +71,11 @@ class ActorleScraper:
     def __init__(self, headless: bool = True):
         self.headless = headless
         self.driver = None
+        self.cache_dir = os.path.dirname(__file__)  # Save in actorle_analysis directory
+        self.cache_file = os.path.join(self.cache_dir, "daily_actorle_cache.json")
+        
+        # Create cache directory if it doesn't exist (should already exist since it's actorle_analysis)
+        os.makedirs(self.cache_dir, exist_ok=True)
     
     def setup_driver(self) -> webdriver.Chrome:
         """Setup Chrome driver with optimal settings"""
@@ -317,6 +323,87 @@ class ActorleScraper:
         
         return '; '.join(genre_list) if genre_list else genres_line
     
+    def _prioritize_genres(self, genres_str: str) -> str:
+        """Intelligently prioritize and consolidate genres to top 2 most important"""
+        if not genres_str or pd.isna(genres_str):
+            return "X"
+        
+        # Parse genres from the string
+        genres = [g.strip() for g in str(genres_str).split(';') if g.strip()]
+        if not genres:
+            return "X"
+        
+        # Define genre priority and combinations
+        high_priority = ['WAR', 'COMEDY', 'HORROR', 'WESTERN', 'MYSTERY', 'ANIMATION']
+        medium_priority = ['ACTION', 'THRILLER', 'CRIME', 'SCIENCE FICTION', 'FANTASY', 'ROMANCE']
+        low_priority = ['DRAMA', 'ADVENTURE']  # These are too common/generic
+        
+        # Check for special combinations first
+        genre_set = set(genres)
+        
+        # ROM-COM combination
+        if 'ROMANCE' in genre_set and 'COMEDY' in genre_set:
+            other_genres = [g for g in genres if g not in ['ROMANCE', 'COMEDY']]
+            if other_genres and other_genres[0] not in low_priority:
+                return f"ROM-COM/{other_genres[0]}"
+            else:
+                return "ROM-COM"
+        
+        # ACTION-ADVENTURE combination (only if no better genres)
+        if 'ACTION' in genre_set and 'ADVENTURE' in genre_set:
+            other_high = [g for g in genres if g in high_priority]
+            other_medium = [g for g in genres if g in medium_priority and g not in ['ACTION']]
+            
+            if other_high:
+                return f"ACTION/{other_high[0]}"
+            elif other_medium:
+                return f"ACTION/{other_medium[0]}"
+            else:
+                return "ACTION/ADVENTURE"
+        
+        # SCI-FI combination
+        if 'SCIENCE FICTION' in genre_set:
+            other_genres = [g for g in genres if g != 'SCIENCE FICTION' and g not in low_priority]
+            if other_genres:
+                return f"SCI-FI/{other_genres[0]}"
+            else:
+                return "SCI-FI"
+        
+        # General prioritization logic
+        prioritized = []
+        
+        # Add high priority genres first
+        for genre in genres:
+            if genre in high_priority and len(prioritized) < 2:
+                prioritized.append(genre)
+        
+        # Add medium priority if we need more
+        for genre in genres:
+            if genre in medium_priority and len(prioritized) < 2 and genre not in prioritized:
+                prioritized.append(genre)
+        
+        # Add low priority only if we still need more and have no other options
+        for genre in genres:
+            if genre in low_priority and len(prioritized) < 2 and genre not in prioritized:
+                # Only add if it's the only option or paired with something good
+                if len(prioritized) == 0 or (len(prioritized) == 1 and prioritized[0] not in low_priority):
+                    prioritized.append(genre)
+        
+        # If we still don't have enough, add whatever we have
+        for genre in genres:
+            if len(prioritized) < 2 and genre not in prioritized:
+                prioritized.append(genre)
+        
+        # Clean up genre names for display
+        cleaned = []
+        for genre in prioritized[:2]:  # Only take top 2
+            if genre == 'SCIENCE FICTION':
+                cleaned.append('SCI-FI')
+            else:
+                cleaned.append(genre)
+        
+        return '/'.join(cleaned) if cleaned else "X"
+    
     def get_summary_stats(self, movies: List[Dict]) -> Dict:
         """Extract summary statistics for Discord bot"""
         if not movies:
@@ -554,6 +641,114 @@ class ActorleScraper:
                 logger.debug("Browser closed successfully")
             except Exception as e:
                 logger.debug(f"Error closing browser: {e}")
+    
+    def get_movies_for_discord(self, movies: List[Dict]) -> pd.DataFrame:
+        """Process movies for Discord display with smart genre prioritization"""
+        if not movies:
+            return pd.DataFrame()
+        
+        df = pd.DataFrame(movies)
+        
+        # Ensure we have the required columns
+        if 'title' not in df.columns:
+            df['title'] = 'X'  # All titles are hidden anyway
+        
+        # Apply smart genre prioritization
+        if 'genres' in df.columns:
+            df['smart_genres'] = df['genres'].apply(self._prioritize_genres)
+        else:
+            df['smart_genres'] = 'X'
+        
+        # Sort by rating (best first), with NaN values at the end
+        df = df.sort_values('rating', ascending=False, na_position='last')
+        
+        # Select columns for display
+        display_df = pd.DataFrame({
+            'Rating': df['rating'].fillna('X').apply(lambda x: f"{x}/10" if x != 'X' else 'X'),
+            'Year': df['year'].fillna('X'),
+            'Title': df['title'].fillna('X'),
+            'Genres': df['smart_genres']
+        })
+        
+        # Save the processed CSV for review
+        csv_file = os.path.join(self.cache_dir, "daily_actorle_processed.csv")
+        display_df.to_csv(csv_file, index=False)
+        logger.info(f"💾 Saved processed CSV to {csv_file}")
+        
+        return display_df
+
+    def _get_today_date(self) -> str:
+        """Get today's date as string"""
+        return datetime.now().strftime("%Y-%m-%d")
+    
+    def _load_cached_data(self) -> Optional[List[Dict]]:
+        """Load cached movie data if it exists and is from today"""
+        if not os.path.exists(self.cache_file):
+            logger.info("No cache file found")
+            return None
+        
+        try:
+            with open(self.cache_file, 'r', encoding='utf-8') as f:
+                cache_data = json.load(f)
+            
+            cached_date = cache_data.get('date')
+            today = self._get_today_date()
+            
+            if cached_date == today:
+                logger.info(f"✅ Using cached data from {cached_date}")
+                return cache_data.get('movies', [])
+            else:
+                logger.info(f"Cache is from {cached_date}, but today is {today}. Need fresh data.")
+                return None
+        
+        except Exception as e:
+            logger.warning(f"Error reading cache file: {e}")
+            return None
+    
+    def _save_cached_data(self, movies: List[Dict]) -> bool:
+        """Save movie data to cache with today's date"""
+        try:
+            cache_data = {
+                'date': self._get_today_date(),
+                'scraped_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                'movie_count': len(movies),
+                'movies': movies
+            }
+            
+            with open(self.cache_file, 'w', encoding='utf-8') as f:
+                json.dump(cache_data, f, ensure_ascii=False, indent=2)
+            
+            logger.info(f"💾 Cached {len(movies)} movies to {self.cache_file}")
+            return True
+        
+        except Exception as e:
+            logger.error(f"Error saving cache: {e}")
+            return False
+
+    def get_movie_data(self) -> List[Dict]:
+        """Get movie data - from cache if available, otherwise scrape"""
+        # First try to load from cache
+        cached_movies = self._load_cached_data()
+        if cached_movies:
+            return cached_movies
+        
+        # No cache or stale cache - need to scrape
+        logger.info("🌐 No valid cache found, scraping fresh data...")
+        
+        html_content = self.scrape_page()
+        if not html_content:
+            logger.error("Failed to scrape page")
+            return []
+        
+        movies = self.extract_movie_table_data(html_content)
+        if not movies:
+            logger.error("No movie data extracted")
+            return []
+        
+        # Save to cache for future use
+        self._save_cached_data(movies)
+        
+        return movies
 
 
 # Discord bot integration functions
@@ -564,37 +759,37 @@ def get_actorle_game_info() -> Optional[Dict]:
     """
     scraper = ActorleScraper()
     try:
-        html_content = scraper.scrape_page()
-        if not html_content:
-            return None
-        
-        movies = scraper.extract_movie_table_data(html_content)
+        # Use the new caching system
+        movies = scraper.get_movie_data()
         if not movies:
             return None
         
         stats = scraper.get_summary_stats(movies)
         
-        # Extract game number from HTML if possible
-        game_number_patterns = [
-            r'Actorle\s*#(\d+)',
-            r'"gameNumber"\s*:\s*(\d+)',
-            r'game.*?(\d{3,4})'
-        ]
+        # For cached data, try to extract game number if we have HTML, otherwise skip
+        # (Game number extraction requires the HTML content which we don't cache)
+        if hasattr(scraper, '_current_html') and scraper._current_html:
+            # Extract game number from HTML if possible
+            game_number_patterns = [
+                r'Actorle\s*#(\d+)',
+                r'"gameNumber"\s*:\s*(\d+)',
+                r'game.*?(\d{3,4})'
+            ]
+            
+            for pattern in game_number_patterns:
+                matches = re.findall(pattern, scraper._current_html, re.IGNORECASE)
+                for match in matches:
+                    try:
+                        num = int(match)
+                        if 1 <= num <= 9999:
+                            stats['game_number'] = num
+                            break
+                    except ValueError:
+                        continue
+                if 'game_number' in stats:
+                    break
         
-        for pattern in game_number_patterns:
-            matches = re.findall(pattern, html_content, re.IGNORECASE)
-            for match in matches:
-                try:
-                    num = int(match)
-                    if 1 <= num <= 9999:
-                        stats['game_number'] = num
-                        break
-                except ValueError:
-                    continue
-            if 'game_number' in stats:
-                break
-        
-        # Add title
+        # Add title if we have driver access
         if scraper.driver:
             stats['title'] = scraper.driver.title
         

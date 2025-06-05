@@ -9,6 +9,10 @@ from bot.functions.df_to_image import df_to_image
 from datetime import datetime, timedelta
 import pandas as pd
 from typing import Optional, Tuple
+# Import the actorle scraper function
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), '..'))
+from actorle_analysis.actorle_scraper import get_actorle_game_info, ActorleScraper
 
 class Leaderboards(commands.Cog):
     _commands_loaded = False  # Class variable to track if commands are already loaded
@@ -19,6 +23,7 @@ class Leaderboards(commands.Cog):
         # Only load commands if they haven't been loaded yet
         if not Leaderboards._commands_loaded:
             self.load_commands()
+            self.add_actorle_summary_command()
             Leaderboards._commands_loaded = True
 
     # this calls create_command for each game name in the games.json configuration
@@ -253,6 +258,80 @@ class Leaderboards(commands.Cog):
             error_message = f"Error showing leaderboard: {str(e)}"
             print(error_message)
             raise Exception(error_message)
+
+    # Add the actorle_summary command
+    def add_actorle_summary_command(self):
+        async def actorle_summary_command(interaction: discord.Interaction):
+            print(f"/actorle_summary called by {interaction.user.name} in {interaction.guild.name}")
+            try:
+                # Defer the response immediately
+                await interaction.response.defer()
+                
+                # Run the actorle scraper
+                try:
+                    await interaction.followup.send("🎭 Scraping Actorle data...", ephemeral=True)
+                    
+                    # Create scraper instance and get movie data
+                    scraper = ActorleScraper(headless=True)
+                    try:
+                        # Use the new caching system - will check cache first
+                        movies = scraper.get_movie_data()
+                        
+                        if not movies:
+                            await interaction.followup.send("❌ No movie data found", ephemeral=True)
+                            return
+                        
+                        # Use the new method for Discord-optimized movie display
+                        df_display = scraper.get_movies_for_discord(movies)
+                        
+                        if df_display.empty:
+                            await interaction.followup.send("❌ No movie data to display", ephemeral=True)
+                            return
+                        
+                        # Create the image
+                        title = "🎭 Daily Actorle Movies"
+                        subtitle = f"Sorted by Best Rating First - {datetime.now().strftime('%Y-%m-%d')}"
+                        
+                        img_path = df_to_image(
+                            df_display, 
+                            "files/images/actorle_summary.png", 
+                            title,
+                            img_subtitle=subtitle
+                        )
+                        
+                        # Send the image file
+                        if os.path.exists(img_path):
+                            await interaction.followup.send(file=discord.File(img_path))
+                        else:
+                            await interaction.followup.send(f"Error: Could not find summary image at {img_path}")
+                            
+                    finally:
+                        scraper.close()
+                        
+                except Exception as e:
+                    await interaction.followup.send(f"Error running Actorle scraper: {str(e)}", ephemeral=True)
+                
+            except Exception as e:
+                try:
+                    if not interaction.response.is_done():
+                        await interaction.response.send_message(f"Error: {str(e)}", ephemeral=True)
+                    else:
+                        await interaction.followup.send(f"Error: {str(e)}", ephemeral=True)
+                except Exception as followup_error:
+                    pass
+
+        # Create the app command
+        actorle_summary_command.__name__ = "actorle_summary"
+        app_command = app_commands.Command(
+            name="actorle_summary",
+            callback=actorle_summary_command,
+            description="Get today's Actorle movie list sorted by best rating first"
+        )
+        
+        # Only add if it doesn't already exist
+        if not self.tree.get_command("actorle_summary"):
+            self.tree.add_command(app_command)
+            print("✓ Added actorle_summary command")
 
 async def setup(client, tree):
     leaderboards = Leaderboards(client, tree)
