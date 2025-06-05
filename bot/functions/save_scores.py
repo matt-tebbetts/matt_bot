@@ -163,17 +163,12 @@ def process_boxoffice(message):
     match = pattern.search(message)
     score = match.group(1) if match else None
     game_detail = message.strip().split("\n")[1] # movie date
-
-    # calculate bonuses
-    movies_guessed = message.count("✅")
-    if movies_guessed > 0:
-        bonus = f'guessed_{movies_guessed}'
     
     # return dictionary
     score_info = {
         'game_score': score,
         'game_detail': game_detail,
-        'game_bonuses': bonus
+        'game_bonuses': None
     }
     return score_info
 
@@ -361,8 +356,10 @@ def process_factle(message):
     return score_info
 
 def process_actorle(message):
-    # Extract game detail (e.g., "Actorle #1164")
-    game_detail = message.split('\n')[0].strip()
+    # Extract game detail using regex to get only "Actorle #XXXX" (excluding score)
+    detail_pattern = re.compile(r'Actorle #\d+')
+    detail_match = detail_pattern.search(message)
+    game_detail = detail_match.group(0) if detail_match else None
     
     # Extract score (e.g., "2/6")
     score_match = re.search(r'(\d+|\?|X)/\d+', message)
@@ -385,7 +382,11 @@ def process_actorle(message):
 
 def process_wordle(message):
     lines = message.split('\n')
-    game_detail = lines[0] if lines else None  # e.g., "Wordle 1,234 3/6"
+    
+    # Extract game detail using regex to get only "Wordle XXXX" (excluding score)
+    detail_pattern = re.compile(r'Wordle \d{1,4}(?:,\d{3})*')
+    detail_match = detail_pattern.search(message)
+    game_detail = detail_match.group(0) if detail_match else None
     
     # Extract score (e.g., "3/6" or "X/6")
     score_match = re.search(r'(\d+|X)/6', message)

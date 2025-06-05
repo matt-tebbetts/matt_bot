@@ -1,6 +1,6 @@
 import discord
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from bot.functions import execute_query
 from bot.functions.admin import read_json, write_json
 from bot.functions.admin import direct_path_finder
@@ -8,6 +8,31 @@ from bot.connections.logging_config import get_logger, log_exception
 
 # Get logger for mini warning functions
 mini_warning_logger = get_logger('mini_warning')
+
+def get_current_mini_date():
+    """
+    Calculate the current mini date based on reset times:
+    - Mini resets at 6pm on weekends (Saturday/Sunday)  
+    - Mini resets at 10pm on weekdays
+    
+    If current time is after today's reset time, we're on tomorrow's mini.
+    If current time is before today's reset time, we're still on today's mini.
+    """
+    now = datetime.now()
+    
+    # Determine reset hour for today
+    # Saturday = 5, Sunday = 6, so weekday() >= 5 means weekend
+    mini_reset_hour = 18 if now.weekday() >= 5 else 22  # 6pm weekends, 10pm weekdays
+    
+    # If we've passed today's reset time, we're on tomorrow's mini
+    if now.hour >= mini_reset_hour:
+        mini_date = (now + timedelta(days=1)).date()
+    else:
+        # If we haven't reached today's reset time, we're still on today's mini
+        mini_date = now.date()
+    
+    mini_warning_logger.debug(f"Current time: {now}, Reset hour: {mini_reset_hour}, Mini date: {mini_date}")
+    return mini_date
 
 # find users who haven't completed the mini
 async def find_users_to_warn():
@@ -80,19 +105,23 @@ async def check_mini_leaders():
     try:
         mini_warning_logger.debug("Starting mini leaders check...")
         
-        # get latest global leaders - now checking global leaderboard instead of per-guild
+        # Get the current mini date (accounts for reset times)
+        current_mini_date = get_current_mini_date()
+        mini_warning_logger.debug(f"Using mini date: {current_mini_date}")
+        
+        # get latest global leaders - now using proper mini date instead of max(game_date)
         query = """
             select 
                 player_name,
                 game_time
             from matt.mini_view
-            where game_date = (select max(game_date) from matt.mini_view)
+            where game_date = %s
             and game_rank = 1
             and guild_nm = 'Global'
         """
         
-        mini_warning_logger.debug(f"Executing query: {query}")
-        result = await execute_query(query)
+        mini_warning_logger.debug(f"Executing query: {query} with date: {current_mini_date}")
+        result = await execute_query(query, (current_mini_date,))
         mini_warning_logger.debug(f"Query returned {len(result)} rows: {result}")
         
         # Convert result to DataFrame
@@ -100,12 +129,12 @@ async def check_mini_leaders():
         
         # Check if we have any data
         if df.empty:
-            mini_warning_logger.info("No mini leaders found for today - no data available")
+            mini_warning_logger.info(f"No mini leaders found for mini date {current_mini_date} - no data available")
             return False
 
         # get current leaders (global list)
         new_leaders = sorted(df['player_name'].tolist())
-        mini_warning_logger.info(f"New leaders from database: {new_leaders}")
+        mini_warning_logger.info(f"New leaders from database for {current_mini_date}: {new_leaders}")
 
         # get list of previous global leaders
         leader_filepath = direct_path_finder('files', 'config', 'global_mini_leaders.json')

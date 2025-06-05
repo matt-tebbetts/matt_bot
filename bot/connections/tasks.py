@@ -108,7 +108,7 @@ async def after_post_new_mini_leaders():
 async def reset_mini_leaders(client: discord.Client):
     try:
         now = datetime.now()
-        mini_reset_hour = 22 if now.weekday() >= 5 else 18
+        mini_reset_hour = 18 if now.weekday() >= 5 else 22  # Fixed: 6pm weekends, 10pm weekdays
         
         reset_leaders_logger.debug(f"Reset check at {now} - reset hour is {mini_reset_hour}")
         
@@ -141,7 +141,7 @@ async def after_reset_mini_leaders():
 async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.CommandTree):
     try:
         now = datetime.now()
-        mini_reset_hour = 18 if now.weekday() >= 5 else 22  # 6pm weekends, 10pm weekdays
+        mini_reset_hour = 18 if now.weekday() >= 5 else 22  # Fixed: 6pm weekends, 10pm weekdays
         
         daily_summary_logger.debug(f"Daily summary check at {now} - reset: {mini_reset_hour}")
         

@@ -22,7 +22,7 @@ class Timezone:
             hour: int = 12,
             timezone: str = "US/Eastern"
         ):
-            timezone_logger.info(f"/set_timezone called by {interaction.user.name}")
+            timezone_logger.info(f"/set_mini_warning_time called by {interaction.user.name}")
             
             try:
                 # Validate hour (0-23)
@@ -95,9 +95,9 @@ class Timezone:
                     ephemeral=True
                 )
 
-        timezone_command.__name__ = "set_timezone"
+        timezone_command.__name__ = "set_mini_warning_time"
         app_command = app_commands.Command(
-            name="set_timezone",
+            name="set_mini_warning_time",
             callback=timezone_command,
             description="Set your preferred time and timezone for mini warnings"
         )
