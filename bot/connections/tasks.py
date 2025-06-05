@@ -143,7 +143,7 @@ async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.
         now = datetime.now()
         mini_reset_hour = 18 if now.weekday() >= 5 else 22  # Fixed: 6pm weekends, 10pm weekdays
         
-        daily_summary_logger.debug(f"Daily summary check at {now} - reset: {mini_reset_hour}")
+        daily_summary_logger.info(f"Daily summary check at {now} - reset: {mini_reset_hour}")
         
         # Send personalized warnings based on user timezone preferences
         # Load user timezone preferences
@@ -262,7 +262,7 @@ async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.
                 else:
                     daily_summary_logger.warning(f"No default channel ID for {guild_name}")
         else:
-            daily_summary_logger.debug(f"Not summary time - current: {now.hour}:{now.minute:02d}")
+            daily_summary_logger.info(f"Not summary time - current: {now.hour}:{now.minute:02d}")
                             
     except Exception as e:
         log_exception(daily_summary_logger, e, "daily_mini_summary task execution")
