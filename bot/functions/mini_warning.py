@@ -134,7 +134,6 @@ async def check_mini_leaders():
 
         # get current leaders (global list)
         new_leaders = sorted(df['player_name'].tolist())
-        mini_warning_logger.info(f"New leaders from database for {current_mini_date}: {new_leaders}")
 
         # get list of previous global leaders
         leader_filepath = direct_path_finder('files', 'config', 'global_mini_leaders.json')
@@ -143,8 +142,6 @@ async def check_mini_leaders():
         previous_leaders = read_json(leader_filepath)
         if previous_leaders is None:
             previous_leaders = []
-        
-        mini_warning_logger.info(f"Previous leaders from file: {previous_leaders}")
 
         # compare lists (order matters!)
         if sorted(new_leaders) != sorted(previous_leaders):
