@@ -28,7 +28,15 @@ setup_logger = get_task_logger('setup_tasks')
 @tasks.loop(seconds=60)
 async def post_new_mini_leaders(client: discord.Client, tree: discord.app_commands.CommandTree):
     try:
-        mini_leaders_logger.debug(f"Running mini leaders check at {datetime.now()}")
+        now = datetime.now()
+        mini_reset_hour = 18 if now.weekday() >= 5 else 22  # 6pm weekends, 10pm weekdays
+        
+        # Skip leader checks during mini expiration/reset window to avoid false positives
+        if now.hour == mini_reset_hour and now.minute <= 9:
+            mini_leaders_logger.debug(f"Skipping leader check during mini expiration window at {now}")
+            return
+        
+        mini_leaders_logger.debug(f"Running mini leaders check at {now}")
         log_asyncio_context()
         
         # check for global leader changes (returns True/False instead of guild dict)
