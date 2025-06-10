@@ -1,12 +1,10 @@
-SELECT
-    game_rank as rnk,
-    player_name as player,
-    game_score as score,
-    points,
-    game_detail
-FROM games.game_view
-WHERE game_date = %s
-    AND game_name = %s
-ORDER BY 
-    points DESC
-;
+select
+	rnk,
+	player,
+	score,
+	detail,
+	bonus,
+	added_at
+from games.daily_view
+where game_date = %s
+and game_name = %s

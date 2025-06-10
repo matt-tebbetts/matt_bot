@@ -226,12 +226,20 @@ class Leaderboards(commands.Cog):
 
             # Create and return the image
             try:
-                # Get game detail from the first row if available
-                game_detail = df['game_detail'].iloc[0] if 'game_detail' in df.columns and not df.empty else None
+                # Get game detail from the first row if available - check both 'detail' and 'game_detail' columns
+                game_detail = None
+                detail_column = None
                 
-                # Drop the game_detail column before creating the image
-                if 'game_detail' in df.columns:
-                    df = df.drop(columns=['game_detail'])
+                if 'detail' in df.columns and not df.empty:
+                    game_detail = df['detail'].iloc[0]
+                    detail_column = 'detail'
+                elif 'game_detail' in df.columns and not df.empty:
+                    game_detail = df['game_detail'].iloc[0]
+                    detail_column = 'game_detail'
+                
+                # Drop the detail column before creating the image
+                if detail_column:
+                    df = df.drop(columns=[detail_column])
                 
                 # Customize title for my_scores
                 if game == "my_scores" and interaction:
