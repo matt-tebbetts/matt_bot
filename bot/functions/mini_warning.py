@@ -31,7 +31,6 @@ def get_current_mini_date():
         # If we haven't reached today's reset time, we're still on today's mini
         mini_date = now.date()
     
-    mini_warning_logger.debug(f"Current time: {now}, Reset hour: {mini_reset_hour}, Mini date: {mini_date}")
     return mini_date
 
 # find users who haven't completed the mini
@@ -103,11 +102,8 @@ async def track_warning_attempt(player_name: str, discord_id_nbr: int, success: 
 # check mini leaders
 async def check_mini_leaders():
     try:
-        mini_warning_logger.debug("Starting mini leaders check...")
-        
         # Get the current mini date (accounts for reset times)
         current_mini_date = get_current_mini_date()
-        mini_warning_logger.debug(f"Using mini date: {current_mini_date}")
         
         # get latest global leaders - now using proper mini date instead of max(game_date)
         query = """
@@ -120,16 +116,13 @@ async def check_mini_leaders():
             and guild_nm = 'Global'
         """
         
-        mini_warning_logger.debug(f"Executing query: {query} with date: {current_mini_date}")
         result = await execute_query(query, (current_mini_date,))
-        mini_warning_logger.debug(f"Query returned {len(result)} rows: {result}")
         
         # Convert result to DataFrame
         df = pd.DataFrame(result)
         
         # Check if we have any data
         if df.empty:
-            mini_warning_logger.info(f"No mini leaders found for mini date {current_mini_date} - no data available")
             return False
 
         # get current leaders (global list)
@@ -137,7 +130,6 @@ async def check_mini_leaders():
 
         # get list of previous global leaders
         leader_filepath = direct_path_finder('files', 'config', 'global_mini_leaders.json')
-        mini_warning_logger.debug(f"Reading previous leaders from: {leader_filepath}")
         
         previous_leaders = read_json(leader_filepath)
         if previous_leaders is None:
@@ -153,7 +145,6 @@ async def check_mini_leaders():
             
             return True  # Signal that there's a new leader
         else:
-            mini_warning_logger.debug("No leader change detected")
             return False  # No change
 
     except Exception as e:

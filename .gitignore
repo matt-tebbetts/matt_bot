@@ -44,6 +44,9 @@ ENV/
 # User configuration with sensitive cookies
 files/config/users.json
 
+# Mini leaders state file
+global_mini_leaders.json
+
 # Logs
 *.log
 logs/

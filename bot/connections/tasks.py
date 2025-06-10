@@ -36,16 +36,10 @@ async def post_new_mini_leaders(client: discord.Client, tree: discord.app_comman
             mini_leaders_logger.debug(f"Skipping leader check during mini expiration window at {now}")
             return
         
-        mini_leaders_logger.debug(f"Running mini leaders check at {now}")
-        log_asyncio_context()
-        
         # check for global leader changes (returns True/False instead of guild dict)
-        mini_leaders_logger.debug("Calling check_mini_leaders()...")
         has_new_leader = await check_mini_leaders()
-        mini_leaders_logger.debug(f"check_mini_leaders returned: {has_new_leader}")
 
         if not has_new_leader:
-            mini_leaders_logger.debug("No new leader detected, task complete")
             return
 
         mini_leaders_logger.info("NEW MINI LEADER DETECTED! Processing announcement...")
@@ -55,11 +49,8 @@ async def post_new_mini_leaders(client: discord.Client, tree: discord.app_comman
         mini_leaders_logger.info(f"Connected guilds: {connected_guilds}")
         
         for guild_name in connected_guilds:
-            mini_leaders_logger.debug(f"Processing guild: {guild_name}")
-            
             # Get the default channel ID
             channel_id = get_default_channel_id(guild_name)
-            mini_leaders_logger.debug(f"Default channel ID for {guild_name}: {channel_id}")
             
             if not channel_id:
                 mini_leaders_logger.warning(f"No default channel ID found for {guild_name}, skipping")
@@ -67,7 +58,6 @@ async def post_new_mini_leaders(client: discord.Client, tree: discord.app_comman
 
             basic_message = "There's a new mini leader!"
             channel = client.get_channel(channel_id)
-            mini_leaders_logger.debug(f"Got channel object for {guild_name}: {channel}")
             
             if channel:
                 try:
@@ -75,7 +65,6 @@ async def post_new_mini_leaders(client: discord.Client, tree: discord.app_comman
                     await channel.send(basic_message)
                     
                     # Create leaderboard and send as image file
-                    mini_leaders_logger.debug("Creating leaderboard image...")
                     leaderboards = Leaderboards(client, tree)
                     img_path = await leaderboards.show_leaderboard(game='mini')
                     
