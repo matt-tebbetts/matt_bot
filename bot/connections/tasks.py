@@ -1,6 +1,6 @@
 import discord
 from discord.ext import tasks
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import os
 import json
@@ -66,7 +66,18 @@ async def post_new_mini_leaders(client: discord.Client, tree: discord.app_comman
                     
                     # Create leaderboard and send as image file
                     leaderboards = Leaderboards(client, tree)
-                    img_path = await leaderboards.show_leaderboard(game='mini')
+                    
+                    # Calculate correct mini game date (mini resets at 10pm weekdays, 6pm weekends)
+                    now = datetime.now()
+                    mini_reset_hour = 18 if now.weekday() >= 5 else 22
+                    
+                    # If it's past the reset time, we're showing tomorrow's mini
+                    if now.hour >= mini_reset_hour:
+                        mini_game_date = (now + timedelta(days=1)).strftime('%Y-%m-%d')
+                    else:
+                        mini_game_date = now.strftime('%Y-%m-%d')
+                    
+                    img_path = await leaderboards.show_leaderboard(game='mini', timeframe=mini_game_date)
                     
                     # Check if we got a valid file path (should end with .png and exist)
                     if (img_path and isinstance(img_path, str) and 
@@ -235,9 +246,13 @@ async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.
                         summary_msg = "🏁 **Final Mini Results for Today!**"
                         await channel.send(summary_msg)
                         
-                        # Generate and send leaderboard image
+                        # Generate and send leaderboard image - use current mini game date
                         leaderboards = Leaderboards(client, tree)
-                        img_path = await leaderboards.show_leaderboard(game='mini')
+                        
+                        # For daily summary, we want the expiring mini (current date's mini)
+                        # since this runs during expiration time before reset
+                        current_date = now.strftime('%Y-%m-%d')
+                        img_path = await leaderboards.show_leaderboard(game='mini', timeframe=current_date)
                         
                         if (img_path and isinstance(img_path, str) and 
                             img_path.endswith('.png') and 
