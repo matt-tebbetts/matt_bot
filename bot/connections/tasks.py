@@ -157,7 +157,7 @@ async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.
         if now.hour == mini_reset_hour and now.minute <= 9:
             daily_summary_logger.info(f"MINI EXPIRATION TIME! Processing warnings and leaderboard at {now}")
             
-            # 1. Send warnings to users who haven't completed the mini
+            # 1. Send warnings by tagging users in guild channels who haven't completed the mini
             try:
                 users_needing_warnings = await find_users_to_warn()
                 daily_summary_logger.info(f"Found {len(users_needing_warnings)} users who need warnings")
@@ -173,54 +173,70 @@ async def daily_mini_summary(client: discord.Client, tree: discord.app_commands.
                 already_warned_ids = {row['discord_id_nbr'] for row in already_warned_result}
                 daily_summary_logger.info(f"Found {len(already_warned_ids)} users already warned today")
                 
-                # Get all guild member IDs to check if users are in connected guilds
-                guild_member_ids = {member.id for guild in client.guilds for member in guild.members}
+                # Only process if we have users to warn who haven't been warned today
+                users_to_warn_today = [u for u in users_needing_warnings if u['discord_id_nbr'] not in already_warned_ids]
                 
-                for user in users_needing_warnings:
-                    user_id = user['discord_id_nbr']
-                    user_name = user.get('name', 'Unknown')
+                if users_to_warn_today:
+                    daily_summary_logger.info(f"Need to warn {len(users_to_warn_today)} users today")
                     
-                    # Skip if already warned today
-                    if user_id in already_warned_ids:
-                        daily_summary_logger.debug(f"Skipping {user_name} - already warned today")
-                        continue
-                    
-                    # Only send DM if user is in a connected guild
-                    if user_id not in guild_member_ids:
-                        daily_summary_logger.debug(f"Skipping DM to {user_name} - not in any connected guilds")
-                        await track_warning_attempt(
-                            player_name=user_name,
-                            discord_id_nbr=user_id,
-                            success=False,
-                            error_message="User not in any connected guilds"
-                        )
-                        continue
-                    
-                    try:
-                        # Send DM warning
-                        discord_user = await client.fetch_user(user_id)
-                        warning_text = f"🕛 **Mini reminder!** The mini crossword expires soon and you haven't completed it yet!"
+                    # Post warnings to each connected guild
+                    for guild in client.guilds:
+                        guild_name = guild.name
+                        channel_id = get_default_channel_id(guild_name)
                         
-                        await discord_user.send(warning_text)
-                        daily_summary_logger.info(f"Sent mini warning DM to {user_name} ({user_id})")
+                        if not channel_id:
+                            daily_summary_logger.warning(f"No default channel ID for {guild_name}")
+                            continue
                         
-                        # Track successful warning
-                        await track_warning_attempt(
-                            player_name=user_name,
-                            discord_id_nbr=user_id,
-                            success=True
-                        )
+                        channel = client.get_channel(channel_id)
+                        if not channel:
+                            daily_summary_logger.error(f"Could not get channel object for channel ID {channel_id} in {guild_name}")
+                            continue
                         
-                    except Exception as e:
-                        log_exception(daily_summary_logger, e, f"sending DM to {user_name}")
+                        # Find users in this guild who need warnings
+                        guild_member_ids = {member.id for member in guild.members}
+                        users_in_this_guild = [
+                            user for user in users_to_warn_today 
+                            if user['discord_id_nbr'] in guild_member_ids
+                        ]
                         
-                        # Track failed warning
-                        await track_warning_attempt(
-                            player_name=user_name,
-                            discord_id_nbr=user_id,
-                            success=False,
-                            error_message=str(e)
-                        )
+                        if not users_in_this_guild:
+                            daily_summary_logger.debug(f"No users to warn in {guild_name}")
+                            continue
+                        
+                        try:
+                            # Create mention tags for users in this guild
+                            user_mentions = [f"<@{user['discord_id_nbr']}>" for user in users_in_this_guild]
+                            mentions_text = " ".join(user_mentions)
+                            
+                            warning_text = f"🕛 **Mini reminder!** The mini crossword expires soon and you haven't completed it yet!\n{mentions_text}"
+                            
+                            await channel.send(warning_text)
+                            daily_summary_logger.info(f"Posted mini warning with {len(user_mentions)} tags to {guild_name}")
+                            
+                            # Track successful warnings for all users in this guild
+                            for user in users_in_this_guild:
+                                await track_warning_attempt(
+                                    player_name=user.get('name', 'Unknown'),
+                                    discord_id_nbr=user['discord_id_nbr'],
+                                    success=True,
+                                    warning_type='guild_tag'
+                                )
+                            
+                        except Exception as e:
+                            log_exception(daily_summary_logger, e, f"posting mini warning to {guild_name}")
+                            
+                            # Track failed warnings for all users in this guild
+                            for user in users_in_this_guild:
+                                await track_warning_attempt(
+                                    player_name=user.get('name', 'Unknown'),
+                                    discord_id_nbr=user['discord_id_nbr'],
+                                    success=False,
+                                    error_message=str(e),
+                                    warning_type='guild_tag'
+                                )
+                else:
+                    daily_summary_logger.info("No new users to warn today (all already warned)")
                         
             except Exception as e:
                 log_exception(daily_summary_logger, e, "processing mini warnings")
