@@ -176,6 +176,7 @@ def process_pips(message):
     game_detail = re.sub(r'\s*[🔴🟡🟢]\s*$', '', first_line)
     
     # Extract time from second line (e.g., "1:29")
+    total_seconds = 0
     if len(lines) >= 2:
         time_line = lines[1].strip()
         # Match time format like "1:29" or "0:45"
@@ -184,16 +185,20 @@ def process_pips(message):
             minutes = int(time_match.group(1))
             seconds = int(time_match.group(2))
             score = f"{minutes}:{str(seconds).zfill(2)}"
+            total_seconds = minutes * 60 + seconds
         else:
             # Fallback if time format is different
             score = time_line
     else:
         score = "Unknown"
     
+    # Check for under 60 seconds bonus
+    bonus = "under_60" if total_seconds > 0 and total_seconds < 60 else None
+    
     score_info = {
         'game_score': score,
         'game_detail': game_detail,
-        'game_bonuses': None  # No bonuses defined for Pips yet
+        'game_bonuses': bonus
     }
     return score_info
 

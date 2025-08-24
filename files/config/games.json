@@ -152,22 +152,31 @@
         "game_name": "pips_easy",
         "prefix": "Pips #",
         "scoring_type": "timed",
-        "emoji": "🎯",
-        "difficulty": "Easy"
+        "emoji": "🀫",
+        "difficulty": "Easy",
+        "bonus_emojis": {
+            "under_60": "⚡"
+        }
     },
     "pips_medium": {
         "game_name": "pips_medium",
         "prefix": "Pips #",
         "scoring_type": "timed",
-        "emoji": "🎯",
-        "difficulty": "Medium"
+        "emoji": "🀫",
+        "difficulty": "Medium",
+        "bonus_emojis": {
+            "under_60": "⚡"
+        }
     },
     "pips_hard": {
         "game_name": "pips",
         "prefix": "Pips #",
         "scoring_type": "timed",
-        "emoji": "🎯",
-        "difficulty": "Hard"
+        "emoji": "🀫",
+        "difficulty": "Hard",
+        "bonus_emojis": {
+            "under_60": "⚡"
+        }
     },
     "my_scores": {
         "game_name": "my_scores"
