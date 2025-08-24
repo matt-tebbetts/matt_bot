@@ -163,7 +163,7 @@
         "difficulty": "Medium"
     },
     "pips_hard": {
-        "game_name": "pips_hard",
+        "game_name": "pips",
         "prefix": "Pips #",
         "scoring_type": "timed",
         "emoji": "🎯",

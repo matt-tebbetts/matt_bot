@@ -83,7 +83,7 @@ async def get_score_info(message, game_name, game_info):
         "actorle": process_actorle,
         "pips_easy": process_pips,
         "pips_medium": process_pips,
-        "pips_hard": process_pips
+        "pips": process_pips
     }
 
     # Check if the game has a specific processor
