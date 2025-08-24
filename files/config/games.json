@@ -152,7 +152,7 @@
         "game_name": "pips_easy",
         "prefix": "Pips #",
         "scoring_type": "timed",
-        "emoji": "🀫",
+        "emoji": "🧮",
         "difficulty": "Easy",
         "bonus_emojis": {
             "under_60": "⚡"
@@ -162,7 +162,7 @@
         "game_name": "pips_medium",
         "prefix": "Pips #",
         "scoring_type": "timed",
-        "emoji": "🀫",
+        "emoji": "🧮",
         "difficulty": "Medium",
         "bonus_emojis": {
             "under_60": "⚡"
@@ -172,7 +172,7 @@
         "game_name": "pips",
         "prefix": "Pips #",
         "scoring_type": "timed",
-        "emoji": "🀫",
+        "emoji": "🧮",
         "difficulty": "Hard",
         "bonus_emojis": {
             "under_60": "⚡"
