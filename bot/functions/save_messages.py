@@ -234,9 +234,20 @@ def is_game_score(message_content: str) -> Tuple[bool, str, Dict[str, Any]]:
     with open(games_file_path, 'r', encoding='utf-8') as file:
         games_data: Dict[str, Dict[str, Any]] = json.load(file)
 
-    # check if message matches any game prefix
+    # Special handling for Pips games to distinguish difficulty levels
+    if message_content.startswith("Pips #"):
+        for game_name, game_info in games_data.items():
+            if game_name.startswith("pips_") and "difficulty" in game_info:
+                difficulty = game_info["difficulty"]
+                # Check if the difficulty appears in the message
+                if difficulty in message_content:
+                    return True, game_info["game_name"].lower(), game_info
+        # If no specific difficulty found, return False to avoid confusion
+        return False, None, None
+
+    # check if message matches any other game prefix
     for game_name, game_info in games_data.items():
-        if "prefix" in game_info:
+        if "prefix" in game_info and not game_name.startswith("pips_"):
             prefix = game_info["prefix"]
             if message_content.startswith(prefix):
                 return True, game_info["game_name"].lower(), game_info

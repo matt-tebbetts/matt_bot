@@ -80,7 +80,10 @@ async def get_score_info(message, game_name, game_info):
         "timeguessr": process_timeguessr,
         "factle": process_factle,
         "factle_sports": process_factle,
-        "actorle": process_actorle
+        "actorle": process_actorle,
+        "pips_easy": process_pips,
+        "pips_medium": process_pips,
+        "pips_hard": process_pips
     }
 
     # Check if the game has a specific processor
@@ -155,6 +158,42 @@ def process_crosswordle(message):
         'game_score': score,
         'game_detail': game_detail,
         'game_bonuses': bonus
+    }
+    return score_info
+
+def process_pips(message):
+    """
+    Process Pips game scores.
+    Expected format:
+    Pips #6 Hard 🔴
+    1:29
+    """
+    lines = message.strip().split('\n')
+    
+    # Extract game detail from first line (e.g., "Pips #6 Hard")
+    first_line = lines[0].strip()
+    # Remove emoji from the end if present
+    game_detail = re.sub(r'\s*[🔴🟡🟢]\s*$', '', first_line)
+    
+    # Extract time from second line (e.g., "1:29")
+    if len(lines) >= 2:
+        time_line = lines[1].strip()
+        # Match time format like "1:29" or "0:45"
+        time_match = re.search(r'(\d+):(\d{2})', time_line)
+        if time_match:
+            minutes = int(time_match.group(1))
+            seconds = int(time_match.group(2))
+            score = f"{minutes}:{str(seconds).zfill(2)}"
+        else:
+            # Fallback if time format is different
+            score = time_line
+    else:
+        score = "Unknown"
+    
+    score_info = {
+        'game_score': score,
+        'game_detail': game_detail,
+        'game_bonuses': None  # No bonuses defined for Pips yet
     }
     return score_info
 

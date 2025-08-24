@@ -148,6 +148,27 @@
             "lost": "❌"
         }
     },
+    "pips_easy": {
+        "game_name": "pips_easy",
+        "prefix": "Pips #",
+        "scoring_type": "timed",
+        "emoji": "🎯",
+        "difficulty": "Easy"
+    },
+    "pips_medium": {
+        "game_name": "pips_medium",
+        "prefix": "Pips #",
+        "scoring_type": "timed",
+        "emoji": "🎯",
+        "difficulty": "Medium"
+    },
+    "pips_hard": {
+        "game_name": "pips_hard",
+        "prefix": "Pips #",
+        "scoring_type": "timed",
+        "emoji": "🎯",
+        "difficulty": "Hard"
+    },
     "my_scores": {
         "game_name": "my_scores"
     },
