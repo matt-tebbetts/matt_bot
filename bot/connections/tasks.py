@@ -20,6 +20,7 @@ from bot.connections.logging_config import get_task_logger, log_exception, log_a
 mini_leaders_logger = get_task_logger('post_new_mini_leaders')
 reset_leaders_logger = get_task_logger('reset_mini_leaders')
 daily_summary_logger = get_task_logger('daily_mini_summary')
+daily_winners_logger = get_task_logger('daily_winners_summary')
 setup_logger = get_task_logger('setup_tasks')
 
 # Removed redundant send_warning_loop - functionality moved to daily_mini_summary task
@@ -303,6 +304,79 @@ async def after_daily_mini_summary():
     else:
         daily_summary_logger.error("Daily mini summary task stopped unexpectedly")
 
+# task 4 - end of day winners summary
+@tasks.loop(minutes=10)
+async def daily_winners_summary(client: discord.Client, tree: discord.app_commands.CommandTree):
+    try:
+        now = datetime.now()
+        winners_post_hour = 23  # 11 PM every day
+        
+        daily_winners_logger.info(f"Daily winners check at {now} - winners post at {winners_post_hour}:00")
+        
+        # Check if it's winners posting time (within 10 minute window)
+        if now.hour == winners_post_hour and now.minute <= 9:
+            daily_winners_logger.info(f"DAILY WINNERS TIME! Posting winners summary at {now}")
+            
+            # Post daily winners to all connected guilds
+            try:
+                connected_guilds = {guild.name for guild in client.guilds}
+                daily_winners_logger.info(f"Posting daily winners to {len(connected_guilds)} guilds")
+                
+                for guild_name in connected_guilds:
+                    channel_id = get_default_channel_id(guild_name)
+                    if not channel_id:
+                        daily_winners_logger.warning(f"No default channel ID for {guild_name}")
+                        continue
+                    
+                    channel = client.get_channel(channel_id)
+                    if not channel:
+                        daily_winners_logger.error(f"Could not get channel object for channel ID {channel_id} in {guild_name}")
+                        continue
+                    
+                    try:
+                        # Post announcement message
+                        current_date = now.strftime('%Y-%m-%d')
+                        await channel.send(f"🏆 **Daily Game Winners** - {current_date}")
+                        
+                        # Generate and send winners leaderboard image
+                        leaderboards = Leaderboards(client, tree)
+                        
+                        # Use current date for today's winners
+                        img_path = await leaderboards.show_leaderboard(game='winners', timeframe=current_date)
+                        
+                        if (isinstance(img_path, str) and 
+                            img_path.endswith('.png') and 
+                            os.path.exists(img_path)):
+                            await channel.send(file=discord.File(img_path))
+                            daily_winners_logger.info(f"Successfully posted daily winners to {guild_name}")
+                        else:
+                            error_msg = img_path if isinstance(img_path, str) else "Unknown error"
+                            daily_winners_logger.error(f"Failed to generate winners for {guild_name}: {error_msg}")
+                            await channel.send("Error: Could not generate daily winners image")
+                            
+                    except Exception as e:
+                        log_exception(daily_winners_logger, e, f"posting daily winners to {guild_name}")
+                        
+            except Exception as e:
+                log_exception(daily_winners_logger, e, "posting daily winners")
+                
+        else:
+            daily_winners_logger.debug(f"Not winners posting time - current: {now.hour}:{now.minute:02d}, posts at: {winners_post_hour}:00")
+                            
+    except Exception as e:
+        log_exception(daily_winners_logger, e, "daily_winners_summary task execution")
+
+@daily_winners_summary.before_loop
+async def before_daily_winners_summary():
+    daily_winners_logger.info("Daily winners summary task starting...")
+    
+@daily_winners_summary.after_loop
+async def after_daily_winners_summary():
+    if daily_winners_summary.is_being_cancelled():
+        daily_winners_logger.warning("Daily winners summary task was cancelled")
+    else:
+        daily_winners_logger.error("Daily winners summary task stopped unexpectedly")
+
 def setup_tasks(client: discord.Client, tree: discord.app_commands.CommandTree):
     setup_logger.info("="*40)
     setup_logger.info("SETTING UP BACKGROUND TASKS")
@@ -331,6 +405,13 @@ def setup_tasks(client: discord.Client, tree: discord.app_commands.CommandTree):
             
         daily_mini_summary.start(client, tree)
         setup_logger.info("✓ Started daily_mini_summary task (every 10 minutes)")
+        
+        if daily_winners_summary.is_running():
+            setup_logger.warning("daily_winners_summary already running, stopping first")
+            daily_winners_summary.stop()
+            
+        daily_winners_summary.start(client, tree)
+        setup_logger.info("✓ Started daily_winners_summary task (every 10 minutes)")
         
         setup_logger.info("="*40)
         setup_logger.info("ALL BACKGROUND TASKS STARTED SUCCESSFULLY")
