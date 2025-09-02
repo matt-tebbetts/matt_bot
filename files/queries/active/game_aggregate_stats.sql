@@ -19,16 +19,12 @@ SELECT
     ROW_NUMBER() OVER (ORDER BY points DESC, avg_score ASC) as `rank`,
     player,
     points,
-    ROUND(avg_score) as `avg`,
+    ROUND(avg_score, 1) as `avg`,
     1st,
     2nd,
     3rd,
     4th,
     5th,
-    CASE 
-        WHEN top_10_raw = 1.0 THEN '100%%'
-        ELSE CONCAT(ROUND(top_10_raw * 100, 1), '%%')
-    END as top_10,
     games
 FROM game_stats
 ORDER BY  points DESC
