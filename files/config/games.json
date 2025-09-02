@@ -178,6 +178,16 @@
             "under_60": "⚡"
         }
     },
+    "unzoomed": {
+        "game_name": "unzoomed",
+        "prefix": "Unzoomed #",
+        "scoring_type": "guesses",
+        "emoji": "🔍",
+        "bonus_emojis": {
+            "first_guess": "🎯",
+            "lost": "❌"
+        }
+    },
     "my_scores": {
         "game_name": "my_scores"
     },

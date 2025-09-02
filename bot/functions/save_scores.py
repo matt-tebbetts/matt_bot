@@ -83,7 +83,8 @@ async def get_score_info(message, game_name, game_info):
         "actorle": process_actorle,
         "pips_easy": process_pips,
         "pips_medium": process_pips,
-        "pips": process_pips
+        "pips": process_pips,
+        "unzoomed": process_unzoomed
     }
 
     # Check if the game has a specific processor
@@ -440,5 +441,31 @@ def process_wordle(message):
         'game_score': score,
         'game_detail': game_detail,
         'game_bonuses': None
+    }
+    return score_info
+
+def process_unzoomed(message):
+    lines = message.split('\n')
+    
+    # Extract game detail using regex to get only "Unzoomed #XXX" (excluding score)
+    detail_pattern = re.compile(r'Unzoomed #\d+')
+    detail_match = detail_pattern.search(message)
+    game_detail = detail_match.group(0) if detail_match else None
+    
+    # Extract score (e.g., "3/6" or "X/6")
+    score_match = re.search(r'(\d+|X)/6', message)
+    score = score_match.group(0) if score_match else None
+    
+    # Check for bonus conditions
+    bonus = None
+    if score == "1/6":
+        bonus = "first_guess"
+    elif score == "X/6":
+        bonus = "lost"
+    
+    score_info = {
+        'game_score': score,
+        'game_detail': game_detail,
+        'game_bonuses': bonus
     }
     return score_info
