@@ -3,7 +3,7 @@ WITH game_stats AS (
         player_name as player,
         COUNT(*) as games,
         SUM(points) as points,
-        AVG(seconds) as avg_score,
+        AVG(case when game_name = 'daily' then (seconds / 60.0) else seconds end) as avg_score,
         COUNT(CASE WHEN game_rank = 1 THEN 1 END) as 1st,
         COUNT(CASE WHEN game_rank = 2 THEN 1 END) as 2nd,
         COUNT(CASE WHEN game_rank = 3 THEN 1 END) as 3rd,
@@ -26,8 +26,8 @@ SELECT
     4th,
     5th,
     CASE 
-        WHEN top_10_raw = 1.0 THEN '100%'
-        ELSE CONCAT(ROUND(top_10_raw * 100, 1), '%')
+        WHEN top_10_raw = 1.0 THEN '100%%'
+        ELSE CONCAT(ROUND(top_10_raw * 100, 1), '%%')
     END as top_10,
     games
 FROM game_stats
