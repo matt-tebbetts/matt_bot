@@ -11,8 +11,9 @@ def df_to_image(df,
                                  img_subtitle="Leaderboard",
                                  left_aligned_columns=['Game', 'Name', 'Player', 'Genre'],
                                  right_aligned_columns=['Rank', 'Time', 'Score','Points', 'Wins',
-                                                        'Top 3', 'Top 5', 'Played', 'Games', 
-                                                        'Scores Added', 'Avg', '1st', '2nd', '3rd', '4th', '5th']):
+                                                        'Top 3', 'Top 5', 'Top 10', 'Played', 'Games', 
+                                                        'Scores Added', 'Avg', '1st', '2nd', '3rd', '4th', '5th', 
+                                                        'rank', 'points', 'avg', '1st', '2nd', '3rd', '4th', '5th', 'top_10', 'games']):
 
     # Ensure the image filepath uses the proper absolute path
     if not os.path.isabs(img_filepath):
