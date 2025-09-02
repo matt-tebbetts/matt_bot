@@ -50,3 +50,4 @@ select
     points
 from combined
 where agg_rank = 1
+order by games desc
