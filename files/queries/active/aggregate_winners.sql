@@ -27,7 +27,15 @@ combined as (
         player_name,
         points,
         ROUND(avg_score, 1) as `avg`,
-        case when game_type = 'points' then max_score else min_score end as best,
+        case 
+            when game_type = 'points' 
+            then max_score 
+            when game_name = 'daily'
+            then min_score / 60.0
+            when game_type = 'timed'
+            then min_score
+            else null
+        end as best,
         1st,
         2nd,
         3rd,
