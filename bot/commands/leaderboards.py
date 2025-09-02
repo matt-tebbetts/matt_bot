@@ -237,13 +237,35 @@ class Leaderboards(commands.Cog):
                 if detail_column:
                     df = df.drop(columns=[detail_column])
                 
-                # Customize title for my_scores
+                # Customize title and subtitle with proper date information
                 if game == "my_scores" and interaction:
                     title = f"{interaction.user.display_name}'s Scores"
-                    subtitle = f"Date: {start_date}"
+                    if start_date == end_date:
+                        subtitle = f"Date: {start_date}"
+                    else:
+                        subtitle = f"Date Range: {start_date} to {end_date}"
                 else:
-                    title = f"{game} Leaderboard"
-                    subtitle = game_detail if game_detail else "Leaderboard"
+                    title = f"{game.replace('_', ' ').title()} Leaderboard"
+                    
+                    # Create date-based subtitle
+                    if start_date == end_date:
+                        # Single day
+                        if timeframe.lower() == "today":
+                            subtitle = f"Today - {start_date}"
+                        elif timeframe.lower() == "yesterday":
+                            subtitle = f"Yesterday - {start_date}"
+                        else:
+                            subtitle = f"Date: {start_date}"
+                    else:
+                        # Date range
+                        if timeframe.lower() == "this_month":
+                            month_name = datetime.strptime(str(start_date), '%Y-%m-%d').strftime('%B %Y')
+                            subtitle = f"{month_name} ({start_date} to {end_date})"
+                        elif timeframe.lower() == "last_month":
+                            month_name = datetime.strptime(str(start_date), '%Y-%m-%d').strftime('%B %Y')
+                            subtitle = f"{month_name} ({start_date} to {end_date})"
+                        else:
+                            subtitle = f"Date Range: {start_date} to {end_date}"
                 
                 img_path = df_to_image(
                     df, 
