@@ -175,10 +175,16 @@ class Leaderboards(commands.Cog):
                     # If no interaction provided, we can't determine the user
                     raise ValueError("my_scores command requires user interaction to determine discord username")
             
-            # Special case for winners - always use daily_winners.sql but show 2 weeks of games
-            elif game == "winners" and timeframe.lower() in ["today", "yesterday"]:
-                sql_file = "daily_winners.sql"
-                params = [start_date]
+            # Special case for winners - use different queries based on timeframe
+            elif game == "winners":
+                if timeframe.lower() in ["today", "yesterday"] or start_date == end_date:
+                    # Single day winners
+                    sql_file = "daily_winners.sql"
+                    params = [start_date]
+                else:
+                    # Date range winners (aggregate)
+                    sql_file = "aggregate_winners.sql"
+                    params = [start_date, end_date]
             # Determine if we need daily scores or aggregate stats for other games
             elif timeframe.lower() in ["today", "yesterday"] or start_date == end_date:
                 # Use daily scores query for single days

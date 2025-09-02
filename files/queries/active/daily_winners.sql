@@ -1,18 +1,6 @@
 WITH 
 recently_played_games AS (
     SELECT DISTINCT
-        case    when game_name in ('boxoffice','actorle','moviedle')
-                then 'movies'
-                when game_name in ('travle','worldle','timeguessr')
-                then 'geography'
-                when game_name in ('connections','wordle','octordle','crosswordle','octordle_rescue','octordle_sequence')
-                then 'language'
-                when game_name in ('factle')
-                then 'trivia'
-                when game_name in ('mini')
-                then 'crossword'
-                else 'other'
-        end as game_type,
         game_name
     FROM games.game_view
     WHERE game_date >= date_sub(curdate(), interval 2 week)
