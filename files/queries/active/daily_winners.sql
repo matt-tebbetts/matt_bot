@@ -3,7 +3,7 @@ recently_played_games AS (
     SELECT DISTINCT
         game_name
     FROM games.game_view
-    WHERE game_date >= date_sub(curdate(), interval 2 week)
+    WHERE game_date >= date_sub(curdate(), interval 1 week)
 ),
 specific_date_winners AS (
     SELECT
