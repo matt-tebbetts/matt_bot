@@ -22,20 +22,22 @@ game_stats AS (
 ),
 combined as (
     SELECT 
-    		game_name,
+    	game_name,
         ROW_NUMBER() OVER (partition by game_name ORDER BY points DESC, avg_score ASC) as agg_rank,
         player_name,
         points,
         ROUND(avg_score, 1) as `avg`,
-        case 
-            when game_type = 'points' 
-            then max_score 
-            when game_name = 'daily'
-            then min_score / 60.0
-            when game_type = 'timed'
-            then min_score
-            else null
-        end as best,
+        round(
+            case 
+                when game_type = 'points' 
+                then max_score 
+                when game_name = 'daily'
+                then min_score / 60.0
+                when game_type = 'timed'
+                then min_score
+                else null
+            end
+        , 1) as best,
         1st,
         2nd,
         3rd,

@@ -1,7 +1,8 @@
 WITH 
 recently_played_games AS (
     SELECT DISTINCT
-        game_name
+        game_name,
+        scoring_type
     FROM games.game_view
     WHERE game_date >= date_sub(curdate(), interval 2 week)
 ),
@@ -20,7 +21,7 @@ specific_date_winners AS (
         game_detail
 )
 SELECT
-    a.game_type,
+    a.scoring_type,
     a.game_name,
     b.winners,
     b.game_score,
@@ -28,5 +29,5 @@ SELECT
 FROM recently_played_games a
 LEFT JOIN specific_date_winners b
     ON a.game_name = b.game_name
-ORDER BY a.game_type, a.game_name
+ORDER BY a.scoring_type, a.game_name
 ;
