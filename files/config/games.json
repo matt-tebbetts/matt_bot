@@ -188,6 +188,16 @@
             "lost": "❌"
         }
     },
+    "dordle": {
+        "game_name": "dordle",
+        "prefix": "Daily Dordle",
+        "scoring_type": "guesses",
+        "emoji": "🔤",
+        "bonus_emojis": {
+            "perfect": "🎯",
+            "failed_any": "❌"
+        }
+    },
     "my_scores": {
         "game_name": "my_scores"
     },
