@@ -2,7 +2,7 @@ WITH
 recently_played_games AS (
     SELECT DISTINCT
         game_name
-    FROM games.game_view
+    FROM games.daily_view
     WHERE game_date >= date_sub(curdate(), interval 1 week)
 ),
 specific_date_winners AS (
@@ -11,7 +11,7 @@ specific_date_winners AS (
         game_score,
         GROUP_CONCAT(player_name ORDER BY player_name SEPARATOR ', ') as winners,
         game_detail
-    FROM games.game_view
+    FROM games.daily_view
     WHERE game_date = %s
         AND game_rank = 1
     GROUP BY 

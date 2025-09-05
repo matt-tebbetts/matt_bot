@@ -55,7 +55,7 @@ async def save_guild_config(guild: discord.Guild):
         guild_info["channels"].append(channel_info)
 
         # Set default channel based on criteria
-        if channel.name in ["game-scores", "crossword-corner"]:
+        if channel.name in ["game-scores", "crossword-corner", "puzzle-games"]:
             guild_info["default_channel_id"] = str(channel.id)
 
     # Gather user information
