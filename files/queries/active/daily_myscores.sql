@@ -1,14 +1,16 @@
 WITH 
 recently_played AS (
 	SELECT DISTINCT
-		player_name, -- discord name
+		user_name, -- discord name
+		player_name,
 		game_name
 	FROM games.daily_view
 	WHERE game_date >= date_sub(curdate(), interval 2 week)
-	AND player_name = %s
+	AND user_name = %s
 ),
 specific_date as (
 	SELECT
+		user_name, -- discord name
 	    player_name,
 	    game_name,
 	    game_score,
@@ -18,7 +20,7 @@ specific_date as (
 	WHERE game_date = %s
 )
 SELECT
-	a.player_name,
+	coalesce(a.player_name, a.user_name) as user_name,
 	a.game_name,
 	b.game_score,
 	b.game_rank,
