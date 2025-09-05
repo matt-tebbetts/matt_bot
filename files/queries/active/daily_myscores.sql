@@ -1,22 +1,20 @@
 WITH 
 recently_played AS (
 	SELECT DISTINCT
-		player_name,
-		member_nm, -- discord name
+		player_name, -- discord name
 		game_name
-	FROM games.game_view
+	FROM games.daily_view
 	WHERE game_date >= date_sub(curdate(), interval 2 week)
-	AND member_nm = %s
+	AND player_name = %s
 ),
 specific_date as (
 	SELECT
 	    player_name,
-		member_nm,
 	    game_name,
 	    game_score,
 	    game_rank,
 	    game_detail
-	FROM games.game_view
+	FROM games.daily_view
 	WHERE game_date = %s
 )
 SELECT
@@ -28,6 +26,5 @@ SELECT
 FROM recently_played a
 LEFT JOIN specific_date b
 	ON a.player_name = b.player_name
-	AND a.member_nm = b.member_nm
 	AND a.game_name = b.game_name
 ;
