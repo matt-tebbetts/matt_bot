@@ -84,7 +84,8 @@ async def get_score_info(message, game_name, game_info):
         "pips_easy": process_pips,
         "pips_medium": process_pips,
         "pips": process_pips,
-        "unzoomed": process_unzoomed
+        "unzoomed": process_unzoomed,
+        "dordle": process_dordle
     }
 
     # Check if the game has a specific processor
@@ -462,6 +463,59 @@ def process_unzoomed(message):
         bonus = "first_guess"
     elif score == "X/6":
         bonus = "lost"
+    
+    score_info = {
+        'game_score': score,
+        'game_detail': game_detail,
+        'game_bonuses': bonus
+    }
+    return score_info
+
+def process_dordle(message):
+    """
+    Process Dordle game scores.
+    Expected format: Daily Dordle 1320 5&3/7
+    Score format: X&Y/Z where X and Y are guesses for each puzzle, Z is max attempts
+    """
+    lines = message.strip().split('\n')
+    
+    # Extract game detail and score from first line
+    # Example: "Daily Dordle 1320 5&3/7"
+    first_line = lines[0].strip()
+    
+    # Extract game detail (everything before the score)
+    # Match the score pattern X&Y/Z at the end of the line
+    score_match = re.search(r'(\d+&\d+/\d+)', first_line)
+    if score_match:
+        score = score_match.group(1)
+        # Game detail is everything before the score
+        game_detail = first_line[:score_match.start()].strip()
+    else:
+        # Fallback if score pattern not found
+        parts = first_line.split()
+        if len(parts) >= 3:
+            game_detail = ' '.join(parts[:-1])  # All but last part
+            score = parts[-1]  # Last part should be score
+        else:
+            game_detail = first_line
+            score = "Unknown"
+    
+    # Check for bonus conditions based on Dordle scoring
+    bonus = None
+    if score and '&' in score and '/' in score:
+        try:
+            # Parse score like "5&3/7"
+            score_part, max_attempts = score.split('/')
+            guess1, guess2 = score_part.split('&')
+            guess1, guess2 = int(guess1), int(guess2)
+            max_attempts = int(max_attempts)
+            
+            # Perfect if both puzzles solved in 1 guess each
+            if guess1 == 1 and guess2 == 1:
+                bonus = "perfect"
+        except (ValueError, IndexError):
+            # If parsing fails, no bonus
+            pass
     
     score_info = {
         'game_score': score,
