@@ -197,6 +197,15 @@
             "perfect": "🎯"
         }
     },
+    "cluesbysam": {
+        "game_name": "cluesbysam",
+        "prefix": "I solved the daily Clues by Sam",
+        "scoring_type": "timed",
+        "emoji": "🧩",
+        "bonus_emojis": {
+            "all_green": "💚"
+        }
+    },
     "my_scores": {
         "game_name": "my_scores"
     },

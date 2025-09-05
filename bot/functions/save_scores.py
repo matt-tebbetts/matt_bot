@@ -85,7 +85,8 @@ async def get_score_info(message, game_name, game_info):
         "pips_medium": process_pips,
         "pips": process_pips,
         "unzoomed": process_unzoomed,
-        "dordle": process_dordle
+        "dordle": process_dordle,
+        "cluesbysam": process_cluesbysam
     }
 
     # Check if the game has a specific processor
@@ -516,6 +517,53 @@ def process_dordle(message):
         except (ValueError, IndexError):
             # If parsing fails, no bonus
             pass
+    
+    score_info = {
+        'game_score': score,
+        'game_detail': game_detail,
+        'game_bonuses': bonus
+    }
+    return score_info
+
+def process_cluesbysam(message):
+    """
+    Process Clues by Sam game scores.
+    Expected format: 
+    I solved the daily Clues by Sam (Sep 5th 2025) in 04:13
+    :green_square::green_square::green_square::green_square:
+    ...
+    """
+    lines = message.strip().split('\n')
+    
+    # Extract game detail and time from first line
+    # Example: "I solved the daily Clues by Sam (Sep 5th 2025) in 04:13"
+    first_line = lines[0].strip()
+    
+    # Extract time from the end of the first line (format: MM:SS)
+    time_match = re.search(r'in (\d{1,2}:\d{2})$', first_line)
+    if time_match:
+        score = time_match.group(1)
+        # Game detail is everything before " in MM:SS"
+        game_detail = first_line[:time_match.start()].strip()
+    else:
+        # Fallback if time format not found
+        score = "Unknown"
+        game_detail = first_line
+    
+    # Check for all_green bonus by examining emoji lines
+    bonus = None
+    emoji_lines = [line for line in lines[1:] if ':green_square:' in line or ':yellow_square:' in line]
+    
+    if emoji_lines:
+        # Check if all emoji squares are green
+        all_green = True
+        for line in emoji_lines:
+            if ':yellow_square:' in line:
+                all_green = False
+                break
+        
+        if all_green:
+            bonus = "all_green"
     
     score_info = {
         'game_score': score,
