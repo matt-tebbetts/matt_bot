@@ -539,12 +539,20 @@ def process_cluesbysam(message):
     # Example: "I solved the daily Clues by Sam (Sep 5th 2025) in 04:13"
     first_line = lines[0].strip()
     
-    # Extract time from the end of the first line (format: MM:SS)
+    # Extract time from the end of the first line (format: MM:SS or "less than X minutes")
     time_match = re.search(r'in (\d{1,2}:\d{2})$', first_line)
+    less_than_match = re.search(r'in less than (\d+) minutes$', first_line)
+    
     if time_match:
         score = time_match.group(1)
         # Game detail is everything before " in MM:SS"
         game_detail = first_line[:time_match.start()].strip()
+    elif less_than_match:
+        # Convert "less than X minutes" to "X:00" format
+        minutes = int(less_than_match.group(1))
+        score = f"{minutes}:00"
+        # Game detail is everything before " in less than X minutes"
+        game_detail = first_line[:less_than_match.start()].strip()
     else:
         # Fallback if time format not found
         score = "Unknown"
