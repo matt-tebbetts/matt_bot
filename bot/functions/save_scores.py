@@ -86,7 +86,8 @@ async def get_score_info(message, game_name, game_info):
         "pips": process_pips,
         "unzoomed": process_unzoomed,
         "dordle": process_dordle,
-        "cluesbysam": process_cluesbysam
+        "cluesbysam": process_cluesbysam,
+        "globle": process_globle
     }
 
     # Check if the game has a specific processor
@@ -572,6 +573,56 @@ def process_cluesbysam(message):
         
         if all_green:
             bonus = "all_green"
+    
+    score_info = {
+        'game_score': score,
+        'game_detail': game_detail,
+        'game_bonuses': bonus
+    }
+    return score_info
+
+def process_globle(message):
+    """
+    Process Globle game scores.
+    Expected format:
+    🌎 Sep 6, 2025 🌍
+    🔥 1 | Avg. Guesses: 23
+    🟨��🟨🟨🟨🟨🟧🟧
+    🟧🟥🟥🟧🟧🟧🟧🟨
+    🟧🟧🟧🟧🟧��🟩 = 23
+    """
+    lines = message.strip().split('\n')
+    
+    if not lines:
+        return {
+            'game_score': "Unknown",
+            'game_detail': "Unknown",
+            'game_bonuses': None
+        }
+    
+    # First line contains the game detail (date info)
+    # Example: "🌎 Sep 6, 2025 🌍"
+    game_detail = lines[0].strip()
+    
+    # Look for the score in the format "= XX" at the end of any line
+    score = "Unknown"
+    for line in lines:
+        # Match pattern like "🟧🟧🟧��🟧🟧🟩 = 23"
+        score_match = re.search(r'=\s*(\d+)$', line.strip())
+        if score_match:
+            score = score_match.group(1)
+            break
+    
+    # Check for low score bonus (arbitrary threshold, can be adjusted)
+    bonus = None
+    if score != "Unknown":
+        try:
+            score_num = int(score)
+            # Award bonus for scores under 10 (very good guess count)
+            if score_num <= 10:
+                bonus = "low_score"
+        except ValueError:
+            pass
     
     score_info = {
         'game_score': score,

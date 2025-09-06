@@ -206,6 +206,15 @@
             "all_green": "💚"
         }
     },
+    "globle": {
+        "game_name": "globle",
+        "prefix": "🌎",
+        "scoring_type": "guesses",
+        "emoji": "🌍",
+        "bonus_emojis": {
+            "low_score": "🎯"
+        }
+    },
     "my_scores": {
         "game_name": "my_scores"
     },
